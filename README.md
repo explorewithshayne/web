@@ -1,2 +1,2 @@
-# ews-web
- Explore with Shayne Website
+# web
+ Wordpress website and plugins
