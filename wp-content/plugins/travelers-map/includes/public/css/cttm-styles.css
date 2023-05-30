@@ -1,0 +1,244 @@
+.travelersmap-container {
+  background: #f4f4f4;
+}
+.travelersmap-container * {
+  box-sizing: border-box;
+}
+.travelersmap-container .default-popup .leaflet-popup-content-wrapper {
+  border-radius: 0;
+  padding: 0;
+}
+.travelersmap-container .default-popup .leaflet-popup-tip {
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+  background: #4a4a4a;
+}
+.travelersmap-container .default-popup .leaflet-popup-content {
+  width: 300px;
+  margin: 0;
+}
+.travelersmap-container .default-popup .leaflet-popup-content:hover .img-mask:after {
+  background: rgba(0, 0, 0, 0.3);
+}
+.travelersmap-container .default-popup .leaflet-popup-content:hover .img-mask img {
+  transform: scale(1.1);
+}
+.travelersmap-container .default-popup .img-mask {
+  overflow: hidden;
+  max-height: 200px;
+  height: 200px;
+}
+.travelersmap-container .default-popup .img-mask:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  transition: 400ms background cubic-bezier(0.05, 0.9, 0.13, 0.99);
+}
+.travelersmap-container .default-popup .img-mask img {
+  width: 100%;
+  height: auto;
+  transition: 2000ms transform cubic-bezier(0.05, 0.9, 0.13, 0.99);
+}
+.travelersmap-container .default-popup .img-mask .nothumbplaceholder {
+  max-width: 100%;
+  width: 300px;
+  height: 200px;
+  background: #0f0c29;
+  background: -webkit-linear-gradient(left, #0f0c29, #302b63, #24243e);
+  background: -o-linear-gradient(left, #0f0c29, #302b63, #24243e);
+  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+}
+.travelersmap-container .default-popup a.tooltip-link {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: block;
+  vertical-align: middle;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  text-decoration: none;
+  overflow: hidden;
+}
+.travelersmap-container .default-popup a.tooltip-link .popup-thumb-text-wrapper {
+  padding: 40px 0 20px;
+  width: 90%;
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+}
+.travelersmap-container .default-popup a.tooltip-link .title {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+.travelersmap-container .default-popup a.tooltip-link .date {
+  color: white;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: center;
+}
+.travelersmap-container .default-popup a.tooltip-link .title + .date {
+  padding-top: 5px;
+}
+.travelersmap-container .detailed-popup .leaflet-popup-content-wrapper {
+  border-radius: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.travelersmap-container .detailed-popup .leaflet-popup-content {
+  width: 300px;
+  margin: 0;
+  position: relative;
+}
+.travelersmap-container .detailed-popup a.tooltip-link {
+  position: relative;
+  max-height: 200px;
+  min-height: 120px;
+  width: 100%;
+  display: block;
+  vertical-align: middle;
+  top: 0;
+  text-decoration: none;
+  overflow: hidden;
+}
+.travelersmap-container .detailed-popup a.tooltip-link:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  transition: 400ms background cubic-bezier(0.05, 0.9, 0.13, 0.99);
+}
+.travelersmap-container .detailed-popup a.tooltip-link img {
+  width: 100%;
+  height: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  transition: 2000ms transform cubic-bezier(0.05, 0.9, 0.13, 0.99);
+}
+.travelersmap-container .detailed-popup a.tooltip-link .nothumbplaceholder {
+  position: absolute;
+  width: 100%;
+  height: 200px;
+  background: #0f0c29;
+  background: -webkit-linear-gradient(left, #0f0c29, #302b63, #24243e);
+  background: -o-linear-gradient(left, #0f0c29, #302b63, #24243e);
+  background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+}
+.travelersmap-container .detailed-popup a.tooltip-link .title {
+  color: white;
+  padding: 30px 5%;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  z-index: 10;
+  position: relative;
+}
+.travelersmap-container .detailed-popup a.tooltip-link .date {
+  color: white;
+  padding: 40px 5% 40px;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: center;
+  z-index: 10;
+  position: relative;
+  width: 100%;
+}
+.travelersmap-container .detailed-popup a.tooltip-link .title + .date {
+  padding: 0 5% 25px;
+  margin-top: -25px;
+}
+.travelersmap-container .detailed-popup a.tooltip-link:hover:after {
+  background: rgba(0, 0, 0, 0.3);
+}
+.travelersmap-container .detailed-popup a.tooltip-link:hover img {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+.travelersmap-container .detailed-popup .excerpt {
+  color: #333;
+  padding: 20px 7%;
+  font-size: 13px;
+  text-align: justify;
+  width: 100%;
+}
+.travelersmap-container .detailed-popup .leaflet-popup-close-button {
+  right: initial;
+  left: 0;
+  padding: 4px 0 0 4px;
+  z-index: 15;
+  color: #e7e7e7;
+}
+.travelersmap-container .detailed-popup .leaflet-popup-close-button:hover {
+  color: white;
+}
+.travelersmap-container .textual-popup .leaflet-popup-content-wrapper {
+  border-radius: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.travelersmap-container .textual-popup .leaflet-popup-content {
+  width: 300px;
+  margin: 0;
+  position: relative;
+}
+.travelersmap-container .textual-popup a.tooltip-link {
+  text-decoration: none;
+  color: #333;
+}
+.travelersmap-container .textual-popup a.tooltip-link:hover {
+  color: black;
+}
+.travelersmap-container .textual-popup a.tooltip-link .title {
+  padding: 25px 5% 25px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+}
+.travelersmap-container .textual-popup a.tooltip-link .date {
+  padding: 25px 5%;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: center;
+  width: 100%;
+}
+.travelersmap-container .textual-popup a.tooltip-link .excerpt {
+  padding: 25px 7%;
+  font-size: 13px;
+  text-align: justify;
+  width: 100%;
+}
+.travelersmap-container .textual-popup a.tooltip-link .title + .date {
+  margin-top: -20px;
+  padding-top: 0px;
+}
+.travelersmap-container .textual-popup a.tooltip-link .date + .excerpt,
+.travelersmap-container .textual-popup a.tooltip-link .title + .excerpt {
+  margin-top: -5px;
+  padding-top: 0px;
+  font-size: 13px;
+  text-align: justify;
+  width: 100%;
+}
+.travelersmap-container .textual-popup .leaflet-popup-close-button {
+  right: initial;
+  left: 0;
+  padding: 4px 0 0 4px;
+  z-index: 15;
+}
