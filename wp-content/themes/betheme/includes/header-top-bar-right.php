@@ -29,7 +29,7 @@ if( $has_shop && empty( $shop_icons_hide['user'] ) ){
 	$has_user = true;
 }
 
-$user_icon = trim( mfn_opts_get('shop-user') );
+$user_icon = trim( mfn_opts_get('shop-user') ?? '' );
 
 // shop wishlist
 
@@ -37,7 +37,7 @@ if( $has_shop && empty( $shop_icons_hide['wishlist'] ) && mfn_opts_get('shop-wis
 	$has_wishlist = true;
 }
 
-$wishlist_icon = trim( mfn_opts_get('shop-icon-wishlist') );
+$wishlist_icon = trim( mfn_opts_get('shop-icon-wishlist') ?? '' );
 
 // shop cart
 
@@ -45,7 +45,7 @@ if( $has_shop && empty( $shop_icons_hide['cart'] ) ){
 	$has_cart = true;
 }
 
-$cart_icon = trim( mfn_opts_get('shop-cart') );
+$cart_icon = trim( mfn_opts_get('shop-cart') ?? '' );
 
 // search
 
@@ -246,7 +246,7 @@ if ( $has_user || $has_wishlist || $has_cart || $header_search || $action_link |
 				}
 
 				echo '<a class="responsive-menu-toggle '. esc_attr($mb_class) .'" href="#" aria-label="'. __('mobile menu', 'betheme') .'">';
-				if ( $menu_text = trim( mfn_opts_get('header-menu-text') ) ) {
+				if ( $menu_text = trim( mfn_opts_get('header-menu-text') ?? '' ) ) {
 					echo '<span aria-hidden="true">'. wp_kses($menu_text, mfn_allowed_html()) .'</span>';
 				} else {
 					echo '<i class="icon-menu-fine" aria-hidden="true"></i>';

@@ -257,7 +257,7 @@ class Mfn_Dashboard extends Mfn_API
 			$icon = 'dashicons-admin-generic';
 		}
 
-		$this->page = add_menu_page(
+		$page = add_menu_page(
 			$title['label'],
 			$title['label'],
 			'edit_theme_options',
@@ -277,7 +277,7 @@ class Mfn_Dashboard extends Mfn_API
 		);
 
 		// Fires when styles are printed for a specific admin page based on $hook_suffix.
-		add_action('admin_print_styles-'. $this->page, array( $this, 'enqueue' ));
+		add_action('admin_print_styles-'. $page, array( $this, 'enqueue' ));
 	}
 
 	/**

@@ -15,12 +15,12 @@
       if( $li.hasClass('active') ){
 
         $li.removeClass('active');
-        $li.children('input').prop('checked', false);
+        $li.children('input').prop('checked', false).trigger('change');
 
       } else {
 
         $li.addClass('active');
-        $li.children('input').prop('checked', 'checked');
+        $li.children('input').prop('checked', 'checked').trigger('change');
 
       }
 

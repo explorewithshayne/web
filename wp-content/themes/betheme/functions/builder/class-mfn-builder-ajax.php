@@ -33,6 +33,7 @@ class Mfn_Builder_Ajax {
 		add_action( 'wp_ajax_mfn_builder_revision_restore', array( $this, '_revision_restore' ) );
 		add_action( 'wp_ajax_mfn_builder_pre_built_section', array( $this, '_pre_built_section' ) );
 
+		add_action( 'wp_ajax_mfn_analyze_builder', array($this, '_tool_analyze_builder') );
 		add_action( 'wp_ajax_mfn_history_delete', array($this, '_tool_history_delete') );
 		add_action( 'wp_ajax_mfn_regenerate_css', array($this, '_tool_regenerate_css') );
 		add_action( 'wp_ajax_mfn_regenerate_fonts', array($this, '_tool_regenerate_fonts') );
@@ -91,6 +92,7 @@ class Mfn_Builder_Ajax {
 		}
 
 		if( is_iterable($attachments) ){
+
 			foreach( $attachments as $a=>$at ){
 
 				if( $a < $offset ) continue;
@@ -101,9 +103,35 @@ class Mfn_Builder_Ajax {
 				$imagePath = wp_upload_dir()['basedir'].'/'.$img;
 
         if ($img && file_exists( $imagePath )) {
-            $attach_data = wp_generate_attachment_metadata($at->ID, $imagePath);
-            wp_update_attachment_metadata( $at->ID, $attach_data );
-            unset($attach_data);
+
+          $attach_data = wp_generate_attachment_metadata($at->ID, $imagePath);
+
+					// regenerate image dimensions
+
+					if( empty( $attach_data['width'] ) || empty( $attach_data['height'] ) ){
+
+						$types = ['image/svg', 'image/svg+xml'];
+
+						if( in_array( get_post_mime_type($at->ID), $types ) ){
+
+							$svgfile = simplexml_load_file($imagePath);
+				    	if( ! empty($svgfile) ) {
+					    	$xmlattributes = $svgfile->attributes();
+								$attach_data['width'] = (string)$xmlattributes->width[0];
+								$attach_data['height'] = (string)$xmlattributes->height[0];
+				    	}
+
+						} else {
+
+							// $sizes = getimagesize( $image_url ); // unnecessary
+
+						}
+
+					}
+
+					// update attachment metadata
+
+					wp_update_attachment_metadata( $at->ID, $attach_data );
         }
 
         unset($attach_data);
@@ -360,6 +388,119 @@ class Mfn_Builder_Ajax {
 				if( get_post_meta( $item->ID, 'mfn-page-local-style') ){
 					$mfn_styles = json_decode( get_post_meta( $item->ID, 'mfn-page-local-style', true ), true );
 					Mfn_Helper::generate_css($mfn_styles, $item->ID);
+				}
+			}
+		}
+
+		wp_die();
+	}
+
+	/**
+	 * Analyze builder content
+	 */
+
+	public function _tool_analyze_builder(){
+
+		check_ajax_referer( 'mfn-builder-nonce', 'mfn-builder-nonce' );
+
+		// analize content
+
+		$seo_content = '';
+		$skip = [
+			'#FFFFFF',
+			'{featured_image}',
+			'contain',
+			'center',
+			'center center',
+			'center top',
+			'default',
+			'disable',
+			'full',
+			'h1',
+			'h2',
+			'h3',
+			'h4',
+			'h5',
+			'h6',
+			'hide',
+			'hide-mobile',
+			'hide-tablet',
+			'horizontal',
+			'inline',
+			'left',
+			'no-repeat',
+			'none',
+			'right',
+			'show',
+			'solid',
+			'thumbnail',
+			'top',
+			'unset',
+		]; // seo values to skip
+
+		$posts = get_posts( array(
+			'post_type' => array('page', 'post', 'portfolio', 'product', 'template'),
+			'posts_per_page' => -1,
+		) );
+
+		if( count($posts) ){
+			foreach( $posts as $post ){
+
+				$seo_content = '';
+				$builder = get_post_meta($post->ID, 'mfn-page-items', true);
+
+				if( ! empty($builder) ){
+
+					// FIX | Muffin Builder 2 compatibility
+
+					if ($builder && ! is_array($builder)) {
+						$builder = unserialize(call_user_func('base'.'64_decode', $builder));
+					}
+
+					if( ! empty( $builder ) ){
+						foreach( $builder as $section ){
+							if( ! empty( $section['wraps'] ) ){
+								foreach( $section['wraps'] as $wrap ){
+									if( ! empty( $wrap['items'] ) ){
+										foreach( $wrap['items'] as $item ){
+
+											if( ! isset($item['attr']) ){
+												$item['attr'] = ! empty($item['fields']) ? $item['fields'] : [];
+											}
+
+											if( ! empty( $item['attr'] ) ){
+												foreach( $item['attr'] as $vk => $value ){
+
+													if( is_string( $value ) &&  ! is_numeric( $value ) && ! in_array( $value, $skip ) ){
+
+														// string
+														$seo_content .= "\n" . trim( $value ?? '' );
+
+													} elseif( 'tabs' == $vk && is_array( $value ) ){
+
+														// tabs
+														foreach( $value as $tab ){
+															if( ! empty( $tab ) ){
+																foreach( $tab as $tab_field ){
+																	$seo_content .= "\n" . trim( $tab_field ?? '' );
+																}
+															}
+														}
+
+													}
+
+												}
+											}
+
+										}
+									}
+								}
+							}
+						}
+					}
+
+					update_post_meta( $post->ID, 'mfn-page-items-seo', $seo_content );
+
 				}
 			}
 		}
@@ -917,13 +1058,7 @@ class Mfn_Builder_Ajax {
 		}
 
 		// force items form regenerate
-
-		$fields_form = get_template_directory() .'/visual-builder/assets/js/forms/bebuilder-'.MFN_THEME_VERSION.'.js';
-		if( file_exists( $fields_form ) ){
-			wp_delete_file( $fields_form );
-		}
-
-		update_option('betheme_form_uid', Mfn_Builder_Helper::unique_ID());
+		MfnVisualBuilder::removeBeDataFile();
 
 		return true;
 
@@ -1172,6 +1307,10 @@ class Mfn_Builder_Ajax {
 	 */
 
 	public static function builder_replace( $search, $replace, $subject, $skip_elements = false ){
+
+		if( empty( $subject ) ){
+			return $subject;
+		}
 
 		// sections
 

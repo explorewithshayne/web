@@ -46,6 +46,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   			'fields' => array(
 
   				array(
+  					'type' => 'header',
   					'title' => __('Header & Footer', 'mfn-opts'),
   				),
 
@@ -54,7 +55,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Custom Header Template', 'mfn-opts'),
   					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=header">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
-  					'options' => mfna_templates('header'),
+  					'php_options' => mfna_templates('header'),
   					'js_options' => 'headers',
   				),
 
@@ -63,7 +64,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Custom Footer Template', 'mfn-opts'),
   					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=footer">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
-  					'options' => mfna_templates('footer'),
+  					'php_options' => mfna_templates('footer'),
   					'js_options' => 'footers',
   				),
 
@@ -76,13 +77,14 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Popup', 'mfn-opts'),
   					'desc' => __('Choose popup to display', 'mfn-opts'),
-  					'options' => mfna_templates('popup'),
+  					'php_options' => mfna_templates('popup'),
   					'js_options' => 'popups',
   				),
 
   				// layout
 
   				array(
+  					'type' => 'header',
   					'title' => __('Layout', 'mfn-opts'),
   				),
 
@@ -120,7 +122,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Sidebar', 'mfn-opts'),
   					'desc' => __('Shows only if layout with sidebar is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+  					'php_options' => is_array(mfn_opts_get('sidebars')) ? array_merge(array( '' => __('-- Default --', 'mfn-opts')), mfn_opts_get('sidebars')) : array('' => __('-- Default --', 'mfn-opts')),
   					'js_options' => 'sidebars',
   				),
 
@@ -129,13 +131,14 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Sidebar 2nd', 'mfn-opts'),
   					'desc' => __('Shows only if layout with both sidebars is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+  					'php_options' => is_array(mfn_opts_get('sidebars')) ? array_merge(array( '' => __('-- Default --', 'mfn-opts')), mfn_opts_get('sidebars')) : array('' => __('-- Default --', 'mfn-opts')),
   					'js_options' => 'sidebars',
   				),
 
 				// media
 
   				array(
+  					'type' => 'header',
   					'title' => __('Media', 'mfn-opts'),
   				),
 
@@ -143,7 +146,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'id' => 'mfn-post-slider',
   					'type' => 'select',
   					'title' => __('Slider Revolution', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('rev'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('rev'),
   					'js_options' => 'rev_slider',
   				),
 
@@ -151,7 +154,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'id' => 'mfn-post-slider-layer',
   					'type' => 'select',
   					'title' => __('Layer Slider', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('layer'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('layer'),
   					'js_options' => 'layer_slider',
   				),
 
@@ -171,6 +174,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
 					// options
 
   				array(
+  					'type' => 'header',
   					'title' => __('Options', 'mfn-opts'),
   				),
 
@@ -225,7 +229,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Custom layout', 'mfn-opts'),
   					'desc' => __('Custom layout overwrites Theme Options', 'mfn-opts'),
-  					'options' => $this->get_layouts(),
+  					'php_options' => $this->get_layouts(),
   					'js_options' => 'layouts',
   				),
 
@@ -234,13 +238,14 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
   					'type' => 'select',
   					'title' => __('Custom menu', 'mfn-opts'),
   					'desc' => __('Does not work with Split Menu', 'mfn-opts'),
-  					'options' => mfna_menu(),
+  					'php_options' => mfna_menu(),
   					'js_options' => 'menus',
   				),
 
 					// seo
 
   				array(
+  					'type' => 'header',
   					'title' => __('SEO', 'mfn-opts'),
   				),
 
@@ -272,6 +277,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Page' ) ) {
 					// custom css
 
   				array(
+  					'type' => 'header',
   					'title' => __('Custom CSS', 'mfn-opts'),
   				),
 

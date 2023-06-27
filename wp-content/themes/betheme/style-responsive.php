@@ -413,6 +413,9 @@ defined( 'ABSPATH' ) || exit;
 	#Top_bar #menu ul li a span:after{display:none!important}
 	#Top_bar #menu ul.mfn-megamenu li .menu-toggle{display:none}
 
+	.menuo-arrows.keyboard-support #Top_bar .menu > li.submenu > a:not(.menu-toggle):after,
+  .menuo-arrows:not(.keyboard-support) #Top_bar .menu > li.submenu > a:not(.menu-toggle)::after{ display: none !important; }
+
 	/* Main Menu | 2nd level */
 
 	#Top_bar #menu ul li ul{position:relative!important;left:0!important;top:0;padding:0;margin-left:0!important;width:auto!important;background-image:none!important;box-shadow:0 0 0 0 transparent!important;-webkit-box-shadow:0 0 0 0 transparent!important}

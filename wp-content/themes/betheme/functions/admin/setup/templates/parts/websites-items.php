@@ -65,9 +65,9 @@ foreach( $demos as $key=>$demo ){
     echo '<img data-src="https://muffingroup.com/betheme/assets/images/demos/'. $key .'.jpg" src="'. $placeholder .'" alt="'. $title .'"/>';
     echo $title;
     if( mfn_is_registered() ){
-      echo '<span class="select" data-href="'. $url .'">Select</span>';
+      echo '<span class="select" data-href="'. $url .'">'. __('Select','mfn-opts') .'</span>';
     } else {
-      echo '<a href="admin.php?page=betheme" class="select">Register</a>';
+      echo '<a href="admin.php?page=betheme" class="select">'. __('Register','mfn-opts') .'</a>';
     }
     echo '<span class="preview" data-href="'. $url .'"><i class="far fa-eye"></i></span>';
   echo '</div>';

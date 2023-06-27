@@ -16,6 +16,7 @@ get_header( 'shop' );
 		<div class="sections_group">
 			<div class="entry-content" itemprop="mainContentOfPage">
 
+				<?php if( ! mfn_is_blocks() ): ?>
 				<div class="section woocommerce_before_main_content">
 					<div class="section_wrapper">
 						<div class="column column-margin-0px one">
@@ -32,6 +33,7 @@ get_header( 'shop' );
 						</div>
 					</div>
 				</div>
+				<?php endif; ?>
 
 				<?php
 
@@ -43,6 +45,7 @@ get_header( 'shop' );
 
 				?>
 
+				<?php if( ! mfn_is_blocks() ): ?>
 				<div class="section woocommerce_after_main_content">
 					<div class="section_wrapper">
 						<div class="column column-margin-0px one">
@@ -55,15 +58,15 @@ get_header( 'shop' );
 						</div>
 					</div>
 				</div>
+			<?php endif; ?>
 
 			</div>
-			
+
 		</div>
-		
+
 		<?php get_sidebar(); ?>
 
 	</div>
 </div>
 
 <?php get_footer();
-

@@ -20,6 +20,8 @@ if( ! class_exists('Mfn_Builder_Front') )
     public $template_type = false;
     public static $is_bebuilder = false;
 
+		public $blocks_fields = false;
+
     /* For Dynamic Data */
 
     public static $item_type = false;
@@ -79,6 +81,10 @@ if( ! class_exists('Mfn_Builder_Front') )
 
     public function __construct($post_id, $content_field = false) {
 
+			if( mfn_is_blocks() ){
+				$this->blocks_fields = new Mfn_Builder_Fields( null, 'items' );
+			}
+
 			$this->post_id = $post_id;
  			$this->content_field = $content_field;
 
@@ -136,6 +142,10 @@ if( ! class_exists('Mfn_Builder_Front') )
   	 */
 
 		public function enqueue_local_style( $enqueue = true ){
+
+			if( mfn_is_blocks() ){
+				return;
+			}
 
 			$path = '';
 			$handle = 'mfn-post-local-styles';
@@ -268,7 +278,7 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 				// do not show builder if wc memberships active do not allow current user
 
-  		} elseif (is_array($mfn_items)) {
+  		} elseif ( ! empty($mfn_items) && is_array($mfn_items) ) {
 
   			// SECTIONS -----
   			$this->show_sections($mfn_items, $vbtoolsoff);
@@ -336,8 +346,10 @@ if( ! class_exists('Mfn_Builder_Front') )
 						$global_section_id = ' data-mfn-global="' . $section['mfn_global_section_id'] .'"';
 
 						//styles
-						$path = wp_upload_dir()['baseurl'] .'/betheme/css/post-'. $section['mfn_global_section_id'] .'.css';
-						wp_enqueue_style('mfn-global-section-styles-'. Mfn_Builder_Helper::unique_ID(), $path, false, time(), 'all');
+						if( !mfn_is_blocks() ){
+							$path = wp_upload_dir()['baseurl'] .'/betheme/css/post-'. $section['mfn_global_section_id'] .'.css';
+							wp_enqueue_style('mfn-global-section-styles-'. Mfn_Builder_Helper::unique_ID(), $path, false, time(), 'all');
+						}
 					}
 
 					$section_id = false;
@@ -376,13 +388,13 @@ if( ! class_exists('Mfn_Builder_Front') )
 						$section['uid'] = Mfn_Builder_Helper::unique_ID();
 					}
 
-				if( !empty($section['mfn_global_section_id'])) {
-					//set the original uid of the section. global sections
-					$section_class[] = 'mcb-section-'. $refresh_content[0]['uid'];
-					$inner_section_class_uid = 'mcb-section-inner-'.$refresh_content[0]['uid'];
-				} else {
-					$section_class[] = 'mcb-section-'. $section['uid'];
-				}
+					if( !empty($section['mfn_global_section_id'])) {
+						//set the original uid of the section. global sections
+						$section_class[] = 'mcb-section-'. $refresh_content[0]['uid'];
+						$inner_section_class_uid = 'mcb-section-inner-'.$refresh_content[0]['uid'];
+					} else {
+						$section_class[] = 'mcb-section-'. $section['uid'];
+					}
 
   				if( $this->template_type && $this->template_type == 'header' ) $section_class[] = 'mcb-header-section';
 
@@ -391,8 +403,13 @@ if( ! class_exists('Mfn_Builder_Front') )
   				// if( empty( $section['attr'] ) ) continue;
 
 					if( ! empty($section['attr']['style']) ) {
-						$section['attr']['style'] = str_replace('full-width', 'full-width full-width-deprecated', $section['attr']['style']); // old full width class
-  					$section_class[] = $section['attr']['style'];
+						$style_ex = explode(' ', $section['attr']['style']);
+						if( in_array('full-width', $style_ex) ){
+							$style_key = array_search('full-width', $style_ex);
+							$style_ex[$style_key] = 'full-width full-width-deprecated';
+							//$section['attr']['style'] = str_replace('full-width', 'full-width full-width-deprecated', $section['attr']['style']); // old full width class
+						}
+						$section_class[] = implode(' ', $style_ex);
   				}
 
   				if( ! empty($section['attr']['class']) ) {
@@ -624,9 +641,15 @@ if( ! class_exists('Mfn_Builder_Front') )
 
   				// output SECTION -----
 
+					if( mfn_is_blocks() ){
+						$section_style = '';
+						$parallax = '';
+					}
+
   				if( !$vbtoolsoff && ( self::$is_bebuilder || ( isset( $items ) && is_array( $items ) ) ) ){
 
   					if ( $this->template_type && $this->template_type == 'header' && isset( $section['wraps'] ) && is_array($section['wraps']) && count($section['wraps']) >= 3 ) $section_class .= ' mfn-new-wraps-disabled';
+
 
   					echo '<div class="section vb-item mcb-section '. $section_class .'" '. $section_id .' data-order="'. $s .'" data-uid="'. $section['uid'] .'"  '. $global_section_id .' style="'. $section_style .'" '. $parallax .'>'; // 100%
   					echo Mfn_Builder_Helper::sectionTools($section);
@@ -718,7 +741,9 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 					// Background Overlay
 
-					echo '<div class="mcb-background-overlay"></div>';
+					if( ! mfn_is_blocks() ){
+						echo '<div class="mcb-background-overlay"></div>';
+					}
 
 					// shape divider
 
@@ -888,15 +913,40 @@ if( ! class_exists('Mfn_Builder_Front') )
               		if( !empty( $section['attr'][$incl_var] ) && is_array( $section['attr'][$incl_var] ) ){
               			$arr_helper = array();
               			foreach( $section['attr'][$incl_var] as $el ) {
-              				if( !empty($el['key']) ) $arr_helper[] = $el['key'];
+              				if( !empty($el['key']) && $el['key'] != '0-current' ) {
+              					$arr_helper[] = $el['key'];
+              				}else{
+              					$mfn_queried_object = get_queried_object();
+              					if( isset($mfn_queried_object->term_id) ) $arr_helper[] = $mfn_queried_object->term_id;
+              				}
               			}
               			$q_args['include'] = $arr_helper;
               		}
 
+              		$mfn_queried_object = get_queried_object();
+              		$child_of = false;
+
+              		if( !empty($section['attr']['query_terms_child_of_product_cat']) ) $child_of = $section['attr']['query_terms_child_of_product_cat'];
+
+              		if( !empty( $child_of ) ){
+              			if( $child_of != '0-current' ) {
+              				$get_term = get_term_by('slug', $section['attr']['query_terms_child_of_product_cat'], 'product_cat');
+            					if( isset($get_term->term_id) ) $q_args['child_of'] = $get_term->term_id;
+            				}elseif( isset($mfn_queried_object->term_id) ) {
+            					$q_args['child_of'] = $mfn_queried_object->term_id;
+            				}
+              		}
+
               		$q_terms = get_terms( $choosed_terms, $q_args );
 
-              		if ( !empty($q_terms) ) :
+              		/*echo '<pre>';
+              		print_r( $q_terms );
+              		echo '</pre>';*/
+
+              		if ( !empty($q_terms) && count($q_terms) > 0 ) :
+
 										foreach( $q_terms as $t=>$term ) {
+
 											self::$item_type = 'term';
 											self::$item_id = $term->term_id;
 											if( !self::$is_bebuilder && !empty($section['attr']['query_display']) && $section['attr']['query_display'] == 'slider' ) {
@@ -916,7 +966,7 @@ if( ! class_exists('Mfn_Builder_Front') )
 											self::$item_id = false;
 										}
 
-									else:
+									elseif( empty($section['attr']['type']) ):
 										foreach ($section['wraps'] as $w => $wrap) {
 		              		$this->show_wraps($wrap, $w, $vb);
 		              	}
@@ -977,37 +1027,185 @@ if( ! class_exists('Mfn_Builder_Front') )
 
               		$q_args['offset'] = $section['attr']['query_post_offset'] ?? '0';
 
-              		if( $q_args['post_type'] == 'post' && !empty($section['attr']['query_post_type_post']) ){
-              			$q_args['category_name'] = $section['attr']['query_post_type_post'];
-              		}else if( function_exists('is_woocommerce') && $q_args['post_type'] == 'product' && !empty($section['attr']['query_post_type_product']) ){
-              			if( $section['attr']['query_post_type_product'] == '0-current' ){
-              				if( is_product_category() ){
-              					$mfn_queried_object = get_queried_object();
-              					$tax_q = array('relation' => 'AND', array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => $mfn_queried_object->slug ));
-              				}else{
-              					$tax_q = array();
-              				}
-              			}else{
-              				$tax_q = array('relation' => 'AND', array('taxonomy' => 'product_cat', 'field' => 'slug', 'terms' => $section['attr']['query_post_type_product']));
+              		$tax_filter = array();
+              		$tax_filter_excl = array();
+
+              		$tax_q = array('relation' => 'AND');
+
+              		if( $q_args['post_type'] == 'post' ){
+              			if( !empty( $section['attr']['query_post_type_post'] ) ){
+              				foreach( $section['attr']['query_post_type_post'] as $tax_obj){
+	              				$tax_filter[] = $tax_obj['key'];
+	              			}
+	              			if( count($tax_filter) > 0 ){
+	              				$q_args['category__in'] = $tax_filter;
+	              			}
               			}
-              			if( count($tax_q) > 0 ) $q_args['tax_query'] = $tax_q;
-              		}else if( $q_args['post_type'] == 'portfolio' && !empty($section['attr']['query_post_type_portfolio']) ){
-              			$tax_q = array('relation' => 'AND', array('taxonomy' => 'portfolio-types', 'field' => 'slug', 'terms' => $section['attr']['query_post_type_portfolio']));
-              			$q_args['tax_query'] = $tax_q;
-              		}else if( $q_args['post_type'] == 'client' && !empty($section['attr']['query_post_type_client']) ){
-              			$tax_q = array('relation' => 'AND', array('taxonomy' => 'client-types', 'field' => 'slug', 'terms' => $section['attr']['query_post_type_client']));
-              			$q_args['tax_query'] = $tax_q;
-              		}else if( $q_args['post_type'] == 'offer' && !empty($section['attr']['query_post_type_offer']) ){
-              			$tax_q = array('relation' => 'AND', array('taxonomy' => 'offer-types', 'field' => 'slug', 'terms' => $section['attr']['query_post_type_offer']));
-              			$q_args['tax_query'] = $tax_q;
-              		}else if( $q_args['post_type'] == 'slide' && !empty($section['attr']['query_post_type_slide']) ){
-              			$tax_q = array('relation' => 'AND', array('taxonomy' => 'slide-types', 'field' => 'slug', 'terms' => $section['attr']['query_post_type_slide']));
-              			$q_args['tax_query'] = $tax_q;
-              		}else if( $q_args['post_type'] == 'testimonial' && !empty($section['attr']['query_post_type_testimonial']) ){
-              			$tax_q = array('relation' => 'AND', array('taxonomy' => 'testimonial-types', 'field' => 'slug', 'terms' => $section['attr']['query_post_type_testimonial']));
-              			$q_args['tax_query'] = $tax_q;
+              			if( !empty( $section['attr']['query_post_type_post_exclude'] ) ){
+              				foreach( $section['attr']['query_post_type_post_exclude'] as $tax_obj){
+	              				$tax_filter_excl[] = $tax_obj['key'];
+	              			}
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$q_args['category__not_in'] = $tax_filter_excl;
+	              			}
+              			}
+              		}else if( function_exists('is_woocommerce') && $q_args['post_type'] == 'product' ){
+
+              			if( !empty($section['attr']['query_post_type_product']) ){
+	              			foreach( $section['attr']['query_post_type_product'] as $tax_obj){
+	              				if( $tax_obj['key'] == '0-current' ){
+	              					if( is_product_category() ){
+		              					$mfn_queried_object = get_queried_object();
+		              					$tax_filter[] = $mfn_queried_object->term_id;
+		              				}
+	              				}else{
+	              					$tax_filter[] = $tax_obj['key'];
+	              				}
+	              			}
+
+	              			if( count($tax_filter) > 0 ){
+	              				$tax_q[] = array('taxonomy' => 'product_cat', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+	              			}
+	              		}
+
+	              		if( !empty($section['attr']['query_post_type_product_exclude']) ){
+	              			foreach( $section['attr']['query_post_type_product_exclude'] as $tax_obj){
+	              				if( $tax_obj['key'] == '0-current' ){
+	              					if( is_product_category() ){
+		              					$mfn_queried_object = get_queried_object();
+		              					$tax_filter_excl[] = $mfn_queried_object->term_id;
+		              				}
+	              				}else{
+	              					$tax_filter_excl[] = $tax_obj['key'];
+	              				}
+	              			}
+
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$tax_q[] = array('taxonomy' => 'product_cat', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+	              			}
+	              		}
+
+              		}else if( $q_args['post_type'] == 'portfolio' ){
+
+              			if( !empty($section['attr']['query_post_type_portfolio']) ){
+	              			foreach( $section['attr']['query_post_type_portfolio'] as $tax_obj){
+	              				$tax_filter[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter) > 0 ){
+	              				$tax_q = array('taxonomy' => 'portfolio-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+	              			}
+	              		}
+
+	              		if( !empty($section['attr']['query_post_type_portfolio_exclude']) ){
+	              			foreach( $section['attr']['query_post_type_portfolio_exclude'] as $tax_obj){
+	              				$tax_filter_excl[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$tax_q = array('taxonomy' => 'portfolio-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+	              			}
+	              		}
+
+              		}else if( $q_args['post_type'] == 'client' ){
+
+              			if( !empty($section['attr']['query_post_type_client']) ) {
+
+	              			foreach( $section['attr']['query_post_type_client'] as $tax_obj){
+	              				$tax_filter[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter) > 0 ){
+	              				$tax_q = array('taxonomy' => 'client-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+	              			}
+
+	              		}
+
+	              		if( !empty($section['attr']['query_post_type_client_exclude']) ) {
+
+	              			foreach( $section['attr']['query_post_type_client_exclude'] as $tax_obj){
+	              				$tax_filter_excl[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$tax_q = array('taxonomy' => 'client-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+	              			}
+
+	              		}
+
+              		}else if( $q_args['post_type'] == 'offer' ){
+
+              			if( !empty($section['attr']['query_post_type_offer']) ){
+	              			foreach( $section['attr']['query_post_type_offer'] as $tax_obj){
+	              				$tax_filter[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter) > 0 ){
+	              				$tax_q = array('taxonomy' => 'offer-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+	              			}
+
+	              		}
+
+	              		if( !empty($section['attr']['query_post_type_offer_exclude']) ){
+	              			foreach( $section['attr']['query_post_type_offer_exclude'] as $tax_obj){
+	              				$tax_filter_excl[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$tax_q = array('taxonomy' => 'offer-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+	              			}
+
+	              		}
+
+              		}else if( $q_args['post_type'] == 'slide' ){
+
+              			if( !empty($section['attr']['query_post_type_slide']) ){
+	              			foreach( $section['attr']['query_post_type_slide'] as $tax_obj){
+	              				$tax_filter[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter) > 0 ){
+	              				$tax_q = array('taxonomy' => 'slide-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+	              			}
+	              		}
+
+	              		if( !empty($section['attr']['query_post_type_slide_exclude']) ){
+	              			foreach( $section['attr']['query_post_type_slide_exclude'] as $tax_obj){
+	              				$tax_filter_excl[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$tax_q = array('taxonomy' => 'slide-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+	              			}
+	              		}
+
+              		}else if( $q_args['post_type'] == 'testimonial' ){
+
+              			if( !empty($section['attr']['query_post_type_testimonial']) ){
+	              			foreach( $section['attr']['query_post_type_testimonial'] as $tax_obj){
+	              				$tax_filter[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter) > 0 ){
+	              				$tax_q = array('taxonomy' => 'testimonial-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+	              			}
+	              		}
+
+	              		if( !empty($section['attr']['query_post_type_testimonial_exclude']) ){
+	              			foreach( $section['attr']['query_post_type_testimonial_exclude'] as $tax_obj){
+	              				$tax_filter_excl[] = $tax_obj['key'];
+	              			}
+
+	              			if( count($tax_filter_excl) > 0 ){
+	              				$tax_q = array('taxonomy' => 'testimonial-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+	              			}
+	              		}
+
               		}
 
+              		if( count($tax_q) > 1 ) $q_args['tax_query'] = $tax_q;
+
+              		$q_args['post_status'] = 'publish';
               		$section_posts_query = new WP_Query( $q_args );
 
               		if ( $section_posts_query->have_posts() ) :
@@ -1142,8 +1340,10 @@ if( ! class_exists('Mfn_Builder_Front') )
 				$wrap_class[] = ' mfn-global-wrap';
 
 				//styles
-				$path = wp_upload_dir()['baseurl'] .'/betheme/css/post-'. $global_wrap_id.'.css';
-				wp_enqueue_style('mfn-global-wrap-styles-'. Mfn_Builder_Helper::unique_ID(), $path, false, time(), 'all');
+				if( !mfn_is_blocks() ){
+					$path = wp_upload_dir()['baseurl'] .'/betheme/css/post-'. $global_wrap_id.'.css';
+					wp_enqueue_style('mfn-global-wrap-styles-'. Mfn_Builder_Helper::unique_ID(), $path, false, time(), 'all');
+				}
 			}
 
 			// FIX: LUK empty wrap created in error
@@ -1206,6 +1406,12 @@ if( ! class_exists('Mfn_Builder_Front') )
 				}
 			}
 
+			$wrap_style = $wrap_bg = array();
+			$wrap_data = array();
+			$parallax = false;
+			$animate = '';
+			$wrap_id = false;
+
 			if( key_exists('attr', $wrap) ) {
 
 				if( ! empty($wrap['attr']['class']) ){
@@ -1256,27 +1462,36 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 				if( ! empty( $wrap['attr']['sticky'] ) ) {
 					$wrap_class[] = 'sticky sticky-desktop';
+
+					if( !empty($wrap['attr']['sticky_offset']) ){
+						$wrap_data[] = 'data-stickyoffset="'.$wrap['attr']['sticky_offset'].'"';
+					}
 				}
 
 				if( ! empty( $wrap['attr']['tablet_sticky'] ) ) {
 					$wrap_class[] = 'sticky sticky-tablet';
+
+					if( !empty($wrap['attr']['sticky_offset_tablet']) ){
+						$wrap_data[] = 'data-stickyoffsettablet="'.$wrap['attr']['sticky_offset_tablet'].'"';
+					}
 				}
 
 				if( ! empty( $wrap['attr']['mobile_sticky'] ) ) {
 					$wrap_class[] = 'sticky sticky-mobile';
+
+					if( !empty($wrap['attr']['sticky_offset_mobile']) ){
+						$wrap_data[] = 'data-stickyoffsetmobile="'.$wrap['attr']['sticky_offset_mobile'].'"';
+					}
 				}
 
-			}
 
 			// styles ---
 
-			$wrap_style = $wrap_bg = array();
-			$wrap_data = array();
-			$parallax = false;
-			$animate = '';
-			$wrap_id = false;
 
-			if( key_exists('attr', $wrap) ){
+
+				if ( !empty($wrap['attr']['width_switcher']) && $wrap['attr']['width_switcher'] == 'custom' ) {
+					$wrap_class[] = 'mfn-item-custom-width';
+				}
 
 				// padding
 
@@ -1354,8 +1569,10 @@ if( ! class_exists('Mfn_Builder_Front') )
 						}
 					}
 
-					if ( self::$item_id && !empty( $wrap['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] ) && $wrap['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] == '{featured_image}' && has_post_thumbnail(self::$item_id) ) {
+					if ( self::$item_id && !empty( $wrap['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] ) && $wrap['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] == '{featured_image}' && self::$item_type == 'post' && has_post_thumbnail(self::$item_id) ) {
 						$wrap_inner_inline_styles = 'style="background-image: url('.wp_get_attachment_image_src( get_post_thumbnail_id(self::$item_id), 'full')[0].')"';
+					}else if ( self::$item_id && !empty( $wrap['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] ) && $wrap['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] == '{featured_image}' && self::$item_type == 'term' && !empty(get_term_meta( self::$item_id, 'thumbnail_id', true )) ) {
+						$wrap_inner_inline_styles = 'style="background-image: url('.wp_get_attachment_url(get_term_meta( self::$item_id, 'thumbnail_id', true )).')"';
 					}
 
 					// parallax for BeBuilder
@@ -1433,6 +1650,10 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 			// output WRAP -----
 
+			if( mfn_is_blocks() ){
+				$wrap_style = '';
+				$parallax = '';
+			}
 
 			if( $vb && !$s_iterate ){
 				echo '<div '. $wrap_id .' class="wrap vb-item mcb-wrap '. $wrap_class .' clearfix" '. $global_wrap_attr .' data-desktop-col="'. $desktop_size_col .'" data-tablet-col="'. $tablet_size_col .'" data-mobile-col="'. $mobile_size_col .'" data-desktop-size="'. $desktop_size .'" data-tablet-size="'. $tablet_size .'" data-mobile-size="'. $mobile_size .'" data-order="'. $w .'"  data-uid="'. $original_uid .'" style="'. $wrap_style .'" '. $parallax .' '. $wrap_data .'>';
@@ -1567,10 +1788,33 @@ if( ! class_exists('Mfn_Builder_Front') )
               		if( !empty( $wrap['attr'][$incl_var] ) && is_array( $wrap['attr'][$incl_var] ) ){
               			$arr_helper = array();
               			foreach( $wrap['attr'][$incl_var] as $el ) {
-              				if( !empty($el['key']) ) $arr_helper[] = $el['key'];
+              				if( !empty($el['key']) && $el['key'] != '0-current' ) {
+              					$arr_helper[] = $el['key'];
+              				}else{
+              					$mfn_queried_object = get_queried_object();
+              					if( isset($mfn_queried_object->term_id) ) $arr_helper[] = $mfn_queried_object->term_id;
+              				}
               			}
               			$q_args['include'] = $arr_helper;
               		}
+
+              		$mfn_queried_object = get_queried_object();
+              		$child_of = false;
+
+              		if( !empty($wrap['attr']['query_terms_child_of_product_cat']) ) $child_of = $wrap['attr']['query_terms_child_of_product_cat'];
+
+              		if( !empty( $child_of ) ){
+              			if( $child_of != '0-current' ) {
+              				$get_term = get_term_by('slug', $wrap['attr']['query_terms_child_of_product_cat'], 'product_cat');
+            					if( isset($get_term->term_id) ) $q_args['child_of'] = $get_term->term_id;
+            				}elseif( isset($mfn_queried_object->term_id) ) {
+            					$q_args['child_of'] = $mfn_queried_object->term_id;
+            				}
+              		}
+
+              		/*echo '<pre>';
+              		print_r($q_args);
+              		echo '</pre>';*/
 
               		$q_terms = get_terms( $choosed_terms, $q_args );
 
@@ -1595,7 +1839,7 @@ if( ! class_exists('Mfn_Builder_Front') )
 											self::$item_id = false;
 										}
 
-									else:
+									elseif( empty($wrap['attr']['type']) ):
 										foreach ($wrap['items'] as $i => $item) {
 		              		$this->show_items($item, $i, $vb);
 		              	}
@@ -1646,9 +1890,14 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 	              		$q_args['offset'] = $wrap['attr']['query_post_offset'] ?? '0';
 
-	              		if( $q_args['post_type'] == 'post' && !empty($wrap['attr']['query_post_type_post']) ){
-	              			$q_args['category_name'] = $wrap['attr']['query_post_type_post'];
-	              		}else if( function_exists('is_woocommerce') && $q_args['post_type'] == 'product' && !empty($wrap['attr']['query_post_type_product']) ){
+	              		$tax_filter = array();
+	              		$tax_filter_excl = array();
+
+	              		$tax_q = array('relation' => 'AND');
+
+	              		/*if( $q_args['post_type'] == 'post' ){
+	              			if( !empty( $wrap['attr']['query_post_type_post'] ) ) $q_args['category_name'] = $wrap['attr']['query_post_type_post'];
+	              		}else if( function_exists('is_woocommerce') && $wrap['attr']['query_post_type'] == 'product' && !empty($wrap['attr']['query_post_type_product']) ){
 	              			if( $wrap['attr']['query_post_type_product'] == '0-current' ){
 	              				if( is_product_category() ){
 	              					$mfn_queried_object = get_queried_object();
@@ -1676,8 +1925,184 @@ if( ! class_exists('Mfn_Builder_Front') )
 	              		}else if( $q_args['post_type'] == 'testimonial' && !empty($wrap['attr']['query_post_type_testimonial']) ){
 	              			$tax_q = array('relation' => 'AND', array('taxonomy' => 'testimonial-types', 'field' => 'slug', 'terms' => $wrap['attr']['query_post_type_testimonial']));
 	              			$q_args['tax_query'] = $tax_q;
+	              		}*/
+
+
+
+	              		if( $q_args['post_type'] == 'post' ){
+	              			if( !empty( $wrap['attr']['query_post_type_post'] ) ){
+	              				foreach( $wrap['attr']['query_post_type_post'] as $tax_obj){
+		              				$tax_filter[] = $tax_obj['key'];
+		              			}
+		              			if( count($tax_filter) > 0 ){
+		              				$q_args['category__in'] = $tax_filter;
+		              			}
+	              			}
+	              			if( !empty( $wrap['attr']['query_post_type_post_exclude'] ) ){
+	              				foreach( $wrap['attr']['query_post_type_post_exclude'] as $tax_obj){
+		              				$tax_filter_excl[] = $tax_obj['key'];
+		              			}
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$q_args['category__not_in'] = $tax_filter_excl;
+		              			}
+	              			}
+	              		}else if( function_exists('is_woocommerce') && $q_args['post_type'] == 'product' ){
+
+	              			if( !empty($wrap['attr']['query_post_type_product']) ){
+		              			foreach( $wrap['attr']['query_post_type_product'] as $tax_obj){
+		              				if( $tax_obj['key'] == '0-current' ){
+		              					if( is_product_category() ){
+			              					$mfn_queried_object = get_queried_object();
+			              					$tax_filter[] = $mfn_queried_object->term_id;
+			              				}
+		              				}else{
+		              					$tax_filter[] = $tax_obj['key'];
+		              				}
+		              			}
+
+		              			if( count($tax_filter) > 0 ){
+		              				$tax_q[] = array('taxonomy' => 'product_cat', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+		              			}
+		              		}
+
+		              		if( !empty($wrap['attr']['query_post_type_product_exclude']) ){
+		              			foreach( $wrap['attr']['query_post_type_product_exclude'] as $tax_obj){
+		              				if( $tax_obj['key'] == '0-current' ){
+		              					if( is_product_category() ){
+			              					$mfn_queried_object = get_queried_object();
+			              					$tax_filter_excl[] = $mfn_queried_object->term_id;
+			              				}
+		              				}else{
+		              					$tax_filter_excl[] = $tax_obj['key'];
+		              				}
+		              			}
+
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$tax_q[] = array('taxonomy' => 'product_cat', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+		              			}
+		              		}
+
+	              		}else if( $q_args['post_type'] == 'portfolio' ){
+
+	              			if( !empty($wrap['attr']['query_post_type_portfolio']) ){
+		              			foreach( $wrap['attr']['query_post_type_portfolio'] as $tax_obj){
+		              				$tax_filter[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter) > 0 ){
+		              				$tax_q = array('taxonomy' => 'portfolio-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+		              			}
+		              		}
+
+		              		if( !empty($wrap['attr']['query_post_type_portfolio_exclude']) ){
+		              			foreach( $wrap['attr']['query_post_type_portfolio_exclude'] as $tax_obj){
+		              				$tax_filter_excl[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$tax_q = array('taxonomy' => 'portfolio-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+		              			}
+		              		}
+
+	              		}else if( $q_args['post_type'] == 'client' ){
+
+	              			if( !empty($wrap['attr']['query_post_type_client']) ) {
+
+		              			foreach( $wrap['attr']['query_post_type_client'] as $tax_obj){
+		              				$tax_filter[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter) > 0 ){
+		              				$tax_q = array('taxonomy' => 'client-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+		              			}
+
+		              		}
+
+		              		if( !empty($wrap['attr']['query_post_type_client_exclude']) ) {
+
+		              			foreach( $wrap['attr']['query_post_type_client_exclude'] as $tax_obj){
+		              				$tax_filter_excl[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$tax_q = array('taxonomy' => 'client-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+		              			}
+
+		              		}
+
+	              		}else if( $q_args['post_type'] == 'offer' ){
+
+	              			if( !empty($wrap['attr']['query_post_type_offer']) ){
+		              			foreach( $wrap['attr']['query_post_type_offer'] as $tax_obj){
+		              				$tax_filter[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter) > 0 ){
+		              				$tax_q = array('taxonomy' => 'offer-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+		              			}
+
+		              		}
+
+		              		if( !empty($wrap['attr']['query_post_type_offer_exclude']) ){
+		              			foreach( $wrap['attr']['query_post_type_offer_exclude'] as $tax_obj){
+		              				$tax_filter_excl[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$tax_q = array('taxonomy' => 'offer-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+		              			}
+
+		              		}
+
+	              		}else if( $q_args['post_type'] == 'slide' ){
+
+	              			if( !empty($wrap['attr']['query_post_type_slide']) ){
+		              			foreach( $wrap['attr']['query_post_type_slide'] as $tax_obj){
+		              				$tax_filter[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter) > 0 ){
+		              				$tax_q = array('taxonomy' => 'slide-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+		              			}
+		              		}
+
+		              		if( !empty($wrap['attr']['query_post_type_slide_exclude']) ){
+		              			foreach( $wrap['attr']['query_post_type_slide_exclude'] as $tax_obj){
+		              				$tax_filter_excl[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$tax_q = array('taxonomy' => 'slide-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+		              			}
+		              		}
+
+	              		}else if( $q_args['post_type'] == 'testimonial' ){
+
+	              			if( !empty($wrap['attr']['query_post_type_testimonial']) ){
+		              			foreach( $wrap['attr']['query_post_type_testimonial'] as $tax_obj){
+		              				$tax_filter[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter) > 0 ){
+		              				$tax_q = array('taxonomy' => 'testimonial-types', 'field' => 'term_id', 'operator' => 'IN', 'terms' => $tax_filter);
+		              			}
+		              		}
+
+		              		if( !empty($wrap['attr']['query_post_type_testimonial_exclude']) ){
+		              			foreach( $wrap['attr']['query_post_type_testimonial_exclude'] as $tax_obj){
+		              				$tax_filter_excl[] = $tax_obj['key'];
+		              			}
+
+		              			if( count($tax_filter_excl) > 0 ){
+		              				$tax_q = array('taxonomy' => 'testimonial-types', 'field' => 'term_id', 'operator' => 'NOT IN', 'terms' => $tax_filter_excl);
+		              			}
+		              		}
+
 	              		}
 
+	              		if( count($tax_q) > 1 ) $q_args['tax_query'] = $tax_q;
+
+	              		$q_args['post_status'] = 'publish';
 	              		$wrap_posts_query = new WP_Query( $q_args );
 
 	              		if ( $wrap_posts_query->have_posts() ) :
@@ -1768,8 +2193,8 @@ if( ! class_exists('Mfn_Builder_Front') )
         	return;
         }
 
-				if( ! isset( $item['fields'] ) ){
-					$item['fields'] = array();
+				if( ! isset( $item['attr'] ) ){
+					$item['attr'] = isset( $item['fields'] ) && is_array($item['fields']) ? $item['fields'] : array();
 				}
 
 				// unique ID
@@ -1780,8 +2205,8 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 				$item_class[] = 'mcb-item-'. $item['uid'];
 
-				if( !self::$item_id && !empty($item['fields']['vb_postid']) ){
-					self::$item_id = $item['fields']['vb_postid'];
+				if( !self::$item_id && !empty($item['attr']['vb_postid']) ){
+					self::$item_id = $item['attr']['vb_postid'];
 				}
 
 				//echo self::$item_id;
@@ -1810,47 +2235,51 @@ if( ! class_exists('Mfn_Builder_Front') )
 
 				// animate
 
-				if ( ! empty( $item['fields']['animate'] ) ) {
+				if ( ! empty( $item['attr']['animate'] ) ) {
 					$item_class[] = 'animate';
-					$animate = 'data-anim-type="'. $item['fields']['animate'] .'"';
+					$animate = 'data-anim-type="'. $item['attr']['animate'] .'"';
 				}
 
 				// custom classes
 
-				if ( ! empty($item['fields']['classes']) ) {
-					$item_class[] = $item['fields']['classes'];
+				if ( ! empty($item['attr']['classes']) ) {
+					$item_class[] = $item['attr']['classes'];
 				}
 
-				if ( ! empty($item['fields']['width_switcher']) && $item['fields']['width_switcher'] == 'inline' ) {
-					$item_class[] = 'mfn-item-inline';
+				if ( ! empty($item['attr']['width_switcher']) ) {
+					if( $item['attr']['width_switcher'] == 'inline' ){
+						$item_class[] = 'mfn-item-inline';
+					}else if( $item['attr']['width_switcher'] == 'custom' ){
+						$item_class[] = 'mfn-item-custom-width';
+					}
 				}
 
-				if ( ! empty($item['fields']['visibility']) ) {
-					$item_class[] = $item['fields']['visibility'];
+				if ( ! empty($item['attr']['visibility']) ) {
+					$item_class[] = $item['attr']['visibility'];
 				}
 
 				// margin bottom
 
-				if ($item['type'] == 'column' && (! empty($item['fields']['margin_bottom']))) {
-					$item_class[] = 'column-margin-'. $item['fields']['margin_bottom'];
+				if ($item['type'] == 'column' && (! empty($item['attr']['margin_bottom']))) {
+					$item_class[] = 'column-margin-'. $item['attr']['margin_bottom'];
 				}
 
 				// pricing item
 
-				if( 'pricing_item' == $item['type'] && ! empty($item['fields']['style']) ) {
-					$item_class[] = 'pricing_item-style-'. $item['fields']['style'];
+				if( 'pricing_item' == $item['type'] && ! empty($item['attr']['style']) ) {
+					$item_class[] = 'pricing_item-style-'. $item['attr']['style'];
 				}
 
 				// position absolute
 
-				if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:position']) && $item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:position'] == 'absolute' ){
+				if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:position']) && $item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:position'] == 'absolute' ){
 					$item_class[] = 'mfn-column-absolute';
 				}
 
 				// custom id
 
-				if(key_exists('custom_id', $item['fields']) && $item['fields']['custom_id']) {
-					$item_id = 'id="'. $item['fields']['custom_id'] .'"';
+				if(key_exists('custom_id', $item['attr']) && $item['attr']['custom_id']) {
+					$item_id = 'id="'. $item['attr']['custom_id'] .'"';
 				} else {
 					$item_id = false;
 				}
@@ -1858,47 +2287,57 @@ if( ! class_exists('Mfn_Builder_Front') )
 				$item_style = '';
 
 				// ACM new input name
-				if( ! empty( $item['fields']['custom_css'] ) ){
-					$item_style .= $item['fields']['custom_css'];
+				if( ! empty( $item['attr']['custom_css'] ) ){
+					$item_style .= $item['attr']['custom_css'];
 				}
 
 				$desktop_size = $item['size'];
 				$tablet_size = !empty($item['tablet_size']) ? $item['tablet_size'] : $desktop_size;
 				$mobile_size = !empty($item['mobile_size']) ? $item['mobile_size'] : '1/1';
 
-				if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex']) ){
-					$desktop_size = $item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex'];
+				if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex']) ){
+					$desktop_size = $item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex'];
 				}
 
-				if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_tablet']) ){
-					$tablet_size = $item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_tablet'];
+				if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_tablet']) ){
+					$tablet_size = $item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_tablet'];
 				}
 
-				if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_mobile']) ){
-					$mobile_size = $item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_mobile'];
+				if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_mobile']) ){
+					$mobile_size = $item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:flex_mobile'];
 				}
 
-				if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:background-size']) && $item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:background-size'] == 'cover-ultrawide' ){
+				if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:background-size']) && $item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:background-size'] == 'cover-ultrawide' ){
   					$item_class[] = 'bg-cover-ultrawide';
   			}
 
-				if (!empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:transform']) || !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner|hover:transform'])) {
+				if (!empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:transform']) || !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner|hover:transform'])) {
 					$item_class[] = 'mfn-transformed';
 				}
 
-				if( $item['type'] == 'product_images' && !empty($item['fields']['thumbnail_arrows']) ){
+				if( $item['type'] == 'product_images' && !empty($item['attr']['thumbnail_arrows']) ){
 					$item_class[] = 'mfn-thumbnails-arrows-active';
 				}
 
 				$item_class	= implode(' ', $item_class);
 
 				// output -----
+
+				if( mfn_is_blocks() ){
+					$item_style = '';
+					$parallax = '';
+				}
+
 				if( $vb && !$w_iterate ){
 					$tooltip = false;
 
-					if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:hide_under_custom']) ) $tooltip = 'data-position="bottom" data-tooltip="Hide under '.$item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:hide_under_custom'].'"';
+					if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:hide_under_custom']) ){
+						$tooltip = 'data-position="bottom" data-tooltip="Hide under '.$item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:hide_under_custom'].'"';
+					}
 
-					if( !empty($item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:show_under_custom']) ) $tooltip = 'data-position="bottom" data-tooltip="Show under '.$item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:show_under_custom'].'"';
+					if( !empty($item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:show_under_custom']) ){
+						$tooltip = 'data-position="bottom" data-tooltip="Show under '.$item['attr']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement:show_under_custom'].'"';
+					}
 
 					echo '<div '.$tooltip.' '.$item_id.' data-order="'. $i .'"  data-uid="'. $item['uid'] .'" data-minsize="'.$item['size'].'" data-desktop-size="'.$desktop_size.'" data-tablet-size="'.$tablet_size.'" data-mobile-size="'.$mobile_size.'" class="column vb-item mcb-column '. $item_class .'" style="'.$item_style.'">';
 					// echo Mfn_Builder_Helper::itemTools($item['size']);
@@ -1907,15 +2346,22 @@ if( ! class_exists('Mfn_Builder_Front') )
 				}
 
 					// Transforms UI --- visible only when transformed an item
-					if( $vb && !$w_iterate ) {
+					if( $vb && !$w_iterate && !mfn_is_blocks($vb) ) {
 						echo '<div class="mfn-header-transform">';
 							echo Mfn_Builder_Helper::itemTools($desktop_size);
 						echo '</div>';
 					}
 
 					echo '<div class="mcb-column-inner mcb-column-inner-'.$item['uid'].' mcb-item-'.$item['type'].'-inner">';
-						if( $vb && !$w_iterate ) { echo Mfn_Builder_Helper::itemTools($desktop_size); }
-						echo Mfn_Builder_Items::$type( $item['fields'], $vb );
+						if( $vb && !$w_iterate ){
+							echo Mfn_Builder_Helper::itemTools($desktop_size);
+						}
+
+						if( mfn_is_blocks($vb) ){
+							echo Mfn_Builder_Items::blocks( $item, $this->blocks_fields );
+						} else {
+							echo Mfn_Builder_Items::$type( $item['attr'], $vb );
+						}
 					echo '</div>';
 
 				echo '</div>';

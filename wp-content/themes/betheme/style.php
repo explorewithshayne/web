@@ -20,6 +20,7 @@ html{
 .column_livesearch .mfn-live-search-wrapper, .column_livesearch .mfn-live-search-box{
 	background-color: <?php echo esc_attr(mfn_opts_get('background-body', '#FCFCFC')); ?>;
 }
+.layout-boxed.mfn-bebuilder-header.mfn-ui #Wrapper .mfn-only-sample-content{ background-color: <?php echo esc_attr(mfn_opts_get('background-body', '#FCFCFC')); ?>; }
 
 <?php if ( $custom_layout && ( '' !== $layout_header_height ) ) : ?>
 	body:not(.template-slider) #Header{
@@ -941,6 +942,22 @@ h6 {
 		#Wrapper, .with_aside .content_wrapper {
 			max-width: <?php echo esc_attr($gridW); ?>px;
 		}
+		body.layout-boxed.mfn-header-scrolled .mfn-header-tmpl.mfn-sticky-layout-width{
+			max-width: <?php echo esc_attr($gridW); ?>px;
+			left: 0;
+			right: 0;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		body.layout-boxed:not(.mfn-header-scrolled) .mfn-header-tmpl.mfn-header-layout-width,
+		body.layout-boxed .mfn-header-tmpl.mfn-header-layout-width:not(.mfn-hasSticky){
+			max-width: <?php echo esc_attr($gridW); ?>px;
+			left: 0;
+			right: 0;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		body.layout-boxed.mfn-bebuilder-header.mfn-ui .mfn-only-sample-content{ max-width: <?php echo esc_attr($gridW); ?>px; margin-left: auto; margin-right: auto;}
 		.section_wrapper, .container {
 			max-width: <?php echo esc_attr($gridW - 20); ?>px;
 		}
@@ -971,7 +988,7 @@ h6 {
 	?>
 
 	@media only screen and (max-width: 767px){
-		.section_wrapper,
+		.content_wrapper .section_wrapper,
 		.container,
 		.four.columns .widget-area { max-width: <?php echo esc_attr($mobileGridW + 70); ?>px !important; }
 	}

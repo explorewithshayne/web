@@ -30,7 +30,7 @@ if( $has_shop && empty( $shop_icons_hide['user'] ) ){
 	$has_user = true;
 }
 
-$user_icon = trim( mfn_opts_get('shop-user') );
+$user_icon = trim( mfn_opts_get('shop-user') ?? '' );
 
 // shop wishlist
 
@@ -38,7 +38,7 @@ if( $has_shop && empty( $shop_icons_hide['wishlist'] ) && mfn_opts_get('shop-wis
 	$has_wishlist = true;
 }
 
-$wishlist_icon = trim( mfn_opts_get('shop-icon-wishlist') );
+$wishlist_icon = trim( mfn_opts_get('shop-icon-wishlist') ?? '' );
 
 // shop cart
 
@@ -46,7 +46,7 @@ if( $has_shop && empty( $shop_icons_hide['cart'] ) ){
 	$has_cart = true;
 }
 
-$cart_icon = trim( mfn_opts_get('shop-cart') );
+$cart_icon = trim( mfn_opts_get('shop-cart') ?? '' );
 
 // search
 

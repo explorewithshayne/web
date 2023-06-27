@@ -32,22 +32,37 @@ class MFN_Options_checkbox_pseudo extends Mfn_Options_field
 
 					foreach ( $this->field['options'] as $k => $v ) {
 
-						$check = false;
-						$class = false;
+						$class_js = '';
 
-						if( in_array($k, array('full-screen', 'full-width', 'equal-height', 'equal-height-wrap')) && !in_array( $k, $values ) ) continue;
+						// deprecated
 
-						if ( in_array( $k, $values ) ) {
-							$check = $k;
-							$class = "active";
-						}
+						if( in_array($k, array('full-screen', 'full-width', 'equal-height', 'equal-height-wrap')) && !in_array( $k, $values ) ) {
+							if( $js ){
+								// in visual builder we do not know values here
+								$class_js = 'mfn-deprecated';
+							} else {
+								continue;
+							}
+						};
 
 						if( $js ){
-							echo '<li class="\'+('.$js.' && '.$js.'.includes(\''. esc_attr($k) .'\') ? "active" : "") +\'">';
-							echo '<input type="checkbox" class="mfn-form-checkbox" \'+('.$js.' && '.$js.'.includes(\''. esc_attr($k) .'\') ? "checked" : "") +\' value="'. esc_attr( $k ) .'" />';
+
+							echo '<li class="'.$class_js.' \'+('.$js.' && '.$js.'.split(\' \').includes(\''. esc_attr($k) .'\') ? "active" : "") +\'">';
+								echo '<input type="checkbox" class="mfn-form-checkbox" \'+('.$js.' && '.$js.'.includes(\''. esc_attr($k) .'\') ? "checked" : "") +\' value="'. esc_attr( $k ) .'" />';
+
 						}else{
+
+							$check = false;
+							$class = '';
+
+							if ( in_array( $k, $values ) ) {
+								$check = $k;
+								$class = "active";
+							}
+
 							echo '<li class="'. esc_attr( $class ) .'">';
-							echo '<input type="checkbox" class="mfn-form-checkbox" value="'. esc_attr( $k ) .'" '. checked( $check, $k, false ) .' />';
+								echo '<input type="checkbox" class="mfn-form-checkbox" value="'. esc_attr( $k ) .'" '. checked( $check, $k, false ) .' />';
+
 						}
 
 							echo '<span class="title">'. wp_kses( $v, mfn_allowed_html('desc') ) .'</span>';

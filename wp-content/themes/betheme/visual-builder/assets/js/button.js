@@ -11,7 +11,7 @@
 		//PBL
 		createFilteredLink: function() {
 
-			if( wp.data.select("core/editor") == null ) return;
+			/*if( wp.data.select("core/editor") == null ) return;
 
 			var getThemeName = $('#mfn-builder').attr('data-label');
 			var getThemeLogo = $('.betheme-custom-logo').attr('src') ? `style="background-image:url('${ $(".betheme-custom-logo").attr("src") }')"` : "";
@@ -22,16 +22,18 @@
 			}
 
 			// basic, original code
-			return '<a href="post.php?post='+wp.data.select("core/editor").getCurrentPostId()+'&action='+ getThemeSlug +'-live-builder" class="mfn-live-edit-page-button mfn-switch-live-editor">Edit with BeBuilder</a>';
+			return '<a href="post.php?post='+wp.data.select("core/editor").getCurrentPostId()+'&action='+ getThemeSlug +'-live-builder" class="mfn-live-edit-page-button mfn-switch-live-editor">Edit with BeBuilder</a>';*/
+
+			if( $('.mfn-switch-live-editor').length ) return $('.mfn-switch-live-editor').clone();
 		},
 
 		addButton: function() {
 			var that = this;
 			setTimeout(function() {
-				if( !$('#editor .mfn-live-edit-page-button').length ){
+				//if( !$('#editor .mfn-live-edit-page-button').length ){
 					$('#editor').find('.edit-post-header .edit-post-header__toolbar').append( that.createFilteredLink() );
 					MfnGutenberg.buttonAction();
-				}
+				//}
 			}, 2000);
 		},
 

@@ -10,7 +10,7 @@
     <div class="input-wrapper">
       <i class="icon-search-line"></i>
       <!-- <i class="icon-cancel-fine"></i> -->
-      <input class="search" type="text" placeholder="Search for a website" autocomplete="off">
+      <input class="search" type="text" placeholder="<?php _e('Search for a website','mfn-opts'); ?>" autocomplete="off">
       <!-- <span class="close"></span> -->
     </div>
   </div>
@@ -21,7 +21,7 @@
       <div class="sidebar__inner">
 
         <div class="filters-group first">
-          <h4>Layout</h4>
+          <h4><?php _e('Layout','mfn-opts'); ?></h4>
           <nav>
             <ul class="layout" data-filter-group="layout">
               <?php
@@ -34,7 +34,7 @@
         </div>
 
         <div class="filters-group second">
-          <h4>Subject</h4>
+          <h4><?php _e('Subject','mfn-opts'); ?></h4>
           <nav>
             <ul class="subject" data-filter-group="subject">
               <?php
@@ -51,7 +51,7 @@
 
     <section class="websites">
 
-      <div class="results" data-count="<?php echo $this->count['all'];?>"><strong>All <?php echo $this->count['all'];?></strong> pre-built websites</div>
+      <div class="results" data-count="<?php echo $this->count['all'];?>"><strong><?php _e('All','mfn-opts'); ?> <?php echo $this->count['all'];?></strong> <?php _e('pre-built websites','mfn-opts'); ?></div>
 
       <div class="websites-iso">
         <?php $this->the_websites( 0, $this->count['all'] ); ?>

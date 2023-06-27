@@ -12,7 +12,9 @@
 
       e.preventDefault();
 
-      if ( confirm( "Continue?" ) ) {
+      var confirmed = $(this).attr('data-confirm');
+
+      if ( confirmed || confirm( "Continue?" ) ) {
 
         var el = $(this),
           ajax = el.attr('data-ajax'),

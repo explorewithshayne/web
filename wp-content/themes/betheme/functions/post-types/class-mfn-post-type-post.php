@@ -110,6 +110,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
       	'fields' => array(
 
       			array(
+      				'type' => 'header',
   					'title' => __('Header & Footer', 'mfn-opts'),
   				),
 
@@ -118,7 +119,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
   					'type' => 'select',
   					'title' => __('Custom Header Template', 'mfn-opts'),
   					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=header">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
-  					'options' => mfna_templates('header'),
+  					'php_options' => mfna_templates('header'),
   					'js_options' => 'headers',
   				),
 
@@ -127,13 +128,14 @@ if (! class_exists('Mfn_Post_Type_Post')) {
   					'type' => 'select',
   					'title' => __('Custom Footer Template', 'mfn-opts'),
   					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=footer">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
-  					'options' => mfna_templates('footer'),
+  					'php_options' => mfna_templates('footer'),
   					'js_options' => 'footers',
   				),
 
 					// layout
 
   				array(
+  					'type' => 'header',
   					'title' => __('Layout', 'mfn-opts'),
   				),
 
@@ -171,7 +173,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
   					'type' => 'select',
   					'title' => __('Sidebar', 'mfn-opts'),
   					'desc' => __('Shows only if layout with sidebar is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+  					'php_options' => mfn_opts_get('sidebars'),
   					'js_options' => 'sidebars',
   				),
 
@@ -180,7 +182,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
   					'type' => 'select',
   					'title' => __('Sidebar 2nd', 'mfn-opts'),
   					'desc' => __('Shows only if layout with both sidebars is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+  					'php_options' => mfn_opts_get('sidebars'),
   					'js_options' => 'sidebars',
   				),
 
@@ -198,6 +200,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
       		// media
 
   				array(
+  					'type' => 'header',
   					'title' => __('Media', 'mfn-opts'),
   				),
 
@@ -205,7 +208,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
   					'id' => 'mfn-post-slider',
   					'type' => 'select',
   					'title' => __('Slider Revolution', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('rev'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('rev'),
   					'js_options' => 'rev_slider',
   				),
 
@@ -213,7 +216,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
   					'id' => 'mfn-post-slider-layer',
   					'type' => 'select',
   					'title' => __('Layer Slider', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('layer'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('layer'),
   					'js_options' => 'layer_slider',
   				),
 
@@ -246,6 +249,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
       		// options
 
       		array(
+      			'type' => 'header',
       			'title' => __('Options', 'mfn-opts'),
       		),
 
@@ -298,6 +302,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
       		// advanced
 
 					array(
+						'type' => 'header',
       			'title' => __('Advanced', 'mfn-opts'),
       		),
 
@@ -318,6 +323,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
 					// intro
 
 					array(
+						'type' => 'header',
       			'title' => __('Intro header', 'mfn-opts'),
       		),
 
@@ -337,6 +343,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
 					// seo
 
   				array(
+  					'type' => 'header',
   					'title' => __('SEO', 'mfn-opts'),
   				),
 
@@ -368,6 +375,7 @@ if (! class_exists('Mfn_Post_Type_Post')) {
 					// custom css
 
 					array(
+						'type' => 'header',
 						'title' => __('Custom CSS', 'mfn-opts'),
 					),
 

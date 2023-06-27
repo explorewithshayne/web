@@ -95,9 +95,11 @@ if (is_array($creative_options)) {
 
 				<?php get_template_part('includes/header', 'top-bar-right'); ?>
 
+				<?php if( !empty(mfn_opts_get('header-banner')) ): ?>
 				<div class="banner_wrapper">
 					<?php echo wp_kses_post(mfn_opts_get('header-banner')); ?>
 				</div>
+				<?php endif; ?>
 
 			</div>
 		</div>

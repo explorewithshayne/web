@@ -57,7 +57,7 @@
 
 		<div class="modalbox-footer">
 			<div class="options-group right">
-				<a class="mfn-btn mfn-btn-blue btn-modal-save btn-save-template-type" href="#"><span class="btn-wrapper">Create template</span></a>
+				<a class="mfn-btn mfn-btn-blue btn-modal-save btn-save-template-type" data-builder="<?php echo apply_filters('betheme_slug', 'mfn'); ?>" href="#"><span class="btn-wrapper">Create template</span></a>
 				<a class="mfn-btn btn-modal-close" href="edit.php?post_type=template"><span class="btn-wrapper">Cancel</span></a>
 			</div>
 		</div>

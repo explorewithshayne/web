@@ -63,6 +63,13 @@ echo '<ul class="social" role="navigation" aria-label="'. __('social menu', 'bet
 				$item = mfna_social($social);
 
 				if( ! empty( $social_links[$social] ) ){
+
+					// add missing https://
+					$re = '/\/\/|#/';
+					if( ! preg_match($re, $social_links[$social]) ){
+						$social_links[$social] = 'https://'. $social_links[$social];
+					}
+
 					echo '<li class="'. esc_attr($social) .'"><a '. $attr .' href="'. esc_attr( $social_links[$social] ) .'" title="'. esc_html($item['title']) .'" aria-label="'. esc_html($item['title']) .' icon"><i class="'. esc_attr($item['icon']) .'"></i></a></li>';
 				}
 

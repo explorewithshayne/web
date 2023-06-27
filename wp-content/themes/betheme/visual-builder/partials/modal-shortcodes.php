@@ -44,7 +44,7 @@ if( ! defined( 'ABSPATH' ) ){
 		<?php
 			foreach ( $inline_shortcodes as $shortcode ) {
 				echo '<div class="mfn-isc-builder-'. esc_attr( $shortcode['type'] ) .'" data-shortcode="'. esc_attr( $shortcode['type'] ) .'">';
-					foreach( $shortcode['fields'] as $sc_field ){
+					foreach( $shortcode['attr'] as $sc_field ){
 
 						$sc_placeholder = '';
 

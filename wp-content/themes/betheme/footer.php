@@ -33,6 +33,8 @@ if ($back_to_top_class == 'hide') {
 }
 ?>
 
+<?php if( ! mfn_is_blocks() ): ?>
+
 <?php do_action('mfn_hook_content_after'); ?>
 
 <?php
@@ -221,7 +223,7 @@ if( $footer_tmp_id ){
 	if( empty($_GET['visual']) ){
 		$mfn_popups = mfn_addons_ID('popup');
 
-		if( is_array($mfn_popups) && count($mfn_popups) > 0){
+		if( isset($mfn_popups) && is_array($mfn_popups) && count($mfn_popups) > 0){
 			foreach ($mfn_popups as $popup_tmpl_id) {
 				if( get_post_status($popup_tmpl_id) == 'publish' ){
 					$popup = new MfnPopup($popup_tmpl_id);
@@ -233,11 +235,17 @@ if( $footer_tmp_id ){
 
 ?>
 
+<?php else: // mfn_is_blocks() ?>
+
+	</div>
+
+<?php endif; ?>
+
 <?php do_action('mfn_hook_bottom'); ?>
+
 <?php do_action('mfn_wp_footer_before'); ?>
 
 <?php wp_footer(); ?>
-
 
 <?php do_action('mfn_demo_builder'); ?>
 

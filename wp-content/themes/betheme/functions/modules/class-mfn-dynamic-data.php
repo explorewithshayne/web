@@ -16,8 +16,8 @@ class MfnDynamicData {
 
 		if( strpos($string, '{') === false ) return $string;
 
-		//preg_match_all( '/(.*?)\{(.*)\}\.?(.*[^;]+)?/m', $string, $match );
-		preg_match_all( '/\{([^<>&\/\[\]\x00-\x20=]++)/', $string, $match );
+		preg_match_all( '/\{([^<>&\/\{\]\x00-\x20=]++)/', $string, $match );
+		//preg_match_all( '@\{([^<>&/\[\]\x00-\x20=]++)@', $string, $match );
 
 		/*echo '<pre>';
 		print_r($match);
@@ -65,6 +65,8 @@ class MfnDynamicData {
 			if( !$this->id && $post_id ) $this->id = $post_id;
 			if( !$this->id && !empty(Mfn_Builder_Front::$item_id) ) $this->id = Mfn_Builder_Front::$item_id;
 			if( !$this->second_param && !empty(Mfn_Builder_Front::$item_type) ) $this->second_param = Mfn_Builder_Front::$item_type;
+
+			if( !$this->id && is_singular() ) $this->id = get_the_ID();
 
 		}else if( !empty(Mfn_Builder_Front::$item_id) ){
 			$this->id = Mfn_Builder_Front::$item_id;
@@ -122,27 +124,28 @@ class MfnDynamicData {
 
 	public function featured_image(){
 
-		//echo $this->id.' x/x '.$this->second_param;
+		// echo $this->id.' / '.$this->second_param;
 
 		if( $this->second_param && $this->second_param == 'site' ){
 			return mfn_opts_get('logo-img', get_theme_file_uri('/images/logo/logo.png'));
 		}else if( $this->second_param && $this->second_param == 'term' ){
 			$term = get_term($this->id);
 			if( get_term_meta( $term->term_id, 'thumbnail_id', true ) ){
-				return wp_get_attachment_url( get_term_meta( $term->term_id, 'thumbnail_id', true ), 'full' );
+				//return wp_get_attachment_url( get_term_meta( $term->term_id, 'thumbnail_id', true ), 'full' );
+				return get_term_meta( $term->term_id, 'thumbnail_id', true );
 			}else{
 				return get_theme_file_uri('/muffin-options/svg/placeholders/image.svg');
 			}
 		}else if( $this->id ){
 			if( has_post_thumbnail($this->id) ) {
 				if( $this->second_param && $this->second_param == 'tag' ){
-					return '<img src="'.get_the_post_thumbnail_url($this->id, 'full').'" alt="">';
+					return get_the_post_thumbnail( $this->id, 'full' );
 				}else{
-					return get_the_post_thumbnail_url($this->id, 'full');
+					return get_post_thumbnail_id($this->id, 'full');
 				}
 			}else{
 				if( $this->second_param && $this->second_param == 'tag' ){
-					return '<img src="'.get_the_post_thumbnail_url($this->id, 'full').'" alt="">';
+					return '<img src="'.get_theme_file_uri('/muffin-options/svg/placeholders/image.svg').'" alt="">';
 				}else{
 					return get_theme_file_uri('/muffin-options/svg/placeholders/image.svg');
 				}
@@ -150,20 +153,20 @@ class MfnDynamicData {
 		}else if( function_exists('is_woocommerce') && is_product_category() ){
 			$qo = get_queried_object();
 			if( get_term_meta( $qo->term_id, 'thumbnail_id', true ) ){
-				return wp_get_attachment_url( get_term_meta( $qo->term_id, 'thumbnail_id', true ), 'full' );
+				return get_post_thumbnail_id( get_term_meta( $qo->term_id, 'thumbnail_id', true ), 'full' );
 			}else{
 				return get_theme_file_uri('/muffin-options/svg/placeholders/image.svg');
 			}
 		}else if( function_exists('is_woocommerce') && is_shop() ){
 			if( has_post_thumbnail(wc_get_page_id('shop')) ) {
-				return get_the_post_thumbnail_url(wc_get_page_id('shop'), 'full');
+				return get_post_thumbnail_id( wc_get_page_id('shop'), 'full');
 			}else{
 				return get_theme_file_uri('/muffin-options/svg/placeholders/image.svg');
 			}
 			
 		}else if( is_home() && get_option( 'page_for_posts' ) ){
 			if( has_post_thumbnail( get_option( 'page_for_posts' ) ) ) {
-				return get_the_post_thumbnail_url( get_option( 'page_for_posts' ), 'full' );
+				return get_post_thumbnail_id( get_option( 'page_for_posts' ), 'full' );
 			}else{
 				return get_theme_file_uri('/muffin-options/svg/placeholders/image.svg');
 			}
@@ -202,6 +205,7 @@ class MfnDynamicData {
 		//echo '<br>'.$this->id.' x/x '.$this->second_param;
 
 		if( (is_singular() || $this->id) && $this->second_param != 'term' ){
+			if( function_exists('is_woocommerce') && !empty(wc_get_page_id('shop')) && wc_get_page_id('shop') == $this->id ) return false;
 			return get_the_content($this->id);
 		}else if( $this->second_param && $this->second_param == 'term' ){
 			$term = get_term($this->id);
@@ -304,7 +308,7 @@ class MfnDynamicData {
 	public function acf(){
 		if( !class_exists( 'ACF' ) ) return 'ACF is not installed.';
 
-		$string = 'ACF field doesn\'t exists.';
+		$string = '';
 
 		if( get_field($this->second_param, $this->id ) ){
 			$string = get_field($this->second_param, $this->id );
@@ -318,7 +322,7 @@ class MfnDynamicData {
 
 		$product = wc_get_product($this->id);
 
-		if( !$product ) return 'Price unaivailable';
+		if( !$product ) return 'Price unavailable';
 
 		return $product->get_price_html();
 

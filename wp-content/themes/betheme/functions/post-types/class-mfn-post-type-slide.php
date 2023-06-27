@@ -156,7 +156,7 @@ if (! class_exists('Mfn_Post_Type_Slide')) {
 			switch ($column) {
 				case "slide_thumbnail":
 					if (has_post_thumbnail()) {
-						the_post_thumbnail('50x50');
+						the_post_thumbnail('thumbnail');
 					}
 					break;
 				case "slide_types":

@@ -137,7 +137,7 @@ echo '<div class="logo'. esc_attr($logo_class) .'">';
 					$svg = 'svg';
 				}
 
-				echo '<img class="logo-'. esc_attr( $logo_key ) .' scale-with-grid '. esc_attr( $svg ) .'" src="'. esc_url( $logo_src ) .'" data-retina="'. esc_url( $logo['retina'][$logo_key] ) .'" data-height="'. esc_attr( mfn_get_attachment_data( $logo_src, 'height' ) ) .'" alt="'. esc_attr( mfn_get_attachment_data( $logo_src, 'alt' ) ) .'" data-no-retina/>';
+				echo '<img class="logo-'. esc_attr( $logo_key ) .' scale-with-grid '. esc_attr( $svg ) .'" src="'. esc_url( $logo_src ?? '' ) .'" data-retina="'. esc_url( $logo['retina'][$logo_key] ?? '' ) .'" data-height="'. esc_attr( mfn_get_attachment_data( $logo_src, 'height' ) ) .'" alt="'. esc_attr( mfn_get_attachment_data( $logo_src, 'alt' ) ) .'" data-no-retina/>';
 			}
 
 		}

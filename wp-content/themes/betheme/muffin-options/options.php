@@ -85,6 +85,7 @@ if ( ! class_exists( 'MFN_Options' ) ) {
 			add_action( 'mfn-opts-page-before-form', array( $this, '_cache_manager' ), 11 );
 			add_action( 'mfn-opts-page-before-form', array( $this, '_flush_cache' ), 12 );
 
+
 			// get the options for use later on
 			$this->options = get_option( $this->args['opt_name'] );
 		}
@@ -160,8 +161,7 @@ if ( ! class_exists( 'MFN_Options' ) ) {
 		 * This is used to return and option value from the options array
 		 */
 
-		public function get( $opt_name, $default = null )
- 		{
+		public function get( $opt_name, $default = null ) {
  			if( ! is_array( $this->options ) ){
  				return $default;
  			}
@@ -271,16 +271,19 @@ if ( ! class_exists( 'MFN_Options' ) ) {
 				$screen = $screen->base;
 			}
 
+			$slug_betheme = apply_filters('betheme_slug', 'betheme');
+			$slug_be = apply_filters('betheme_slug', 'be');
+
 			$be_dark = array(
-				'toplevel_page_betheme',
-				'betheme_page_be-setup',
-				'betheme_page_be-plugins',
-				'betheme_page_be-websites',
-				'betheme_page_be-options',
-				'betheme_page_be-status',
-				'betheme_page_be-support',
-				'betheme_page_be-changelog',
-				'betheme_page_be-tools',
+				'toplevel_page_'. $slug_betheme,
+				$slug_betheme .'_page_'. $slug_be .'-setup',
+				$slug_betheme .'_page_'. $slug_be .'-plugins',
+				$slug_betheme .'_page_'. $slug_be .'-websites',
+				$slug_betheme .'_page_'. $slug_be .'-options',
+				$slug_betheme .'_page_'. $slug_be .'-status',
+				$slug_betheme .'_page_'. $slug_be .'-support',
+				$slug_betheme .'_page_'. $slug_be .'-changelog',
+				$slug_betheme .'_page_'. $slug_be .'-tools',
 			);
 
 			// dark mode
@@ -452,6 +455,13 @@ if ( ! class_exists( 'MFN_Options' ) ) {
 			if ( function_exists('w3tc_flush_all') ){
 				w3tc_flush_all();
 			}
+
+			// generate bebuilder file
+
+			if( empty( $this->options['builder-visibility'] ) || 'hide' !== $this->options['builder-visibility'] ){
+				Mfn_Helper::generate_bebuilder_items();
+			}
+
 		}
 
 		/**
@@ -815,7 +825,7 @@ if ( ! class_exists( 'MFN_Options' ) ) {
 
 		function _field_input( $field ){
 
-			if( empty( $field['type'] ) ){
+			if( empty( $field['type'] ) || $field['type'] == 'header' ){
 				return false;
 			}
 
@@ -998,7 +1008,7 @@ if ( ! class_exists( 'MFN_Options' ) ) {
           $class = $field['args']['class'];
         }
 
-				if( empty( $field['args']['type'] ) ){
+				if( empty( $field['args']['type'] ) || $field['args']['type'] == 'header' ){
 
 					// card wrapper
 

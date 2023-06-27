@@ -52,11 +52,15 @@ echo '<div class="sidebar-menu">
 	          echo '<li class="menu-options"><a data-position="right" id="page-options-tab" class="mfn-view-options-tab" href="#" data-tooltip="Mega menu options">Options</a></li>';
 	      }elseif( $this->template_type && $this->template_type == 'popup' ) {
 	          echo '<li class="menu-options"><a data-position="right" id="page-options-tab" class="mfn-view-options-tab" href="#" data-tooltip="Popup options">Options</a></li>';
+	      }elseif( $this->template_type && $this->template_type == 'sidemenu' ) {
+	          echo '<li class="menu-options"><a data-position="right" id="page-options-tab" class="mfn-view-options-tab" href="#" data-tooltip="Sidemenu options">Options</a></li>';
+	      }elseif( $this->template_type ) {
+	          echo '<li class="menu-options"><a data-position="right" id="page-options-tab" class="mfn-view-options-tab" href="#" data-tooltip="Template options">Options</a></li>';
 	      }else{
 	          echo '<li class="menu-options"><a data-position="right" id="page-options-tab" class="mfn-view-options-tab" href="#" data-tooltip="Page options'. ( ! is_admin() ? ' (Unavailable in Demo)' : '' ) .'">Options</a></li>';
 	      }
 
-	      echo '<li class="menu-themeoptions"><a data-tooltip="Theme options'. ( ! is_admin() ? ' (Unavailable in Demo)' : '' ) .'" data-position="right" href="#">Theme options</a></li>';
+	      if( current_user_can( 'edit_theme_options' ) ) echo '<li class="menu-themeoptions"><a data-tooltip="Theme options'. ( ! is_admin() ? ' (Unavailable in Demo)' : '' ) .'" data-position="right" href="#">Theme options</a></li>';
 
 	      echo '<li class="menu-settings"><a data-tooltip="Settings'. ( ! is_admin() ? ' (Unavailable in Demo)' : '' ) .'" class="mfn-settings-tab" data-position="right" href="#">Settings</a></li>';
 

@@ -230,6 +230,14 @@
 .mfn-card[data-card="integrations"] .plugin-item img { max-width: auto; max-height: 60px; margin-bottom: 20px; }
 
 
+/*********** Header: Performance */
+.mfn-card[data-card="performance"] .card-title-group:not(:first-child) { flex-grow: 0; }
+.mfn-card[data-card="performance"] .card-logos-group { display: flex; margin-left: auto; margin-right: 40px; }
+.mfn-card[data-card="performance"] .card-header { border-bottom: 0; padding: 20px; }
+.mfn-card[data-card="performance"] .logo-pagespeed { margin-right: 20px; }
+.mfn-card[data-card="performance"] .mfn-btn { margin-bottom: 0; }
+
+
 /*********** Header: Plugin item */
 .mfn-card[data-card="plugin-item"] { position: relative; text-align: center; }
 .mfn-card[data-card="plugin-item"] .plugin-logo { height: 130px; display: flex; align-items: center; justify-content: center; line-height: 0; border-bottom: 1px solid var(--mfn-ui-card-border); margin-bottom: 20px; margin-top: -20px; }
@@ -296,6 +304,8 @@
 .mfn-card[data-card="tool-item"] .tool-logo span.delete-history b { color: #e94448; }
 .mfn-card[data-card="tool-item"] .tool-logo span.regenerate-thumbnails { background-color: rgba(46, 174, 66, 0.11); }
 .mfn-card[data-card="tool-item"] .tool-logo span.regenerate-thumbnails b { color: #489c6d; }
+.mfn-card[data-card="tool-item"] .tool-logo span.analyze-builder { background-color: rgba(153, 53, 253, 0.11); }
+.mfn-card[data-card="tool-item"] .tool-logo span.analyze-builder b { color: #e62fe3; }
 .mfn-card[data-card="tool-item"] .tool-logo img { max-width: auto; max-height: 40px; }
 .mfn-card[data-card="tool-item"] .mfn-btn { margin: 0; }
 
@@ -394,7 +404,7 @@
 /****************************** Responsive ******************************/
 
 @media only screen and (max-height: 800px) and (min-width: 783px) {
-  [data-page="options"] .mfn-dashboard-menu{position:unset}
+  [data-page="options"] .mfn-dashboard-menu{position:unset;width:100%}
   .mfn-options > form{padding-top:0}
   .mfn-options .mfn-subheader.sticky{top:31px!important}
 }
@@ -466,6 +476,11 @@
     .mfn-card[data-card="integrations"] .plugin-item { border-right: unset; border-bottom: 1px solid var(--mfn-ui-card-border); padding: 40px 30px 25px; }
     .mfn-card[data-card="integrations"] .plugin-item:first-child {padding-top: 10px; }
     .mfn-card[data-card="integrations"] .plugin-item:last-child { border-bottom: 0; padding-bottom: 0; }
+
+    .mfn-card[data-card="performance"] .card-header { flex-wrap: wrap; }
+    .mfn-card[data-card="performance"] .card-logos-group { margin: 15px 0; }
+    .mfn-card[data-card="performance"] .card-logos-group,
+    .mfn-card[data-card="performance"] .card-buttons-group { flex-basis: 100%; text-align: center;}
 
     .mfn-card[data-card="support-info"] .support-item { border-right: unset; border-bottom: 1px solid rgba(48,64,80,.1); }
     .mfn-ui-dark .mfn-card[data-card="support-info"] .support-item { border-color: rgba(48,64,80,.4); }

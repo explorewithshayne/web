@@ -19,6 +19,9 @@ if (! class_exists('Mfn_Post_Type_Icons')) {
 		 * Mfn_Post_Type_Icons constructor
 		 */
 
+		public $path_be = '';
+		public $path_icons = '';
+
 		public function __construct()
 		{
 			parent::__construct();

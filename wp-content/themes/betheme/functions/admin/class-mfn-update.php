@@ -19,7 +19,10 @@ class Mfn_Update extends Mfn_API {
 		add_filter( 'pre_set_site_transient_update_themes', array( $this, 'pre_set_site_transient_update_themes' ) );
 
 		// Prepares themes for JavaScript
-		add_filter( 'wp_prepare_themes_for_js', array( $this, 'autoupdate' ), 10, 2 );
+		// add_filter( 'wp_prepare_themes_for_js', array( $this, 'autoupdate' ), 10, 2 );
+
+		// This action runs when WordPress completes its upgrade process
+		add_action( 'upgrader_process_complete', array( $this, 'upgrader_process_complete' ), 10, 2 );
 
 	}
 
@@ -45,10 +48,6 @@ class Mfn_Update extends Mfn_API {
 				'code' => $this->code,
 			);
 
-			if( mfn_is_hosted() ){
-				$args[ 'ish' ] = mfn_get_ish();
-			}
-
 			$transient->response[ $theme_template ] = array(
 				'theme' => $theme_template,
 				'new_version' => $new_version,
@@ -59,6 +58,43 @@ class Mfn_Update extends Mfn_API {
 		}
 
 		return $transient;
+	}
+
+	/**
+	 * This function runs when WordPress completes its upgrade process
+	 * It iterates through each plugin updated to see if ours is included
+	 * @param $upgrader_object Array
+	 * @param $options Array
+	 */
+
+	function upgrader_process_complete( $upgrader_object, $options ) {
+
+		// print_r( [$upgrader_object, $options] );
+
+		if( $options['action'] == 'update' && $options['type'] == 'theme' && isset( $options['themes'] ) ) {
+			foreach( $options['themes'] as $theme ) {
+
+				if( 'betheme' == $theme ){
+
+					$version = MFN_THEME_VERSION;
+					$updates = get_site_option( 'betheme_updates_history' );
+
+					if( empty($updates) ){
+						$updates = [];
+					}
+
+					$updates[] = [
+						'time' => time(),
+						'version' => $version,
+					];
+
+					update_site_option( 'betheme_updates_history', $updates );
+
+				}
+
+			}
+		}
+
 	}
 
 	/**

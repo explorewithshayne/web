@@ -20,8 +20,9 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 		private $options = [];
 		private $theme_options = [];
 		private $preview = true; // items preview
+		private $blocks_classic = false; // classic bebuilder blocks in admin
 
-	public $global_sections = [];
+		public $global_sections = [];
 
     private $sizes = [
       '1/6' => '0.1666',
@@ -61,9 +62,15 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 				return true;
 			}
 
-      // first action hooked into the admin scripts actions
       if( empty( $_GET['action'] ) || $_GET['action'] != 'mfn-live-builder' ){
-  			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+
+				if( mfn_opts_get('builder-blocks') ){
+					$this->blocks_classic = true;
+				}
+
+				// first action hooked into the admin scripts actions
+				add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+
   		}
 
 			// get inline shortcodes
@@ -77,7 +84,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 		public function set_fields(){
 
-			$this->fields = new Mfn_Builder_Fields( );
+			$this->fields = new Mfn_Builder_Fields( false, 'admin' );
 
 		}
 
@@ -95,7 +102,9 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 			// builder scripts
 
-  		wp_enqueue_script( 'mfn-builder', get_theme_file_uri( '/functions/builder/assets/builder.js' ), array( 'jquery' ), MFN_THEME_VERSION, true );
+			if( $this->blocks_classic ){
+				wp_enqueue_script( 'mfn-builder', get_theme_file_uri( '/functions/builder/assets/builder.js' ), array( 'jquery' ), MFN_THEME_VERSION, true );
+			}
 
   	}
 
@@ -135,7 +144,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
     public static function field( $field, $value, $type = 'meta', $item_id = false )
   	{
-      if( empty( $field['type'] ) ){
+      if( empty( $field['type'] ) || $field['type'] == 'header' ){
         return;
       }
 
@@ -165,12 +174,12 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 				$row_class = $field['class'];
 			}
 
-			// if( ! empty( $field['id'] ) ){
-			// 	$row_class .= ' '. $field['id'];
-			// }
-
 			if( ! empty( $field['row_class'] ) ){
 				$row_class .= ' '. $field['row_class'];
+			}
+
+			if( ! empty( $field['responsive'] ) ){
+				$row_class .= ' mfn_field_'. $field['responsive'];
 			}
 
 			// id
@@ -597,7 +606,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 					foreach ( $section_fields as $field ) {
 
-						if( empty( $field['type'] ) ){
+						if( $field['type'] == 'header' || empty( $field['type'] ) ){
 
 							// row header
 
@@ -785,7 +794,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 					foreach ( $wrap_fields as $field ) {
 
-						if( empty( $field['type'] ) ){
+						if( $field['type'] == 'header' || empty( $field['type'] ) ){
 
 							// row header
 
@@ -855,6 +864,10 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
   		$item_fields = $this->fields->get_item_fields( $item_type );
 
+			if( $item  && ! isset( $item['attr'] ) ){
+				$item['attr'] = ! empty($item['fields']) ? $item['fields'] : [];
+			}
+
 			// size
 
 			if( empty( $item['size'] ) ){
@@ -879,8 +892,8 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 			$label = false;
 
-			if( ! empty( $item['fields']['title'] ) ){
-				$label = $item['fields']['title'];
+			if( ! empty( $item['attr']['title'] ) ){
+				$label = $item['attr']['title'];
 			}
 
 			// google fonts used in the inline editor: blockquote, colum, visual
@@ -942,7 +955,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 					$preview_empty = [];
 					$preview_tabs_primary = 'title';
 
-					foreach ( $item_fields['fields'] as $field ) {
+					foreach ( $item_fields['attr'] as $field ) {
 						if ( isset( $field['preview'] ) ){
 
 							$prev_key = $field['preview'];
@@ -950,13 +963,13 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 							// existing item or default value
 
-							if( isset( $item['fields'] ) ){
+							if( isset( $item['attr'] ) ){
 
-								if( isset( $item['fields'][$prev_id] ) ){
-									$preview[$prev_key] = $item['fields'][$prev_id];
+								if( isset( $item['attr'][$prev_id] ) ){
+									$preview[$prev_key] = $item['attr'][$prev_id];
 								}
 
-								if( 'tabs' === $field['type'] && empty( $item['fields']['tabs'] ) ){
+								if( 'tabs' === $field['type'] && empty( $item['attr']['tabs'] ) ){
 									$preview[$prev_key] = '';
 								}
 
@@ -1097,8 +1110,8 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 									// existing item or default value
 
-									if( isset( $item['fields'] ) ){
-										$item_style = str_replace( array( ',', ' ' ), '-', $item['fields']['style'] );
+									if( isset( $item['attr'] ) ){
+										$item_style = str_replace( array( ',', ' ' ), '-', $item['attr']['style'] );
 									} else {
 										$item_style = 'grid';
 									}
@@ -1146,7 +1159,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 					// item | meta fields
 
-					foreach ( $item_fields['fields'] as $field ) {
+					foreach ( $item_fields['attr'] as $field ) {
 
 						if ( ! isset( $field['class'] ) ) {
 							$field['class'] = '';
@@ -1165,7 +1178,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 							}
 						}
 
-						if( empty( $field['type'] ) ){
+						if( $field['type'] == 'header' || empty( $field['type'] ) ){
 
 							// row header
 
@@ -1181,13 +1194,13 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 							// existing item or default value
 
-							if( isset( $item['fields'] ) ){
+							if( isset( $item['attr'] ) ){
 
-								if( isset( $field['id'] ) && isset( $item['fields'][ $field['id'] ] ) ){
-									$value = $item['fields'][ $field['id'] ];
+								if( isset( $field['id'] ) && isset( $item['attr'][ $field['id'] ] ) ){
+									$value = $item['attr'][ $field['id'] ];
 								}
 
-								if( 'tabs' === $field['type'] && empty( $item['fields']['tabs'] ) ){
+								if( 'tabs' === $field['type'] && empty( $item['attr']['tabs'] ) ){
 									$value = [];
 								}
 
@@ -1233,6 +1246,124 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 			echo '</div>';
   	}
 
+
+		/**
+		 * SEO content
+		 */
+
+		public function rankMath( $id = false, $mfn_items = false ){
+
+			// RankMath hidden content field
+
+			if( ! $mfn_items && $id ){
+
+				if( ! class_exists('RankMath') ){
+					return;
+				}
+
+				// BeBuilder Blocks disabled
+
+				if( mfn_opts_get('builder-blocks') ){
+					return;
+				}
+
+				$mfn_items = get_post_meta($id, 'mfn-page-items', true);
+
+				// FIX | Muffin Builder 2 compatibility
+
+				if ($mfn_items && ! is_array($mfn_items)) {
+					$mfn_items = unserialize(call_user_func('base'.'64_decode', $mfn_items));
+				}
+
+			}
+
+			// analize content
+
+			$seo_content = '';
+			$skip = [
+				'#FFFFFF',
+				'{featured_image}',
+				'contain',
+				'center',
+				'center center',
+				'center top',
+				'default',
+				'disable',
+				'full',
+				'h1',
+				'h2',
+				'h3',
+				'h4',
+				'h5',
+				'h6',
+				'hide',
+				'hide-mobile',
+				'hide-tablet',
+				'horizontal',
+				'inline',
+				'left',
+				'no-repeat',
+				'none',
+				'right',
+				'show',
+				'solid',
+				'thumbnail',
+				'top',
+				'unset',
+			]; // seo values to skip
+
+			if( ! empty( $mfn_items ) ){
+				foreach( $mfn_items as $section ){
+					if( ! empty( $section['wraps'] ) ){
+						foreach( $section['wraps'] as $wrap ){
+							if( ! empty( $wrap['items'] ) ){
+								foreach( $wrap['items'] as $item ){
+
+									if( ! isset($item['attr']) ){
+										$item['attr'] = ! empty($item['fields']) ? $item['fields'] : [];
+									}
+
+									if( ! empty( $item['attr'] ) ){
+										foreach( $item['attr'] as $vk => $value ){
+
+											if( is_string( $value ) &&  ! is_numeric( $value ) && ! in_array( $value, $skip ) ){
+
+												// string
+												$seo_content .= "\n" . trim( $value ?? '' );
+
+											} elseif( 'tabs' == $vk && is_array( $value ) ){
+
+												// tabs
+												foreach( $value as $tab ){
+													if( ! empty( $tab ) ){
+														foreach( $tab as $tab_field ){
+															$seo_content .= "\n" . trim( $tab_field ?? '' );
+														}
+													}
+												}
+
+											}
+
+										}
+									}
+
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if( $id ){
+				// show
+				echo '<input type="hidden" id="mfn-rankmath-content" value="'. htmlspecialchars( $seo_content ) .'" />';
+			} else {
+				// return
+				return $seo_content;
+			}
+
+		}
+
     /**
      * PRINT Muffin Builder
      */
@@ -1241,29 +1372,38 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
     {
       global $post;
 
+			// Rank Math plugin support | BeBuilder Blocks disabled
+
+			$this->rankMath( $post->ID );
+
+			// hide builder if current user does not have a specific capability
+
+      if ( $visibility = mfn_opts_get( 'builder-visibility' ) ) {
+        if ( $visibility == 'hide' || ( ! current_user_can( $visibility ) ) ) {
+          return;
+        }
+      }
+
 			// disable BeBuilder Blocks for some template types
 
       if( get_post_type($post->ID) == 'template' && get_post_meta($post->ID, 'mfn_template_type', true) && in_array( get_post_meta($post->ID, 'mfn_template_type', true), array('header', 'footer', 'megamenu') ) ){
       	return;
       }
 
-			// hide builder if current user does not have a specific capability
-
-      if ( $visibility = mfn_opts_get( 'builder-visibility' ) ) {
-        if ( $visibility == 'hide' || ( ! current_user_can( $visibility ) ) ) {
-          return false;
-        }
-      }
-
 			// disable BeBuilder Blocks in Theme options
 
-			if( ! mfn_opts_get('builder-blocks') ){
-				if( apply_filters('bebuilder_access', false) ){
-					echo '<div class="bebuilderblocks-disabled">';
-						echo '<a href="post.php?post='. $post->ID .'&amp;action=mfn-live-builder" class="mfn-live-edit-page-button mfn-switch-live-editor">Edit with '. apply_filters('betheme_label', 'Be') .'Builder</a>';
-						echo '<p>If you prefer our classic builder, you can enable it in<br/><a target="_blank" href="admin.php?page='. apply_filters('betheme_slug', 'be') .'-options#advanced">Theme Options > Global > Advanced > BeBuilder Blocks</a></p>';
-					echo '</div>';
-				}
+			if( apply_filters('bebuilder_access', false) ){
+				echo '<div class="bebuilderblocks-disabled">';
+					echo '<a href="post.php?post='. $post->ID .'&amp;action='. apply_filters('betheme_slug', 'mfn') .'-live-builder" class="mfn-live-edit-page-button mfn-switch-live-editor">Edit with '. apply_filters('betheme_label', 'Be') .'Builder</a>';
+
+					if( !WHITE_LABEL && 'mfn' === apply_filters('betheme_slug', 'mfn') ){
+						echo '<p>BeBuilder Blocks is now part of BeBuilder.<br />If you go for a classic look but want an extremely fast builder <a href="https://www.youtube.com/watch?v=JJ5gRaj1It4" class="lightbox">check this video</a></p>';
+					}
+
+				echo '</div>';
+			}
+
+			if( ! $this->blocks_classic ){
 				return;
 			}
 
@@ -2277,7 +2417,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 						<?php
 							foreach ( $this->inline_shortcodes as $shortcode ) {
 								echo '<div class="mfn-isc-builder-'. esc_attr( $shortcode['type'] ) .'" data-shortcode="'. esc_attr( $shortcode['type'] ) .'">';
-									foreach( $shortcode['fields'] as $sc_field ){
+									foreach( $shortcode['attr'] as $sc_field ){
 
 										$sc_placeholder = '';
 
@@ -2469,6 +2609,9 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
   	public function save( $post_id )
   	{
+			if( ! $this->blocks_classic ){
+				return;
+			}
 
   		// FIX | Visual Composer Frontend
 
@@ -2582,7 +2725,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 						'tablet_size' => $_POST['mfn-item-size-tablet'][$type_k],
 						'mobile_size' => $_POST['mfn-item-size-mobile'][$type_k],
 						'used_fonts' => $_POST['mfn-item-fonts'][$type_k],
-						'fields' => [],
+						'attr' => [],
 					];
 
   				if ( isset( $_POST['mfn-item'][$uid] ) && is_array( $_POST['mfn-item'][$uid] ) ) {
@@ -2619,7 +2762,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 									}
 								}
 
-								$item['fields']['tabs'] = $tabs;
+								$item['attr']['tabs'] = $tabs;
 
   						} else {
 
@@ -2665,7 +2808,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
   								update_post_meta( $post_id, 'mfn_template_product_image_zoom', $value );
   							}
 
-								$item['fields'][$attr_k] = $value;
+								$item['attr'][$attr_k] = $value;
 
   						}
   					}
@@ -2720,11 +2863,12 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
   		/** START template conditions */
 
   		if ( function_exists('is_woocommerce') && get_post_type( $post_id ) == 'template' ){
-  			// conditions
+
+				// conditions
 	  		if ( isset( $_POST['mfn_template_conditions'] ) && is_array( $_POST['mfn_template_conditions'] ) && count($_POST['mfn_template_conditions']) > 0 ) {
 	  			$tmpl_conditions = $_POST['mfn_template_conditions'];
 	  			update_post_meta( $post_id, 'mfn_template_conditions', json_encode( $tmpl_conditions ) );
-	  		}else{
+	  		}elseif( $mfn_items ){ // delete conditions only if builder is enabled
 	  			delete_post_meta( $post_id, 'mfn_template_conditions' );
 	  		}
 
@@ -3095,7 +3239,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 		  								}else{
 		  									delete_option( 'mfn_sinle_product_tmpl_all_tags'.$mfn_lang, $post_id );
 		  								}
-				  						
+
 										}
 									}
 								}
@@ -3181,9 +3325,26 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 			delete_option( 'mfn_'.$type.'_addons_archives' );
 			delete_option( 'mfn_'.$type.'_addons_singular' );
 
-
 			$archives = array();
 			$singular = array();
+
+			$default_lang = false;
+			$all_langs = false;
+
+			if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+				$default_lang = apply_filters('wpml_default_language', NULL );
+				$all_langs = apply_filters( 'wpml_active_languages', null );
+
+				if( is_array($all_langs) && is_iterable($all_langs) ){
+					foreach($all_langs as $a=>$al){
+						delete_option( 'mfn_'.$type.'_addons_archives_'.$a );
+						delete_option( 'mfn_'.$type.'_addons_singular_'.$a );
+
+						$archives[$a] = array();
+						$singular[$a] = array();
+					}
+				}
+			}
 
 			$templates = get_posts(
 				array(
@@ -3201,7 +3362,6 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 				)
 			);
 
-
 			if(isset($templates) && is_array($templates) && count($templates) > 0){
 				foreach($templates as $t=>$tmp){
 
@@ -3209,22 +3369,44 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 					$t_lang = '';
 					$conditions = (array) json_decode( get_post_meta($tmpl_id, 'mfn_template_conditions', true) );
 
+					// wpml fix
+					if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+						$tmpl_lang = apply_filters( 'wpml_post_language_details', NULL, $tmpl_id ) ;
+						$t_lang = $tmpl_lang['language_code'];
+					}
+
 					if(isset($conditions) && is_array($conditions) && count($conditions) > 0 ){
 						foreach($conditions as $con){
 
 							if( $con->var == 'everywhere' ){
 								if( $con->rule == 'include' ){
 
-									$archives['post']['all'][] = $tmpl_id;
-									$archives['product']['all'][] = $tmpl_id;
-									$archives['portfolio']['all'][] = $tmpl_id;
-									$archives['offer']['all'][] = $tmpl_id;
+									if( defined( 'ICL_SITEPRESS_VERSION' ) ){
 
-									$singular['page']['all'][] = $tmpl_id;
-									$singular['post']['all'][] = $tmpl_id;
-									$singular['product']['all'][] = $tmpl_id;
-									$singular['portfolio']['all'][] = $tmpl_id;
-									$singular['offer']['all'][] = $tmpl_id;
+										$archives[$t_lang]['post']['all'][] = $tmpl_id;
+										$archives[$t_lang]['product']['all'][] = $tmpl_id;
+										$archives[$t_lang]['portfolio']['all'][] = $tmpl_id;
+										$archives[$t_lang]['offer']['all'][] = $tmpl_id;
+
+										$singular[$t_lang]['page']['all'][] = $tmpl_id;
+										$singular[$t_lang]['post']['all'][] = $tmpl_id;
+										$singular[$t_lang]['product']['all'][] = $tmpl_id;
+										$singular[$t_lang]['portfolio']['all'][] = $tmpl_id;
+										$singular[$t_lang]['offer']['all'][] = $tmpl_id;
+
+									}else{
+										$archives['post']['all'][] = $tmpl_id;
+										$archives['product']['all'][] = $tmpl_id;
+										$archives['portfolio']['all'][] = $tmpl_id;
+										$archives['offer']['all'][] = $tmpl_id;
+
+										$singular['page']['all'][] = $tmpl_id;
+										$singular['post']['all'][] = $tmpl_id;
+										$singular['product']['all'][] = $tmpl_id;
+										$singular['portfolio']['all'][] = $tmpl_id;
+										$singular['offer']['all'][] = $tmpl_id;
+
+									}
 
 								}
 							}
@@ -3239,20 +3421,35 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 										$post_type = $explode[0];
 
 										// set term by id
-										$archives[$term_id][] = $tmpl_id;
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$archives[$t_lang][$term_id][] = $tmpl_id;
+										}else{
+											$archives[$term_id][] = $tmpl_id;
+										}
 
 									}elseif( !empty($con->archives) ){
 
 										// all term
-										$archives[$con->archives]['all'][] = $tmpl_id;
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$archives[$t_lang][$con->archives]['all'][] = $tmpl_id;
+										}else{
+											$archives[$con->archives]['all'][] = $tmpl_id;
+										}
 
 									}elseif( empty($con->archives) ){
 
-										// all archives 
-										$archives['post']['all'][] = $tmpl_id;
-										$archives['product']['all'][] = $tmpl_id;
-										$archives['portfolio']['all'][] = $tmpl_id;
-										$archives['offer']['all'][] = $tmpl_id;
+										// all archives
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$archives[$t_lang]['post']['all'][] = $tmpl_id;
+											$archives[$t_lang]['product']['all'][] = $tmpl_id;
+											$archives[$t_lang]['portfolio']['all'][] = $tmpl_id;
+											$archives[$t_lang]['offer']['all'][] = $tmpl_id;
+										}else{
+											$archives['post']['all'][] = $tmpl_id;
+											$archives['product']['all'][] = $tmpl_id;
+											$archives['portfolio']['all'][] = $tmpl_id;
+											$archives['offer']['all'][] = $tmpl_id;
+										}
 
 									}
 								}elseif( $con->rule == 'exclude' ){
@@ -3264,20 +3461,34 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 										$post_type = $explode[0];
 
 										// set term by id
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$archives[$t_lang][$term_id]['exclude'][] = $tmpl_id;
+										}else{
+											$archives[$term_id]['exclude'][] = $tmpl_id;
+										}
 
-										$archives[$term_id]['exclude'][] = $tmpl_id;
-
-									}elseif( !empty($con->archives) && is_array( $archives[$con->archives]['all'] ) ){
+									}elseif( !empty($con->archives) && is_array( $archives[$t_lang][$con->archives]['all'] ) ){
 										// all term
-										foreach( $archives[$con->archives]['all'] as $t=>$t_id ){
-											if( $t_id == $tmpl_id ) unset($archives[$con->archives]['all'][$t]);
+										foreach( $archives[$t_lang][$con->archives]['all'] as $t=>$t_id ){
+											if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+												if( $t_id == $tmpl_id ) unset($archives[$t_lang][$con->archives]['all'][$t]);
+											}else{
+												if( $t_id == $tmpl_id ) unset($archives[$con->archives]['all'][$t]);
+											}
 										}
 
 									}elseif( empty($con->archives) ){
-										if( !empty($archives['post']['all'][$tmpl_id]) ) unset( $archives['post']['all'][$tmpl_id] );
-										if( !empty($archives['product']['all'][$tmpl_id]) ) unset( $archives['product']['all'][$tmpl_id] );
-										if( !empty($archives['portfolio']['all'][$tmpl_id]) ) unset( $archives['portfolio']['all'][$tmpl_id] );
-										if( !empty($archives['offer']['all'][$tmpl_id]) ) unset( $archives['offer']['all'][$tmpl_id] );
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											if( !empty($archives[$t_lang]['post']['all'][$tmpl_id]) ) unset( $archives[$t_lang]['post']['all'][$tmpl_id] );
+											if( !empty($archives[$t_lang]['product']['all'][$tmpl_id]) ) unset( $archives[$t_lang]['product']['all'][$tmpl_id] );
+											if( !empty($archives[$t_lang]['portfolio']['all'][$tmpl_id]) ) unset( $archives[$t_lang]['portfolio']['all'][$tmpl_id] );
+											if( !empty($archives[$t_lang]['offer']['all'][$tmpl_id]) ) unset( $archives[$t_lang]['offer']['all'][$tmpl_id] );
+										}else{
+											if( !empty($archives['post']['all'][$tmpl_id]) ) unset( $archives['post']['all'][$tmpl_id] );
+											if( !empty($archives['product']['all'][$tmpl_id]) ) unset( $archives['product']['all'][$tmpl_id] );
+											if( !empty($archives['portfolio']['all'][$tmpl_id]) ) unset( $archives['portfolio']['all'][$tmpl_id] );
+											if( !empty($archives['offer']['all'][$tmpl_id]) ) unset( $archives['offer']['all'][$tmpl_id] );
+										}
 									}
 								}
 							}elseif( $con->var == 'singular' ){
@@ -3291,21 +3502,37 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 										$post_type = $explode[0];
 
 										// set term by id
-										$singular[$term_id][] = $tmpl_id;
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$singular[$t_lang][$term_id][] = $tmpl_id;
+										}else{
+											$singular[$term_id][] = $tmpl_id;
+										}
 
 									}elseif( !empty($con->singular) ){
 
 										// all term
-										$singular[$con->singular]['all'][] = $tmpl_id;
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$singular[$t_lang][$con->singular]['all'][] = $tmpl_id;
+										}else{
+											$singular[$con->singular]['all'][] = $tmpl_id;
+										}
 
 									}elseif( empty($con->singular) ){
 
-										// all singular 
-										$singular['page']['all'][] = $tmpl_id;
-										$singular['post']['all'][] = $tmpl_id;
-										$singular['product']['all'][] = $tmpl_id;
-										$singular['portfolio']['all'][] = $tmpl_id;
-										$singular['offer']['all'][] = $tmpl_id;
+										// all singular
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$singular[$t_lang]['page']['all'][] = $tmpl_id;
+											$singular[$t_lang]['post']['all'][] = $tmpl_id;
+											$singular[$t_lang]['product']['all'][] = $tmpl_id;
+											$singular[$t_lang]['portfolio']['all'][] = $tmpl_id;
+											$singular[$t_lang]['offer']['all'][] = $tmpl_id;
+										}else{
+											$singular['page']['all'][] = $tmpl_id;
+											$singular['post']['all'][] = $tmpl_id;
+											$singular['product']['all'][] = $tmpl_id;
+											$singular['portfolio']['all'][] = $tmpl_id;
+											$singular['offer']['all'][] = $tmpl_id;
+										}
 
 									}
 								}elseif( $con->rule == 'exclude' ){
@@ -3317,29 +3544,40 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 										$post_type = $explode[0];
 
 										// set term by id
-
-										$singular[$term_id]['exclude'][] = $tmpl_id;
-
-									}elseif( !empty($con->singular) && is_array( $singular[$con->singular]['all'] ) ){
-										// all term
-										
-										foreach( $singular[$con->singular]['all'] as $t=>$t_id ){
-											if( $t_id == $tmpl_id ) unset($singular[$con->singular]['all'][$t]);
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											$singular[$t_lang][$term_id]['exclude'][] = $tmpl_id;
+										}else{
+											$singular[$term_id]['exclude'][] = $tmpl_id;
 										}
-										
+
+									}elseif( !empty($con->singular) && is_array( $singular[$t_lang][$con->singular]['all'] ) ){
+										// all term
+
+										foreach( $singular[$t_lang][$con->singular]['all'] as $t=>$t_id ){
+											if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+												if( $t_id == $tmpl_id ) unset($singular[$t_lang][$con->singular]['all'][$t]);
+											}else{
+												if( $t_id == $tmpl_id ) unset($singular[$con->singular]['all'][$t]);
+											}
+										}
+
 									}elseif( empty($con->singular) ){
-										if( !empty($singular['page']['all'][$tmpl_id]) ) unset( $singular['page']['all'][$tmpl_id] );
-										if( !empty($singular['post']['all'][$tmpl_id]) ) unset( $singular['post']['all'][$tmpl_id] );
-										if( !empty($singular['product']['all'][$tmpl_id]) ) unset( $singular['product']['all'][$tmpl_id] );
-										if( !empty($singular['portfolio']['all'][$tmpl_id]) ) unset( $singular['portfolio']['all'][$tmpl_id] );
-										if( !empty($singular['offer']['all'][$tmpl_id]) ) unset( $singular['offer']['all'][$tmpl_id] );
+										if( defined( 'ICL_SITEPRESS_VERSION' ) ){
+											if( !empty($singular[$t_lang]['page']['all'][$tmpl_id]) ) unset( $singular[$t_lang]['page']['all'][$tmpl_id] );
+											if( !empty($singular[$t_lang]['post']['all'][$tmpl_id]) ) unset( $singular[$t_lang]['post']['all'][$tmpl_id] );
+											if( !empty($singular[$t_lang]['product']['all'][$tmpl_id]) ) unset( $singular[$t_lang]['product']['all'][$tmpl_id] );
+											if( !empty($singular[$t_lang]['portfolio']['all'][$tmpl_id]) ) unset( $singular[$t_lang]['portfolio']['all'][$tmpl_id] );
+											if( !empty($singular[$t_lang]['offer']['all'][$tmpl_id]) ) unset( $singular[$t_lang]['offer']['all'][$tmpl_id] );
+										}else{
+											if( !empty($singular['page']['all'][$tmpl_id]) ) unset( $singular['page']['all'][$tmpl_id] );
+											if( !empty($singular['post']['all'][$tmpl_id]) ) unset( $singular['post']['all'][$tmpl_id] );
+											if( !empty($singular['product']['all'][$tmpl_id]) ) unset( $singular['product']['all'][$tmpl_id] );
+											if( !empty($singular['portfolio']['all'][$tmpl_id]) ) unset( $singular['portfolio']['all'][$tmpl_id] );
+											if( !empty($singular['offer']['all'][$tmpl_id]) ) unset( $singular['offer']['all'][$tmpl_id] );
+										}
 									}
 								}
 							}
-
-							update_option( 'mfn_'.$type.'_addons_archives', $archives );
-							update_option( 'mfn_'.$type.'_addons_singular', $singular );
-
 
 						}
 					}
@@ -3347,10 +3585,26 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 				}
 			}
 
+			if( defined( 'ICL_SITEPRESS_VERSION' ) && is_array($all_langs) && is_iterable($all_langs) ){
+				// with WPML
+				foreach($all_langs as $a=>$al){
+					if( $a == $default_lang ){
+						// default lang
+						update_option( 'mfn_'.$type.'_addons_archives', $archives[$a] );
+						update_option( 'mfn_'.$type.'_addons_singular', $singular[$a] );
+					}else{
+						// another langs
+						update_option( 'mfn_'.$type.'_addons_archives_'.$a, $archives[$a] );
+						update_option( 'mfn_'.$type.'_addons_singular_'.$a, $singular[$a] );
+					}
+				}
+			}else{
+				// no WPML
+				update_option( 'mfn_'.$type.'_addons_archives', $archives );
+				update_option( 'mfn_'.$type.'_addons_singular', $singular );
+			}
 
 		}
-
-
 
 
 		/**
@@ -3359,6 +3613,8 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 		public function reset_global_templates_conditions($type) {
 			global $wpdb;
+
+			delete_option( 'mfn_'.$type.'_entire_site' );
 
 			delete_option( 'mfn_'.$type.'_post_single' );
 			delete_option( 'mfn_'.$type.'_page_single' );
@@ -3467,7 +3723,10 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 
 							if( $con->var == 'everywhere' ){
 								if( $con->rule == 'include' ){
-									update_option( 'mfn_'.$type.$t_lang.'_post_single', $tmpl_id );
+
+									update_option( 'mfn_'.$type.$t_lang.'_entire_site', $tmpl_id );
+
+									/*update_option( 'mfn_'.$type.$t_lang.'_post_single', $tmpl_id );
 									update_option( 'mfn_'.$type.$t_lang.'_product_single', $tmpl_id );
 									update_option( 'mfn_'.$type.$t_lang.'_portfolio_single', $tmpl_id );
 									update_option( 'mfn_'.$type.$t_lang.'_offer_single', $tmpl_id );
@@ -3477,7 +3736,7 @@ if( ! class_exists( 'Mfn_Builder_Admin' ) )
 									update_option( 'mfn_'.$type.$t_lang.'_product_arch', $tmpl_id );
 									update_option( 'mfn_'.$type.$t_lang.'_portfolio_arch', $tmpl_id );
 									update_option( 'mfn_'.$type.$t_lang.'_offer_arch', $tmpl_id );
-									update_option( 'mfn_'.$type.$t_lang.'_page_arch', $tmpl_id );
+									update_option( 'mfn_'.$type.$t_lang.'_page_arch', $tmpl_id );*/
 								}
 							}
 

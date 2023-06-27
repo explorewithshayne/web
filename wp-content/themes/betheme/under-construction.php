@@ -31,7 +31,7 @@
 
 <body <?php body_class($body_class); ?>>
 
-	<div id="Content">
+	<div id="Content" class="content-under-construction">
 		<div class="content_wrapper clearfix">
 
 			<?php if ($customID): ?>
@@ -189,6 +189,7 @@
 	</div>
 
 <?php
+	wp_enqueue_script('mfn-waypoints', get_theme_file_uri('/js/plugins/waypoints.min.js'), ['jquery'], MFN_THEME_VERSION, true);
 	wp_enqueue_script('mfn-countdown', get_theme_file_uri('/js/plugins/countdown.min.js'), ['jquery'], MFN_THEME_VERSION, true);
 	wp_footer();
 ?>

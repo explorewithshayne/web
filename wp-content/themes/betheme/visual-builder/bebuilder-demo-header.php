@@ -9,6 +9,7 @@
 	do_action( 'wp_print_styles' );
 	do_action( 'wp_print_scripts' );
 	do_action( 'wp_head' ); 
+	do_action( 'mfn_bebuilder_header_scripts' );
 	?>
 </head>
 <body class="mfn-preloader-active">

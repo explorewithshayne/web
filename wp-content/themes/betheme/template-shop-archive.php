@@ -19,11 +19,18 @@ if( isset( $tmp_id ) && is_numeric( $tmp_id ) && get_post_type( $tmp_id ) == 'te
 	$mfn_builder->show();
 
 } else {
+
+	if( get_post_meta( $tmp_id, 'mfn-post-hide-content', true ) ){
+		remove_action( 'woocommerce_archive_description', 'woocommerce_taxonomy_archive_description' );
+		remove_action( 'woocommerce_archive_description', 'woocommerce_product_archive_description' );
+	}
+
 	echo '<div class="section">';
 		echo '<div class="section_wrapper clearfix default-woo-list">';
 			woocommerce_content();
 		echo '</div>';
 	echo '</div>';
+
 }
 
 

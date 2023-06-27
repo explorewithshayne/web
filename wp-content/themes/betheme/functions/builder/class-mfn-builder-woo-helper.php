@@ -87,7 +87,7 @@ class Mfn_Builder_Woo_Helper {
 
 		} else {
 
-			$output .= '<div class="image_frame scale-with-grid product-loop-thumb" ontouchstart="this.classList.toggle(\'hover\');">';
+			$output .= '<div class="image_frame scale-with-grid product-loop-thumb">';
 
 				if( mfn_opts_get('shop-wishlist') && isset($wishlist_position[1]) ){
 					$output .= '<span data-position="left" data-id="'.$product->get_id().'" class="mfn-wish-button mfn-abs-top"><svg width="26" viewBox="0 0 26 26"><defs><style>.path{fill:none;stroke:#333;stroke-width:1.5px;}</style></defs><path class="path" d="M16.7,6a3.78,3.78,0,0,0-2.3.8A5.26,5.26,0,0,0,13,8.5a5,5,0,0,0-1.4-1.6A3.52,3.52,0,0,0,9.3,6a4.33,4.33,0,0,0-4.2,4.6c0,2.8,2.3,4.7,5.7,7.7.6.5,1.2,1.1,1.9,1.7H13a.37.37,0,0,0,.3-.1c.7-.6,1.3-1.2,1.9-1.7,3.4-2.9,5.7-4.8,5.7-7.7A4.3,4.3,0,0,0,16.7,6Z"></path></svg></span>';
@@ -194,10 +194,12 @@ class Mfn_Builder_Woo_Helper {
 
   public static function get_woo_product_price($product, $attr = false){
 
-  	ob_start();
+  	/*ob_start();
 		mfn_display_custom_attributes($product->get_id());
-		$output = ob_get_clean();
+		$output = ob_get_clean();*/
 
+		$output = '';
+		
   	$output .= '<div class="mfn-li-product-row mfn-li-product-row-price">';
   	$output .= '<p class="price">'.$product->get_price_html().'</p>';
   	$output .= '</div>';
@@ -208,7 +210,7 @@ class Mfn_Builder_Woo_Helper {
 
 		$output = '';
 
-  	if( get_the_excerpt($product->get_id()) ){
+  	if( get_the_excerpt($product->get_id()) && !empty($attr['description']) ){
 			$output .= '<div class="mfn-li-product-row mfn-li-product-row-description excerpt-'. ( !empty($attr['description']) ? $attr['description'] : 'unset') .'">';
 				$output .= '<p class="excerpt">'. do_shortcode( get_the_excerpt($product->get_id()) ) .'</p>';
 			$output .= '</div>';
@@ -221,7 +223,7 @@ class Mfn_Builder_Woo_Helper {
 
 		$classes = '';
 
-		if( isset($attr['button']) && $attr['button'] == 0 ) return;
+		if( $attr && (empty($attr['button']) || $attr['button'] == 0) ) return;
 
 		$product->is_purchasable() ? $classes .= 'add_to_cart_button' : null;
 		$product->supports( 'ajax_add_to_cart' ) ? $classes .= ' ajax_add_to_cart' : null;
@@ -257,6 +259,7 @@ class Mfn_Builder_Woo_Helper {
   public static function sample_products_loop($attr) {
   	$sl_arr = array(
 			'post_type' => 'product',
+			'post_status' => 'publish',
 			'posts_per_page' => $attr['products'],
   	);
   	if( get_option('woocommerce_hide_out_of_stock_items') && get_option('woocommerce_hide_out_of_stock_items') == 'yes' ) {

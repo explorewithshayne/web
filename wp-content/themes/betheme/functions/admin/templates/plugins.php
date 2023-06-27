@@ -82,7 +82,7 @@
 												if( ! empty($plugin['premium']) && ! mfn_is_registered() ){
 													echo '<a class="mfn-btn mfn-btn-red" href="admin.php?page=betheme"><span class="btn-wrapper">Register</span></a>';
 												} elseif( 'update' == $plugin['action'] ){
-                          echo '<a data-plugin="'. esc_attr($plugin['slug']) .'" data-page="be-tgmpa" class="mfn-btn mfn-btn-blue plugin-update" href="#"><span class="btn-wrapper">Update</span></a>';
+                          echo '<a data-plugin="'. esc_attr($plugin['slug']) .'" data-page="be-tgmpa" data-path="'. esc_attr($plugin['path']) .'" class="mfn-btn mfn-btn-blue plugin-update" href="#"><span class="btn-wrapper">Update</span></a>';
 												} elseif( empty( $plugin['action'] ) ){
                           echo '<a data-plugin="'. esc_attr($plugin['slug']) .'" data-page="be-tgmpa" class="mfn-btn disabled"><span class="btn-wrapper">Active</span></a>';
                         } elseif( 'activate' == $plugin['action'] ){

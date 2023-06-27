@@ -19,7 +19,7 @@ if (! class_exists('Mfn_Widget_Menu')) {
 		{
 			$widget_ops = array( 'classname' => 'widget_mfn_menu', 'description' => esc_html__('Use this widget on pages to display aside menu with children or siblings of the current page', 'mfn-opts') );
 
-			parent::__construct('widget_mfn_menu', esc_html__('Muffin Menu', 'mfn-opts'), $widget_ops);
+			parent::__construct('widget_mfn_menu', esc_html__('Be Menu', 'mfn-opts'), $widget_ops);
 
 			$this->alt_option_name = 'widget_mfn_menu';
 		}
@@ -193,6 +193,7 @@ if (! class_exists('Mfn_Widget_Menu')) {
 							echo '<option value="show" '. selected($submenus, 'show', false). '>'. esc_html__('Always show', 'mfn-opts') .'</option>';
 							echo '<option value="hover" '. selected($submenus, 'hover', false). '>'. esc_html__('Show on hover', 'mfn-opts') .'</option>';
 							echo '<option value="hover submenu-active" '. selected($submenus, 'hover submenu-active', false). '>'. esc_html__('Show on hover, always show active', 'mfn-opts') .'</option>';
+							echo '<option value="click-mobile" '. selected($submenus, 'click', false). '>'. esc_html__('Show on hover / click on mobile', 'mfn-opts') .'</option>';
 							echo '<option value="click" '. selected($submenus, 'click', false). '>'. esc_html__('Show on click', 'mfn-opts') .'</option>';
 						?>
 					</select>

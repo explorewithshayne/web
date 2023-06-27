@@ -162,7 +162,7 @@ class Mfn_Setup extends Mfn_API{
 
 		$title = __( 'Setup Wizard','mfn-opts' );
 
-		$this->page = add_submenu_page(
+		$page = add_submenu_page(
 			apply_filters('betheme_dynamic_slug', 'betheme'),
 			$title,
 			$title,
@@ -171,7 +171,7 @@ class Mfn_Setup extends Mfn_API{
 			array( $this, 'init' )
 		);
 
-		add_action( 'admin_print_styles-'. $this->page, array( $this, 'enqueue' ) );
+		add_action( 'admin_print_styles-'. $page, array( $this, 'enqueue' ) );
 
 	}
 
@@ -651,8 +651,12 @@ class Mfn_Setup extends Mfn_API{
 
 		if ( current_user_can( 'install_plugins' ) ) {
 
-			$GLOBALS['tgmpa']->install_plugins_page();
+			// deactivate plugin before update
+			if( ! empty($_GET['tgmpa-update']) && ! empty($_GET['path']) ){
+				// deactivate_plugins( esc_attr($_GET['path']) );
+			}
 
+			$GLOBALS['tgmpa']->install_plugins_page();
 			$this->disable_plugins_redirect();
 
 		}

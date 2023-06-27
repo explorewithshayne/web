@@ -141,14 +141,14 @@ class Mfn_Helper {
 
 							if( isset($item['uid']) && strpos($item['uid'], '/') !== false ) $sections[$s]['wraps'][$w]['items'][$y]['uid'] = Mfn_Builder_Helper::unique_ID();
 
-							if(isset($item['fields']) && count($item['fields']) > 0){
+							if(isset($item['attr']) && count($item['attr']) > 0){
 
-								if( !empty($item['fields']['used_fonts']) ){
-									$fonts_arr = explode(',', $item['fields']['used_fonts']);
+								if( !empty($item['attr']['used_fonts']) ){
+									$fonts_arr = explode(',', $item['attr']['used_fonts']);
 									$return['fonts'] = array_unique(array_merge($return['fonts'],$fonts_arr));
 								}
 
-								foreach($item['fields'] as $f=>$field){
+								foreach($item['attr'] as $f=>$field){
 									if($item['type'] == 'shop_products' && $f == 'products'){
 										update_post_meta( $post_id, 'mfn_template_perpage', $field );
 									}elseif($item['type'] == 'product_cart_button' && $f == 'cart_button_text'){
@@ -397,12 +397,19 @@ class Mfn_Helper {
 
 	}
 
-	public static function generate_bebuilder_items($bepath, $beitems){
+	public static function generate_bebuilder_items(){
+		MfnVisualBuilder::removeBeDataFile();
+		$bepath = MfnVisualBuilder::bebuilderFilePath();
+		
+		$mfnVidualClass = new MfnVisualBuilder();
+		$beitems = $mfnVidualClass->fieldsToJS();
+
 		$wp_filesystem = self::filesystem();
 		$folder_path = get_template_directory().'/visual-builder/assets/js/forms';
 		if( ! file_exists( $folder_path ) ) wp_mkdir_p( $folder_path );
 		$path = wp_normalize_path( $bepath );
 		$make = $wp_filesystem->put_contents( $path, $beitems, FS_CHMOD_FILE );
+		update_option('betheme_form_uid', Mfn_Builder_Helper::unique_ID());
 		return $make;
 	}
 

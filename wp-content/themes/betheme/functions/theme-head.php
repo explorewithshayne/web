@@ -44,7 +44,13 @@ if (! function_exists('mfn_html_classes')) {
 if (! function_exists('mfn_title')) {
 	function mfn_title($title)
 	{
-		if (mfn_opts_get('mfn-seo') && mfn_ID()) {
+
+		if( function_exists('is_shop') && is_shop() ){
+			$shop_id = wc_get_page_id('shop');
+			$title = get_the_title($shop_id) .' &#8211 '. get_bloginfo('name');
+		}
+
+		if ( mfn_opts_get('mfn-seo') && mfn_ID() ) {
 			if ($seo_title = trim(get_post_meta(mfn_ID(), 'mfn-meta-seo-title', true))) {
 				$title = esc_html($seo_title);
 			}
@@ -229,6 +235,31 @@ if (! function_exists('mfn_google_remarketing')) {
 add_action('wp_footer', 'mfn_google_remarketing', 100);
 
 /**
+ * Add defer attribute to JS files
+ */
+
+function mfn_defer_scripts( $tag, $handle, $src ) {
+
+	// The handles of the enqueued scripts we want to defer
+	$defer_scripts = array(
+		'mfn-swiper',
+	);
+
+  if ( in_array( $handle, $defer_scripts ) ) {
+		$attributes = [
+			'type' => 'text/javascript',
+			'src' => $src,
+			'id' => $handle .'-js',
+			'defer' => 'defer',
+		];
+		return wp_get_script_tag( $attributes );
+  }
+
+  return $tag;
+}
+add_filter( 'script_loader_tag', 'mfn_defer_scripts', 10, 3 );
+
+/**
  * Fonts selected in Theme Options & BeBuilder
  */
 
@@ -311,7 +342,11 @@ if (! function_exists('mfn_styles')) {
 
 		// wp_enqueue_style
 
-		wp_enqueue_style('mfn-be', get_theme_file_uri('/css/be'. $min .'.css'), false, MFN_THEME_VERSION);
+		if( mfn_is_blocks() ){
+			wp_enqueue_style('mfn-icons', get_theme_file_uri('/fonts/mfn/icons'. $min .'.css'), false, MFN_THEME_VERSION);
+		} else {
+			wp_enqueue_style('mfn-be', get_theme_file_uri('/css/be'. $min .'.css'), false, MFN_THEME_VERSION);
+		}
 
 		// plugins
 
@@ -488,7 +523,10 @@ if (! function_exists('mfn_styles_disable')) {
 		// block library styles
 
 		if( ! empty( $performance_wp_disable[ 'wp-block-library' ] ) ){
+			wp_dequeue_style( 'classic-theme-styles' );
 			wp_dequeue_style( 'wp-block-library' );
+			wp_dequeue_style( 'wc-blocks-style' );
+			wp_dequeue_style( 'wc-blocks-vendors-style' );
 		}
 
 		// dashicons
@@ -650,27 +688,34 @@ function mfn_styles_header(){
 
 function mfn_styles_local(){
 
-	if( 'inline' == mfn_opts_get('local-styles-location') && empty( $_GET['visual'] ) ){
+ 	if( 'inline' == mfn_opts_get('local-styles-location') && empty( $_GET['visual'] ) ){
 
-		$mfn_builder = new Mfn_Builder_Front(get_the_ID());
-		$path = $mfn_builder->enqueue_local_style( false );
+ 		$id = get_the_ID();
 
-		if( ! $path ){
-			return false;
-		}
+ 		// custom 404 page
+ 		if( is_404() && mfn_opts_get('error404-page') ){
+ 			$id = mfn_opts_get('error404-page');
+ 		}
 
-		ob_start();
+ 		$mfn_builder = new Mfn_Builder_Front($id);
+ 		$path = $mfn_builder->enqueue_local_style( false );
 
-		include_once $path;
+ 		if( ! $path ){
+ 			return false;
+ 		}
 
-		$css = "/* Local Page Style ". get_the_ID() ." */\n";
-		$css .= ob_get_clean();
+ 		ob_start();
 
-		return $css;
+ 		include_once $path;
 
-	}
+ 		$css = "/* Local Page Style ". esc_attr($id) ." */\n";
+ 		$css .= ob_get_clean();
 
-	return false;
+ 		return $css;
+
+ 	}
+
+ 	return false;
 
 }
 
@@ -729,7 +774,8 @@ if (! function_exists('mfn_styles_custom_font')) {
 					}
 					$output .= ';';
 				$output .= 'font-weight:normal;';
-				$output .= 'font-style:normal';
+				$output .= 'font-style:normal;';
+				$output .= 'font-display:swap';
 			$output .= '}';
 		}
 
@@ -1639,6 +1685,12 @@ if (! function_exists('mfn_body_classes')) {
 
 		// header template
 
+		if( mfn_is_blocks() ){
+			$classes[] = 'builder-blocks';
+		}
+
+		// header template
+
 		if( $header_tmp_id ){
 			$classes[] = 'mfn-header-template';
 		}
@@ -2117,7 +2169,7 @@ if (! function_exists('mfn_bebuilder_access')) {
 			}
 		}else if( !array_intersect($allowed_roles, $user->roles ) ) {
 			return false;
-		}else if( defined('MFN_DISABLE_LIVE') ){
+		}else if( defined('MFN_DISABLE_LIVE') && MFN_DISABLE_LIVE ){
 			return false;
 		}
 
@@ -2167,14 +2219,18 @@ function mfn_visual_builder(){
 
 		function mfnvb_iframe_style() {
 
-			if ( !wp_script_is( 'google-maps', 'enqueued') && $api_key = trim(mfn_opts_get('google-maps-api-key')) ) {
-				$api_key = '?key='. $api_key;
+			if ( !wp_script_is( 'google-maps', 'enqueued') && $api_key = mfn_opts_get('google-maps-api-key') ) {
+				$api_key = '?key='. trim($api_key);
 				wp_enqueue_script('google-maps', 'https://maps.google.com/maps/api/js'. $api_key . '&callback=mfnInitMap', false, null, true);
 				wp_add_inline_script('mfn-scripts', 'function mfnInitMap() { return false; }');
 			}
 
 			wp_enqueue_style('mfn-inline-editor-style', get_theme_file_uri('/visual-builder/assets/css/medium-editor.min.css'), false, MFN_THEME_VERSION, false);
 			wp_enqueue_style( 'mfn-iframe-vbstyle', get_theme_file_uri('/visual-builder/assets/css/iframe.css'), false, MFN_THEME_VERSION, 'all' );
+
+			if( mfn_is_blocks() ){
+				wp_enqueue_style( 'mfn-iframe-blocks', get_theme_file_uri('/visual-builder/assets/css/blocks.css'), false, MFN_THEME_VERSION, 'all' );
+			}
 
 			if( function_exists('is_woocommerce') ){
 				wp_enqueue_script( 'wc-single-product' );
@@ -2193,6 +2249,8 @@ function mfn_visual_builder(){
 			wp_enqueue_script('mfn-swiper', get_theme_file_uri('/js/swiper.js'), array('jquery'), MFN_THEME_VERSION, true);
 			wp_enqueue_script('mfn-isotope', get_theme_file_uri('/js/plugins/isotope.min.js'), array('jquery'), MFN_THEME_VERSION, true);
 
+			wp_enqueue_script('mfn-waypoints', get_theme_file_uri('/js/plugins/waypoints.min.js'), ['jquery'], MFN_THEME_VERSION, true);
+
 		}
 
 		function mfnvb_remove_admin_bar() {
@@ -2205,13 +2263,33 @@ function mfn_visual_builder(){
 		    $user_id = get_current_user_id();
 		    $options = get_site_option( 'betheme_builder_'. $user_id );
 
-		    if( isset($options['mfn-modern-nav']) && $options['mfn-modern-nav'] == '1' ){
-		    	$classes[] = 'mfn-modern-nav';
-		    }
+				if( !empty($options['builder-blocks']) ){
 
-		    if( !empty($options['ui-theme']) ){
-		    	$classes[] = $options['ui-theme'];
-		    }
+					// blocks
+
+		    	$classes[] = 'mfn-builder-blocks';
+
+					if( !empty($options['simple-view']) ){
+			    	$classes[] = 'simple-view';
+			    }
+
+			    if( !empty($options['hover-effects']) ){
+			    	$classes[] = 'hover-effects-disable';
+			    }
+
+		    } else {
+
+					// visual
+
+			    if( isset($options['mfn-modern-nav']) && $options['mfn-modern-nav'] == '1' ){
+			    	$classes[] = 'mfn-modern-nav';
+			    }
+
+			    if( !empty($options['ui-theme']) ){
+			    	$classes[] = $options['ui-theme'];
+			    }
+
+				}
 
 		    if( get_post_type( get_the_ID() == 'template' ) && get_post_meta(get_the_ID(), 'mfn_template_type', true) ){
 		    	$classes[] = 'mfn-bebuilder-'.get_post_meta(get_the_ID(), 'mfn_template_type', true);

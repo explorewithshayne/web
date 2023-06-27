@@ -108,10 +108,10 @@ class Mfn_Importer_Helper {
 			$wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}wc_product_meta_lookup" );
 		}
 
-		/*$wpdb->query( $wpdb->prepare(
+		$wpdb->query( $wpdb->prepare(
 			"DELETE FROM $wpdb->options
     	WHERE `option_name` REGEXP %s",
-			'mfn_header|mfn_footer|_transient_wc_attribute_taxonomies|_transient_wc_product|product_cat_children' ) );*/
+			'sidebars_widgets|^widget_' ) );
 
 		$transients = array('wp_page_for_privacy_policy','mfn_header','mfn_footer','product_cat_children','_transient_wc_', '_transient_timeout_wc_', 'mfn_popup_addons_singular', 'mfn_popup_addons_archives');
 
@@ -169,6 +169,9 @@ class Mfn_Importer_Helper {
 
     $importer_api = new Mfn_Importer_API( $this->demo_builder );
     $importer_api->delete_temp_dir();
+
+    // regenerate builder file
+ 		Mfn_Helper::generate_bebuilder_items();
 
     return true;
   }
@@ -686,16 +689,25 @@ class Mfn_Importer_Helper {
 									foreach( $section['wraps'] as $w_k => $wrap ){
 										if( ! empty( $wrap['items'] ) ){
 											foreach( $wrap['items'] as $i_k => $item ){
-												if( ! empty($item['fields']['menu_display']) ){
 
-													$menu_id = $item['fields']['menu_display'];
+												// Betheme < 27.0 compatibility
+												if( ! isset( $item['attr'] ) ){
+													$item['attr'] = ! empty($item['fields']) ? $item['fields'] : [];
+													$builder[$s_k]['wraps'][$w_k]['items'][$i_k]['attr'] = $item['attr'];
+													unset( $builder[$s_k]['wraps'][$w_k]['items'][$i_k]['fields'] );
+													$updated = true;
+												}
+
+												if( ! empty($item['attr']['menu_display']) ){
+
+													$menu_id = $item['attr']['menu_display'];
 
 													if( ! empty( $map_menus[$menu_id] ) ){
 														$menu_slug = $map_menus[$menu_id]['slug'];
 
 														$menu_obj = wp_get_nav_menu_object( $menu_slug );
 														if( $menu_obj ){
-															$builder[$s_k]['wraps'][$w_k]['items'][$i_k]['fields']['menu_display'] = $menu_obj->term_id;
+															$builder[$s_k]['wraps'][$w_k]['items'][$i_k]['attr']['menu_display'] = $menu_obj->term_id;
 															$updated = true;
 														}
 													}
@@ -1000,6 +1012,7 @@ class Mfn_Importer_Helper {
 
 	/**
 	 * Set homepage
+	 * and Media sizes
 	 */
 
 	 function set_pages(){
@@ -1046,6 +1059,30 @@ class Mfn_Importer_Helper {
 
  			update_option( $slug, $post_id );
 
+ 		}
+
+		// Media size
+
+		$defaults = [
+ 			'thumbnail_size_w' => 300,
+ 			'thumbnail_size_h' => 300,
+ 			'thumbnail_crop' => 0,
+ 			'medium_size_w' => 500,
+ 			'medium_size_h' => 500,
+ 			'large_size_w' => 1200,
+ 			'large_size_h' => 1200,
+ 		];
+
+		if( ! empty( $this->demos[$this->demo]['media'] ) ){
+ 			$media = $this->demos[$this->demo]['media'];
+ 		} else {
+ 			$media = [];
+ 		}
+
+ 		$media = array_merge( $defaults, $media );
+
+		foreach ( $media as $size => $value ) {
+ 			update_option( $size, $value );
  		}
 
 		return true;
@@ -1475,8 +1512,16 @@ class Mfn_Importer_Helper {
 
 										// item fields
 
-										if( isset( $item['fields'] ) && is_array( $item['fields'] ) ){
-											foreach( $item['fields'] as $field_key => $field ) {
+										// Betheme < 27.0 compatibility
+										if( ! isset( $item['attr'] ) ){
+											$item['attr'] = ! empty($item['fields']) ? $item['fields'] : [];
+											$meta_value[$sec_key]['wraps'][$wrap_key]['items'][$item_key]['attr'] = $item['attr'];
+											unset( $meta_value[$sec_key]['wraps'][$wrap_key]['items'][$item_key]['fields'] );
+											$updated = true;
+										}
+
+										if( ! empty( $item['attr'] ) ){
+											foreach( $item['attr'] as $field_key => $field ) {
 
 												if( 'tabs' == $field_key ) {
 
@@ -1492,7 +1537,7 @@ class Mfn_Importer_Helper {
 
 																	$field = str_replace( $old_url, $new_url, $tab_field );
 																	$field = $this->replace_multisite( $field );
-																	$meta_value[$sec_key]['wraps'][$wrap_key]['items'][$item_key]['fields']['tabs'][$tab_key][$tab_field_key] = $field;
+																	$meta_value[$sec_key]['wraps'][$wrap_key]['items'][$item_key]['attr']['tabs'][$tab_key][$tab_field_key] = $field;
 
 																}
 															}
@@ -1506,7 +1551,7 @@ class Mfn_Importer_Helper {
 
 													$field = str_replace( $old_url, $new_url, $field );
 													$field = $this->replace_multisite( $field );
-													$meta_value[$sec_key]['wraps'][$wrap_key]['items'][$item_key]['fields'][$field_key] = $field;
+													$meta_value[$sec_key]['wraps'][$wrap_key]['items'][$item_key]['attr'][$field_key] = $field;
 
 												}
 

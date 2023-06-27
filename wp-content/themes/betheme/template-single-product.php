@@ -10,7 +10,7 @@ if( function_exists( 'mfn_ID' ) ){
 
 if( ( empty($_GET['visual']) || !empty($_GET['mfn-template-id']) ) && isset( $tmp_id ) && is_numeric( $tmp_id ) && get_post_type( $tmp_id ) == 'template' ){
 
-	echo '<div class="product">';
+	echo '<div class="'. implode(' ', wc_get_product_class( 'mfn-single-product-tmpl-wrapper', get_the_ID() )) .'">';
 
 		echo '<div class="section_wrapper clearfix">';
 			do_action( 'woocommerce_before_single_product' );
@@ -32,7 +32,7 @@ if( ( empty($_GET['visual']) || !empty($_GET['mfn-template-id']) ) && isset( $tm
 			woocommerce_content();
 		echo '</div>';
 	echo '</div>';
-	
+
 }
 
 ?>

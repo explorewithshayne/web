@@ -56,6 +56,7 @@ if (! class_exists('Mfn_Post_Type_Layout')) {
 					// layout
 
 					array(
+						'type' => 'header',
 						'title' => __('Layout', 'mfn-opts'),
 					),
 
@@ -75,6 +76,7 @@ if (! class_exists('Mfn_Post_Type_Layout')) {
 					// background
 
 					array(
+						'type' => 'header',
 						'title' => __('Background', 'mfn-opts'),
 					),
 
@@ -96,6 +98,7 @@ if (! class_exists('Mfn_Post_Type_Layout')) {
 					// logo
 
 					array(
+						'type' => 'header',
 						'title' => __('Logo', 'mfn-opts'),
 					),
 
@@ -157,6 +160,7 @@ if (! class_exists('Mfn_Post_Type_Layout')) {
 					// header
 
 					array(
+						'type' => 'header',
 						'title' => __('Header', 'mfn-opts'),
 					),
 
@@ -204,6 +208,7 @@ if (! class_exists('Mfn_Post_Type_Layout')) {
 					// colors
 
 					array(
+						'type' => 'header',
 						'title' => __('Colors', 'mfn-opts'),
 					),
 

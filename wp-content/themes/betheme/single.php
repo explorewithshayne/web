@@ -18,7 +18,7 @@ get_header();
 
 				$is_toolset = get_post_meta( get_the_ID(), '_views_template', true );
 
-				if ( $is_toolset || 'builder' == get_post_meta( get_the_ID(), 'mfn-post-template', true ) ) {
+				if ( mfn_is_blocks() || $is_toolset || 'builder' == get_post_meta( get_the_ID(), 'mfn-post-template', true ) ) {
 
 					// template: builder
 
@@ -34,7 +34,7 @@ get_header();
 
 					// single post navigation | sticky
 
-					if (! $single_post_nav['hide-sticky']) {
+					if ( ! $single_post_nav['hide-sticky'] && ! mfn_is_blocks() ) {
 						if (isset($opts_single_post_nav['in-same-term'])) {
 							$single_post_nav['in-same-term'] = true;
 						}

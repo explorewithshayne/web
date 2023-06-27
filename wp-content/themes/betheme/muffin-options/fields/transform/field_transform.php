@@ -45,8 +45,8 @@ class MFN_Options_transform extends Mfn_Options_field
 
 					if ('rotate' === $input) {
 						$unit = 'deg';
-						$min = 0;
-						$max = 360;
+						$min = -180;
+						$max = 180;
 						$step = 1;
 					} elseif('skewX' === $input || 'skewY' === $input){
 						$unit = '';

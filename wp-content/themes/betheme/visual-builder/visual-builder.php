@@ -1,7 +1,7 @@
 <?php
 
-// error_reporting(E_ALL);
-// ini_set("display_errors", 1);
+/*error_reporting(E_ALL);
+ini_set("display_errors", 1);*/
 
 if( ! defined( 'ABSPATH' ) ){
 	exit; // Exit if accessed directly
@@ -61,8 +61,11 @@ if( is_admin() ){
 	    return $actions;
 	}
 
-	// init vb class
-	add_action( 'post_action_'. apply_filters('betheme_slug', 'mfn') .'-live-builder', 'mfnvb_init_vb' );
+	add_action( 'init', 'mfn_init_bebuilder');
+	function mfn_init_bebuilder(){
+		// init vb class
+		add_action( 'post_action_'. apply_filters('betheme_slug', 'mfn') .'-live-builder', 'mfnvb_init_vb' );
+	}
 }
 
 function mfnvb_init_vb($id){
@@ -72,14 +75,29 @@ function mfnvb_init_vb($id){
 	}
 
 	if( get_post_type($id) == 'template' ) flush_rewrite_rules(false);
-	
+
 	$mfnVisualBuilder = new MfnVisualBuilder();
 
 	if( is_admin() ){
-		add_action( 'admin_enqueue_scripts', array( $mfnVisualBuilder, 'mfn_append_vb_styles'), 9999 );
+		//add_action( 'admin_enqueue_scripts', array( $mfnVisualBuilder, 'mfn_append_vb_styles'), 9999 );
+
+		wp_enqueue_style( 'imgareaselect' );
+		wp_plupload_default_settings();
+
+		require_once ABSPATH . WPINC . '/media-template.php';
+		add_action( 'mfn_footer_enqueue', 'wp_print_media_templates' );
+		add_action( 'mfn_footer_enqueue', 'wp_print_media_templates' );
+		add_action( 'mfn_footer_enqueue', 'wp_print_media_templates' );
+		
+		add_action( 'mfn_header_enqueue', array( $mfnVisualBuilder, 'mfn_append_vb_header'), 10 );
+		add_action( 'mfn_footer_enqueue', array( $mfnVisualBuilder, 'mfn_append_vb_footer'), 10 );
 	}else{
 		remove_action('wp_enqueue_scripts', 'mfn_styles');
-		add_action( 'wp_enqueue_scripts', array( $mfnVisualBuilder, 'mfn_append_vb_styles'), 9999 );
+
+		add_action( 'wp_enqueue_scripts', array( $mfnVisualBuilder, 'mfn_append_vb_header'), 999 );
+		add_action( 'wp_enqueue_scripts', array( $mfnVisualBuilder, 'mfn_append_vb_footer'), 999 );
+
+		//add_action( 'wp_enqueue_scripts', array( $mfnVisualBuilder, 'mfn_append_vb_styles'), 9999 );
 	}
 
 	$mfnVisualBuilder->mfn_load_sidebar();
@@ -182,6 +200,17 @@ function mfnvb_updateVbView(){
 		unset( $mfn_update_post['ID'] );
 		$wpdb->update( $wpdb->posts, $mfn_update_post, array( 'ID' => $post_id ) );
 	}
+
+	// FIX | Yoast SEO
+
+	$seo_content = $admin->rankMath(false, $sections);
+	if( $seo_content ){
+		update_post_meta( $post_id, 'mfn-page-items-seo', $seo_content );
+	} else {
+		delete_post_meta( $post_id, 'mfn-page-items-seo' );
+	}
+
+	// end: FIX | Yoast SEO
 
 	/** START template conditions */
 	if ( $post_type == 'template' ){
@@ -343,25 +372,6 @@ function mfnvb_set_revision(){
 	wp_die();
 }
 
-// copy to clipboard
-
-/*add_action( 'wp_ajax_mfntoclipboard', 'mfnvb_copytoclipboard' );
-
-function mfnvb_copytoclipboard(){
-
-	if( !current_user_can( 'edit_posts' ) ){ wp_die(); }
-	check_ajax_referer( 'mfn-builder-nonce', 'mfn-builder-nonce' );
-
-	if( !empty($_POST['sections']) ){
-		$save = $request['sections'];
-		echo $save;
-	}else{
-		echo '';
-	}
-
-	wp_die();
-}*/
-
 // save preset
 
 add_action( 'wp_ajax_mfnsavepreset', 'mfnvb_savepreset' );
@@ -384,7 +394,7 @@ function mfnvb_savepreset(){
 	$new_item['item'] = $item;
 	$new_item['type'] = 'custom';
 	$new_item['uid'] = Mfn_Builder_Helper::unique_ID();
-	$new_item['fields'] = $items;
+	$new_item['attr'] = $items;
 
 	$all[] = $new_item;
 
@@ -541,7 +551,6 @@ function mfnvb_restore_revision(){
 
 			$return['html'] = $render['html'];
 			$return['form'] = $render['form'];
-			$return['navigator'] = $render['navigator'];
 
 			wp_send_json($return);
 
@@ -585,7 +594,7 @@ function mfnvb_savepostoption(){
 
 	$id = $_POST['id'];
 	$option = esc_html($_POST['option']);
-	$value = esc_html($_POST['value']);
+	$value = $_POST['value'];
 
 	if( $value == '0' && in_array($option, array('mfn_header_template', 'mfn_footer_template')) ){
 		delete_post_meta($id, $option);
@@ -597,7 +606,7 @@ function mfnvb_savepostoption(){
 
 			$csspath = str_replace('postid', $id, $explode[1]);
 			$csspath = str_replace('|hover', ':hover', $csspath);
-			
+
 			$style = $explode[2];
 
 			$existed = get_post_meta($id, 'mfn-page-options-style', true);
@@ -677,8 +686,7 @@ function mfnvb_import_data(){
 	$count = $_POST['count'];
 	$single = $_POST['single'] ? true : false;
 
-	$import = wp_unslash( $_POST['import'] );
-	$mfn_items = json_decode( $import, true );
+	$mfn_items = json_decode( stripslashes ($_POST['import']), true );
 
 	if( ! is_array( $mfn_items ) ) return false;
 
@@ -688,13 +696,10 @@ function mfnvb_import_data(){
 		];
 	}
 
-	$navigator = MfnVisualBuilder::getNavigatorTree($mfn_items);
-
 	$render = mfnvb_renderView( $mfn_items, $id );
 
 	$return['html'] = $render['html'];
 	$return['form'] = $render['form'];
-	$return['navigator'] = $render['navigator'];
 
 	wp_send_json($return);
 
@@ -749,9 +754,8 @@ function mfnvb_import_single_page(){
 
 			//print_r($mfn_items);
 
-			/*$return['html'] = $render['html'];
+			$return['html'] = $render['html'];
 			$return['form'] = $render['form'];
-			$return['navigator'] = $render['navigator'];*/
 
 			wp_send_json($render);
 
@@ -807,7 +811,6 @@ function mfnvb_import_template(){
 
 	$return['html'] = $render['html'];
 	$return['form'] = $render['form'];
-	$return['navigator'] = $render['navigator'];
 
 	wp_send_json($return);
 
@@ -857,7 +860,7 @@ function mfnvb_import_template_wraponly(){
 
 
 	$mfnvb = new MfnVisualBuilder();
-	$form = $mfnvb->loadElementsArr($mfn_items);
+	$form = $mfnvb->loadExistedElements($mfn_items);
 
 	ob_start();
 
@@ -869,11 +872,8 @@ function mfnvb_import_template_wraponly(){
 
 	ob_end_clean();
 
-	$navigator = MfnVisualBuilder::getNavigatorTree($mfn_items);
-
 	$return['html'] = $html;
 	$return['form'] = $form;
-	$return['navigator'] = $navigator;
 
 	wp_send_json($return);
 
@@ -927,7 +927,6 @@ function mfnvb_insert_prebuilt(){
 
 		$return['html'] = $render['html'];
 		$return['form'] = $render['form'];
-		$return['navigator'] = $render['navigator'];
 
 		wp_send_json($return);
 
@@ -948,7 +947,7 @@ function mfnvb_importfromclipboard(){
 	$id = $_POST['id'];
 	$type = $_POST['type'];
 
-	$mfn_items = json_decode( wp_unslash($_POST['import']), true);
+	$mfn_items = json_decode( stripslashes($_POST['import']), true);
 
 	if( ! is_array( $mfn_items ) ) return false;
 
@@ -956,7 +955,6 @@ function mfnvb_importfromclipboard(){
 
 	$return['html'] = $render['html'];
 	$return['form'] = $render['form'];
-	$return['navigator'] = $render['navigator'];
 
 	wp_send_json($return);
 
@@ -1124,7 +1122,6 @@ function mfnvb_renderhtml(){
 
 	$return['html'] = $render['html'];
 	$return['form'] = $render['form'];
-	$return['navigator'] = $render['navigator'];
 
 	wp_send_json($return);
 
@@ -1162,12 +1159,10 @@ function mfnvb_renderView( $mfn_items, $id, $type = false ){
 	//$html = ob_get_clean();
 
 	$mfnvb = new MfnVisualBuilder();
-	$form = $mfnvb->loadElementsArr($mfn_items);
-	$navigator = MfnVisualBuilder::getNavigatorTree($mfn_items);
+	$form = $mfnvb->loadExistedElements($mfn_items);
 
 	$return['html'] = $html;
 	$return['form'] = $form;
-	$return['navigator'] = $navigator;
 
 	return $return;
 }

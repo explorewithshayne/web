@@ -243,17 +243,27 @@
 
 								<li class="url">
 									<span class="label"><?php esc_html_e('Home URL', 'mfn-opts'); ?></span>
-									<span class="desc"><?php echo esc_html($this->data['home']); ?></span>
+									<?php if ($this->status['https_home']): ?>
+										<span class="desc"><?php echo esc_html($this->data['home']); ?></span>
+									<?php else: ?>
+										<span class="status-icon mfn-icon-no-red"></span>
+										<span class="desc"><?php echo esc_html($this->data['home']); ?></span>
+										<span class="status-notice status-error">Connection is not secure. Please use HTTPS.</span>
+									<?php endif; ?>
 								</li>
 
 								<li class="url">
 									<span class="label"><?php esc_html_e('Site URL', 'mfn-opts'); ?></span>
-									<?php if ($this->status['siteurl']): ?>
+									<?php if ($this->status['siteurl'] && $this->status['https_site']): ?>
 										<span class="desc"><?php echo esc_html($this->data['siteurl']); ?></span>
 									<?php else: ?>
 										<span class="status-icon mfn-icon-no-red"></span>
 										<span class="desc"><?php echo esc_html($this->data['siteurl']); ?></span>
-										<span class="status-notice status-error">Home URL host must be the same as Site URL host.</span>
+										<?php if ( ! $this->status['siteurl'] ): ?>
+											<span class="status-notice status-error">Home URL host must be the same as Site URL host.</span>
+										<?php else: ?>
+											<span class="status-notice status-error">Connection is not secure. Please use HTTPS.</span>
+										<?php endif; ?>
 									<?php endif; ?>
 								</li>
 
@@ -319,6 +329,19 @@
 										<span class="mfn-badge"><?php echo esc_html(MFN_THEME_VERSION); ?></span>
 									</span>
 								</li>
+
+								<?php if( ! empty($this->data['version_history']) ): ?>
+									<li>
+										<span class="label"><?php esc_html_e('Updates history', 'mfn-opts'); ?></span>
+										<span class="desc">
+											<?php
+												foreach( array_reverse($this->data['version_history']) as $version ){
+													echo '<span class="mfn-badge">'. $version['version'] .'</span> - '. date( get_option( 'date_format' ), $version['time'] ) .'<br />';
+												}
+											?>
+										</span>
+									</li>
+								<?php endif; ?>
 
 							</ul>
 						</div>

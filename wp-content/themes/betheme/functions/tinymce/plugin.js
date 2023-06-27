@@ -3,7 +3,7 @@
   /* globals tinymce */
 
   "use strict";
-  
+
   tinymce.PluginManager.add('mfnsc', function(editor, url) {
     editor.addButton('mfnsc', {
       text: 'Shortcode',
@@ -187,7 +187,7 @@
         }, {
           text: 'Image',
           onclick: function() {
-            editor.insertContent('[image src="" size="" width="" height="" align="" stretch="0" border="0" margin_top="" margin_bottom="" link_image="" link="" target="" hover="" alt="" caption="" greyscale="" animate=""]');
+            editor.insertContent('[image src="" size="" align="" stretch="0" border="0" margin_top="" margin_bottom="" link_image="" link="" target="" hover="" alt="" caption="" greyscale="" animate=""]');
           }
         }, {
           text: 'Popup',

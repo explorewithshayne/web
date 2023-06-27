@@ -2,7 +2,7 @@
 
 <div class="mfn-cart-holder woocommerce" tabindex="0" aria-expanded="false" aria-label="<?php _e('shop cart','betheme'); ?>" role="navigation">
 	<div class="mfn-ch-row mfn-ch-header">
-		<a class="toggle-mfn-cart close-mfn-cart mfn-close-icon" tabindex="0"><span class="icon">&#10005;</span></a>
+		<a href="#" class="toggle-mfn-cart close-mfn-cart mfn-close-icon" tabindex="0"><span class="icon">&#10005;</span></a>
 		<h3>
 			<?php
 				$cart_icon = mfn_opts_get('shop-cart');
@@ -18,7 +18,7 @@
 				}else{
 					echo get_the_title( get_option( 'woocommerce_cart_page_id' ) );
 				}
-				
+
 			?>
 		</h3>
 	</div>

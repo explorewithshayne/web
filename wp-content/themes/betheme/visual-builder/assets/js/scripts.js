@@ -25,7 +25,6 @@ let savebutton = $('.btn-save-form-primary span').text();
 let previewTab;
 let pageid = mfnvbvars.pageid;
 let wpnonce = mfnvbvars.wpnonce;
-let ajaxurl = mfnvbvars.ajaxurl;
 var builder_type = mfnvbvars.builder_type;
 let $edited_div = false;
 let inlineIndex = 0;
@@ -106,7 +105,7 @@ var elements = {
         //var new_item = {...mfnvbvars.elements[name]};
 
         var new_item = {};
-        new_item = JSON.parse( JSON.stringify(mfnvbvars.elements[name]) );
+        new_item = JSON.parse( JSON.stringify(renderMfnFields.items[name]) );
         var html = new_item.html.replaceAll('uidhere', uid);
 
         if( new_item.script ){
@@ -149,6 +148,28 @@ var sizes = [
     {index: 12, key: '1/1', desktop: 'one', laptop: 'laptop-one', tablet: 'tablet-one', mobile: 'mobile-one', percent: '100%'}
 ];
 
+const deprecated_fields = {
+    item: ['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-header-menu > li.current-menu-item.mfn-menu-li > a.mfn-menu-link:color','style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-header-menu > li.current-menu-item.mfn-menu-li > a.mfn-menu-link:background-color'],
+    wrap: [],
+    section: []
+};
+
+const rewrited_fields = {
+    item: {
+        'product_images': [ // added 20.05.2023
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-style',           new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-style'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-color',           new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-color'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-width',           new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-width'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-width_tablet',    new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-width_tablet'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-width_mobile',    new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-width_mobile'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-radius',          new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-radius'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-radius_tablet',   new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-radius_tablet'},
+            {old: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .flex-viewport:border-radius_mobile',   new: 'style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-has-gallery .flex-viewport, .mcb-section .mcb-wrap .mcb-item-mfnuidelement .mfn-product-hasnt-gallery .woocommerce-product-gallery__image:border-radius_mobile'}
+        ]
+    },
+    wrap: [],
+    section: []
+};
 
 var dynamic_data = {
     'labels' : {
@@ -327,13 +348,15 @@ function backToWidgets(){
     $('.mfn-visualbuilder .sidebar-panel .sidebar-panel-header .header-items .title-group .sidebar-panel-desc .sidebar-panel-title').text('Add element');
     $('.mfn-visualbuilder .sidebar-panel .sidebar-panel-header .header-items .title-group .sidebar-panel-icon').attr('class', 'sidebar-panel-icon mfn-icon-add-big');
 
+    if($('.mfn-ui').hasClass('mfn-sidebar-hidden-footer')) $('.mfn-ui').removeClass('mfn-sidebar-hidden-footer');
+
     $(".panel").hide();
     $(".header").hide();
     $(".panel-items").show();
     $(".header-items").show();
     $('.panel-edit-item .mfn-form');
     $('.mfn-ui').removeClass('mfn-editing-section mfn-editing-wrap mfn-editing-element');
-    if( typeof edited_item.jsclass !== 'undefined' ) $('.mfn-ui').removeClass('mfn-editing-'+edited_item.jsclass);
+    if( edited_item && typeof edited_item.jsclass !== 'undefined' ) $('.mfn-ui').removeClass('mfn-editing-'+edited_item.jsclass);
 
     if( $builder.find('.mfn-current-editing').length ) $builder.find('.mfn-current-editing').removeClass('mfn-current-editing');
 
@@ -489,7 +512,7 @@ function catchShortcuts(e){
         }
     }else if((e.ctrlKey || e.metaKey) && e.key == "c"){
         // ctr || cmd + c
-        if( !window.getSelection && !$content.find('.mfn-current-editing .mfn-inline-editor').is(":focus") && !$content.find('input').is(':focus') && !$content.find('textarea').is(':focus') && !$('input').is(':focus') && !$('textarea').is(':focus') && !$('textarea').is(':focus') && !$('.CodeMirror-code').is(':focus') ){
+        if( iframe.window.getSelection().toString() == '' && !$content.find('.mfn-current-editing .mfn-inline-editor').is(":focus") && !$content.find('input').is(':focus') && !$content.find('textarea').is(':focus') && !$('input').is(':focus') && !$('textarea').is(':focus') && !$('textarea').is(':focus') && !$('.CodeMirror-code').is(':focus') ){
             e.preventDefault();
             if( $content.find('.mfn-current-editing').length ){
                 context_el = $content.find('.mfn-current-editing').attr('data-uid');
@@ -626,7 +649,7 @@ $('.mfn-items-list-contextmenu ul li a').on('click', function(e) {
     $('.mfn-items-list-contextmenu').hide();
 
     if( action == 'love-it' ){
-        $.ajax( ajaxurl, {
+        $.ajax( mfnajaxurl, {
           type : "POST",
           data : {
             'mfn-builder-nonce': wpnonce,
@@ -653,7 +676,6 @@ $('.mfn-items-list-contextmenu ul li a').on('click', function(e) {
 function init() {
 
     iframeReady(); // sections toolbar buttons
-    historyClick(); // history back click
 
     uploader.browse();
     uploader.delete();
@@ -759,7 +781,7 @@ function init() {
 
     dynamicData.init();
 
-    setTimeout(addHistory, 500);
+    historyStorage.init();
 
     $('.mfn-preloader').fadeOut(500, function() {
         $('body').removeClass('mfn-preloader-active');
@@ -777,16 +799,16 @@ function loopAllStyleFields(uid = false){
     }
 
     $.each(copied, function(i, v) {
-        if( v.jsclass == 'wrap' || v.jsclass == 'section' ){
-            $.each(v.attr, function(a, attr) {
-                if( a.includes('style:') ){
-                    a = a.replaceAll('mfnuidelement', v.uid);
+        if( v.uid == 'pageoptions' ){
+            $.each(v, function(a, attr) {
+                if( a.includes('style:') ) {
+                    a = a.replaceAll('mfnuidelement', v.uid).replaceAll('postid', pageid);
                     grabArrStyle(a, attr, v.uid);
                 }
             });
         }else{
-            $.each(v.fields, function(a, attr) {
-                if( a.includes('style:') ){
+            $.each(v.attr, function(a, attr) {
+                if( a.includes('style:') ) {
                     a = a.replaceAll('mfnuidelement', v.uid).replaceAll('postid', pageid);
                     grabArrStyle(a, attr, v.uid);
                 }
@@ -795,7 +817,6 @@ function loopAllStyleFields(uid = false){
     });
 
     copied = [];
-
 }
 
 $('#mfn-sidebar-switcher').on('click', function() {
@@ -855,170 +876,143 @@ function stopDrag(e) {
     document.documentElement.removeEventListener('mouseup', stopDrag, false);
 }
 
-function addHistory(){
-    //return false;
-    if( !historyAllow ) return;
+let historyStorage = {
+    object: function() {
+        return localStorage.getItem('mfnhistory') ? JSON.parse(localStorage.getItem('mfnhistory')) : [];
+    },
+    init: function() {
+        historyStorage.add();
+        historyStorage.click();
+    },
+    add: function() {
+        // addHistory historyStorage.add()
+        if( !historyAllow ) return;
 
-    //console.log('add history');
+        let history = historyStorage.object();
 
-    var history = localStorage.getItem('mfnhistory') ? JSON.parse(localStorage.getItem('mfnhistory')) : [];
-
-    if( historyIndex > 0){
-        history = history.filter( (y,x) => x >= historyIndex );
-    }
-
-    scroll_top = $content.find("html, body").scrollTop();
-
-    historyIndex = 0;
-
-    $('.sidebar-panel-footer .mfn-history-btn.btn-undo').addClass('loading');
-
-    var formData = prepareForm();
-
-    history.unshift({
-        'pageid': pageid,
-        'form': formData,
-        'uid': edited_item ? edited_item.uid : false,
-        'tab': edited_item ? $('.mfn-ui .mfn-form .sidebar-panel-content-tabs li.active').attr('data-tab') : false,
-    });
-
-    try {
-        localStorage.setItem('mfnhistory', JSON.stringify( history.filter((item,i) => { return i < 10 }) ));
-    } catch (e) {
-        localStorage.setItem('mfnhistory', JSON.stringify( [] ) );
-        console.log('Memory limit');
-    }
-
-    history = false;
-
-    $('.sidebar-panel-footer .mfn-history-btn.btn-undo').removeClass('loading');
-    checkHistoryIndex();
-}
-
-function historyClick(){
-    $('.sidebar-panel-footer .mfn-history-btn').on('click', function(e) {
-        e.preventDefault();
-        $el = $(this);
-
-        if( wyswig_active ){
-            wyswig_active = false;
-            if( $editpanel.find( '.panel-edit-item .mfn-form .html-editor' ).length ) MfnFieldTextarea.destroy();
-            if( $editpanel.find( '.panel-edit-item .mfn-form .visual-editor' ).length ) tinymce.execCommand( 'mceRemoveEditor', false, 'mfn-editor' );
+        if( historyIndex > 0){
+            history = history.filter( (y,x) => x >= historyIndex );
         }
 
-        if(!$el.hasClass('inactive') && !$el.hasClass('loading')){
+        historyIndex = 0;
 
-            let historyAction = 'undo';
+        $('.sidebar-panel-footer .mfn-history-btn.btn-undo').addClass('loading');
 
-            if( $el.hasClass('btn-redo') && historyIndex > 0 ){
-                historyAction = 'redo';
-                historyIndex--;
-            }else if( $el.hasClass('btn-undo') && historyIndex <= history.length ){
-                historyIndex++;
-            }else{
-                checkHistoryIndex();
-                return;
-            }
+        history.unshift({
+            'form': mfnvbvars.pagedata,
+            'pageid': pageid,
+            'html': $builder.html()
+        });
 
-            $el.addClass('loading');
-            $content.find('body').addClass('mfn-loading');
-
-            historyRun(historyAction, historyIndex);
-
+        try {
+            localStorage.setItem('mfnhistory', JSON.stringify( history.filter((item,i) => { return i < 11 }) ));
+        } catch (e) {
+            localStorage.setItem('mfnhistory', JSON.stringify( history.filter((item,i) => { return i < 2 }) ) );
+            console.log('Memory limit');
         }
 
-    });
-}
+        history = false;
 
-function historyRun(historyAction, historyIndex){
-    var history = localStorage.getItem('mfnhistory') ? JSON.parse(localStorage.getItem('mfnhistory')) : [];
-    var h_event = history[historyIndex];
+        $('.sidebar-panel-footer .mfn-history-btn.btn-undo').removeClass('loading');
+        historyStorage.index();
+    },
+    click: function() {
+         $('.sidebar-panel-footer .mfn-history-btn').on('click', function(e) {
+            e.preventDefault();
+            $el = $(this);
 
-    if( !h_event ) {
-        checkHistoryIndex();
-        $('.sidebar-panel-footer .mfn-history-btn').removeClass('loading');
-        return;
-    }
+            let history = historyStorage.object();
 
-    if( h_event.pageid != pageid ) return;
+            if(!$el.hasClass('inactive') && !$el.hasClass('loading')){
 
-    edited_item = false;
+                let historyAction = 'undo';
 
-    $.ajax({
-        url: ajaxurl,
-        data: {
-            action: 'mfnrenderhtml',
-            'mfn-builder-nonce': wpnonce,
-            sections: h_event.form,
-            id: pageid
-        },
-        type: 'POST',
-        success: function(response){
-
-            $builder.html( response.html );
-            $navigator.find('.navigator-tree').html(response.navigator);
-            mfnvbvars.pagedata = mfnvbvars.pagedata.filter( (item) => item.uid == 'pageoptions' );
-
-            $.each(response.form, function(i, el) {
-                mfnvbvars.pagedata.push(el);
-            });
-
-            if( $builder.find('.mfn-current-editing').length ) $builder.find('.mfn-current-editing').removeClass('mfn-current-editing');
-
-            if( $builder.find('.loading.disabled').length )$builder.find('.loading.disabled').removeClass('loading disabled');
-
-            if( $builder.find('.mfn-initialized').length ){
-                $builder.find('.mfn-initialized').removeClass('mfn-initialized mfn-watchChanges mfn-blur-action mfn-focused').removeAttr('data-medium-editor-element medium-editor-index');
-                inlineEditors = [];
-            }
-
-            setTimeout(function() {
-                if( h_event.uid && $builder.find('.vb-item[data-uid="'+h_event.uid+'"]').length ){
-                    $builder.find('.vb-item[data-uid="'+h_event.uid+'"]').find('.mfn-header').first().find('.mfn-element-edit').trigger('click');
-                    if( h_event.tab ) $('.mfn-ui .mfn-form .sidebar-panel-content-tabs li.spct-li-'+h_event.tab).trigger('click');
+                if( $el.hasClass('btn-redo') && historyIndex > 0 ){
+                    historyAction = 'redo';
+                    historyIndex--;
+                }else if( $el.hasClass('btn-undo') && historyIndex <= history.length ){
+                    historyIndex++;
                 }else{
-                    backToWidgets();
+                    $el.addClass('inactive');
+                    return;
                 }
-            }, 100);
 
-            $('.sidebar-panel-footer .mfn-history-btn').removeClass('loading');
-            $content.find('body').removeClass('mfn-loading');
+                $el.addClass('loading');
+                $content.find('body').addClass('mfn-loading');
 
-            history = false;
+                historyStorage.restore(historyAction, historyIndex);
 
-            $content.find("style.mfn-local-style").remove();
+            }
 
-            $content.find("html, body").scrollTop( scroll_top );
+        });
+    },
+    index: function() {
+        let history = historyStorage.object();
 
-            blink( true );
-            runAjaxElements();
-            inlineEditor();
-            loopAllStyleFields();
-            checkHistoryIndex();
-
-            checkEmptyPage();
-            checkEmptySections();
-            checkEmptyWraps();
-
+        if(historyIndex < history.length-1){
+            $undo.removeClass('inactive');
+        }else{
+            $undo.addClass('inactive');
         }
-    });
-}
 
-function checkHistoryIndex(){
-    var history = localStorage.getItem('mfnhistory') ? JSON.parse(localStorage.getItem('mfnhistory')) : [];
+        if(historyIndex < 1){
+            $redo.addClass('inactive');
+        }else{
+            $redo.removeClass('inactive');
+        }
+        history = false;
+    },
+    restore: function(historyAction, historyIndex) {
+        let history = historyStorage.object();
+        var h_event = history[historyIndex];
 
-    if(historyIndex < history.length-1){
-        $undo.removeClass('inactive');
-    }else{
-        $undo.addClass('inactive');
+        if( !h_event ) {
+            historyStorage.index();
+            $('.sidebar-panel-footer .mfn-history-btn').removeClass('loading');
+            return;
+        }
+
+        if( h_event.pageid != pageid ) return;
+
+        edited_item = false;
+
+        mfnvbvars.pagedata = h_event.form;
+        $builder.html( h_event.html );
+
+        if( $builder.find('.mfn-initialized').length ){
+            $builder.find('.mfn-initialized').removeClass('mfn-initialized mfn-watchChanges mfn-blur-action mfn-focused').removeAttr('data-medium-editor-element medium-editor-index');
+            inlineEditors = [];
+        }
+
+        setTimeout(function() {
+            if( h_event.uid && $builder.find('.vb-item[data-uid="'+h_event.uid+'"]').length ){
+                $builder.find('.vb-item[data-uid="'+h_event.uid+'"]').find('.mfn-header').first().find('.mfn-element-edit').trigger('click');
+                if( h_event.tab ) $('.mfn-ui .mfn-form .sidebar-panel-content-tabs li.spct-li-'+h_event.tab).trigger('click');
+            }else{
+                backToWidgets();
+            }
+        }, 100);
+
+        $('.sidebar-panel-footer .mfn-history-btn').removeClass('loading');
+        $content.find('body').removeClass('mfn-loading');
+
+        history = false;
+
+        $content.find("style.mfn-local-style").remove();
+
+        blink( true );
+        runAjaxElements();
+        inlineEditor();
+        loopAllStyleFields();
+        historyStorage.index();
+
+        checkEmptyPage();
+        checkEmptySections();
+        checkEmptyWraps();
+
+        runSorting();
+
     }
-
-    if(historyIndex < 1){
-        $redo.addClass('inactive');
-    }else{
-        $redo.removeClass('inactive');
-    }
-    history = false;
 }
 
 
@@ -1075,7 +1069,7 @@ function iframeReady(){
     sliderInput.customValue();
     presets.init();
 
-    $content.on('click', '.mcb-column-inner div:not(.mfn-header) a:not(.btn-edit-slider), .mcb-column-inner > a, .mfn-footer-stickymenu a', function(e) {
+    $content.on('click', '.mfn-rev-slider a:not(.btn-edit-slider), .mcb-column-inner div:not(.mfn-header) a:not(.btn-edit-slider), .mcb-column-inner > a, .mfn-footer-stickymenu a', function(e) {
         e.preventDefault();
     });
 
@@ -1105,9 +1099,9 @@ function iframeReady(){
 
     if( builder_type == 'megamenu' ){
         var page_options = mfnvbvars.pagedata.filter( (item) => item.uid == 'pageoptions' )[0];
-        if( typeof page_options.fields['megamenu_width'] !== "undefined" && page_options.fields['megamenu_width'] == 'custom-width' ) {
-            $content.find('.mfn-megamenu-wrapper').css('width', page_options.fields['megamenu_custom_width']);
-        }else if( typeof page_options.fields['megamenu_width'] !== "undefined" && page_options.fields['megamenu_width'] == 'full-width' ){
+        if( typeof page_options['megamenu_width'] !== "undefined" && page_options['megamenu_width'] == 'custom-width' ) {
+            $content.find('.mfn-megamenu-wrapper').css('width', page_options['megamenu_custom_width']);
+        }else if( typeof page_options['megamenu_width'] !== "undefined" && page_options['megamenu_width'] == 'full-width' ){
             $content.find('.mfn-megamenu-wrapper').addClass('mfn-megamenu-full-width').removeAttr('style');
         }
 
@@ -1156,14 +1150,14 @@ function iframeReady(){
             if($it.attr('data-order') < sections_count){
                 $it.insertAfter($it.next());
 
-                addHistory();
+                historyStorage.add();
             }
         }else if($(this).hasClass('mfn-section-move-up')){
             // move up
             if($it.attr('data-order') > 0){
                 $it.insertBefore($it.prev());
 
-                addHistory();
+                historyStorage.add();
             }
         }else if( $(this).hasClass('mfn-section-export') ){
             // export
@@ -1190,7 +1184,7 @@ function iframeReady(){
             $content.find('.mfn-section-add').addClass('loading');
 
             var new_element = elements.section();
-            var navigator_html = navigatorHtml('Section', new_element.uid);
+            //var navigator_html = navigatorHtml('Section', new_element.uid);
 
             let uid = $(this).parent().data('uid');
             let count = $content.find('.mcb-section').length;
@@ -1203,20 +1197,22 @@ function iframeReady(){
                 if(placement == 'prev'){
                     $builder.find('.mcb-section[data-uid='+uid+']').before( new_element.html );
 
-                    $navigator.find('.navigator-tree .nav-'+uid).before(navigator_html);
+                    //$navigator.find('.navigator-tree .nav-'+uid).before(navigator_html);
                 }else{
                     $builder.find('.mcb-section[data-uid='+uid+']').after( new_element.html );
 
-                    $navigator.find('.navigator-tree .nav-'+uid).after(navigator_html);
+                    //$navigator.find('.navigator-tree .nav-'+uid).after(navigator_html);
                 }
             }else{
                 $builder.prepend( new_element.html );
-                $navigator.find('.navigator-tree').prepend(navigator_html);
+                //$navigator.find('.navigator-tree').prepend(navigator_html);
             }
 
             $content.find('.mfn-section-add').removeClass('loading');
 
             loopAllStyleFields(new_element.uid);
+
+            if($('body').hasClass('mfn-navigator-active')) be_navigator.show(new_element.uid);
 
             blink();
 
@@ -1227,12 +1223,12 @@ function iframeReady(){
         e.preventDefault();
         if(!$content.find('.wrap-layouts').hasClass('loading')){
 
-            var navigator_tree = '';
+            //var navigator_tree = '';
 
             $content.find('.wrap-layouts').addClass('loading');
 
             let section = $(this).parent().parent().parent().parent().data('order');
-            let id = $(this).parent().parent().parent().parent().data('uid');
+            let id = $(this).closest('.section.vb-item').attr('data-uid');
             let type = $(this).data('type');
 
             if($builder.find('.mcb-section-'+id+' .mfn-section-new').length){ $builder.find('.mcb-section-'+id+' .mfn-section-new').remove(); }
@@ -1241,24 +1237,24 @@ function iframeReady(){
                 var new_element = elements.wrap('1/4');
                 var new_element2 = elements.wrap('1/2');
                 var new_element3 = elements.wrap('1/4');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/4');
+                /*navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/4');
                 navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/2');
-                navigator_tree += navigatorHtml('Wrap', new_element3.uid, '1/4');
+                navigator_tree += navigatorHtml('Wrap', new_element3.uid, '1/4');*/
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element2.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element3.html );
             }else if( type == 'wrap-2313' ){
                 var new_element = elements.wrap('2/3');
                 var new_element2 = elements.wrap('1/3');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '2/3');
-                navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/3');
+                /*navigator_tree += navigatorHtml('Wrap', new_element.uid, '2/3');
+                navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/3');*/
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element2.html );
             }else if( type == 'wrap-1323' ){
                 var new_element = elements.wrap('1/3');
                 var new_element2 = elements.wrap('2/3');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/3');
-                navigator_tree += navigatorHtml('Wrap', new_element2.uid, '2/3');
+                /*navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/3');
+                navigator_tree += navigatorHtml('Wrap', new_element2.uid, '2/3');*/
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element2.html );
             }else if( type == 'wrap-14' ){
@@ -1266,10 +1262,10 @@ function iframeReady(){
                 var new_element2 = elements.wrap('1/4');
                 var new_element3 = elements.wrap('1/4');
                 var new_element4 = elements.wrap('1/4');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/4');
+                /*navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/4');
                 navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/4');
                 navigator_tree += navigatorHtml('Wrap', new_element3.uid, '1/4');
-                navigator_tree += navigatorHtml('Wrap', new_element4.uid, '1/4');
+                navigator_tree += navigatorHtml('Wrap', new_element4.uid, '1/4');*/
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element2.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element3.html );
@@ -1278,9 +1274,9 @@ function iframeReady(){
                 var new_element = elements.wrap('1/3');
                 var new_element2 = elements.wrap('1/3');
                 var new_element3 = elements.wrap('1/3');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/3');
+                /*navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/3');
                 navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/3');
-                navigator_tree += navigatorHtml('Wrap', new_element3.uid, '1/3');
+                navigator_tree += navigatorHtml('Wrap', new_element3.uid, '1/3');*/
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element2.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element3.html );
@@ -1290,15 +1286,15 @@ function iframeReady(){
             }else if( type == 'wrap-12' ){
                 var new_element = elements.wrap('1/2');
                 var new_element2 = elements.wrap('1/2');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/2');
-                navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/2');
+                /*navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/2');
+                navigator_tree += navigatorHtml('Wrap', new_element2.uid, '1/2');*/
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element2.html );
                 loopAllStyleFields(new_element.uid);
                 loopAllStyleFields(new_element2.uid);
             }else{
                 var new_element = elements.wrap('1/1');
-                navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/1');
+                //navigator_tree += navigatorHtml('Wrap', new_element.uid, '1/1');
                 $builder.find('.mcb-section-'+id+' .section_wrapper').append( new_element.html );
                 loopAllStyleFields(new_element.uid);
             }
@@ -1306,17 +1302,19 @@ function iframeReady(){
             if($content.find('.mcb-section-'+id+' .mfn-section-new').length){ $content.find('.mcb-section-'+id+' .mfn-section-new').remove(); }
             if($content.find('.mcb-section-'+id).hasClass('empty')){ $content.find('.mcb-section-'+id).removeClass('empty'); }
 
-            if( !$navigator.find('.navigator-tree .nav-'+id+' ul').length ){
+            /*if( !$navigator.find('.navigator-tree .nav-'+id+' ul').length ){
                 $navigator.find('.navigator-tree .nav-'+id).append('<ul class="mfn-sub-nav">'+navigator_tree+'</ul>');
             }else{
                 $navigator.find('.navigator-tree .nav-'+id+' > ul').append(navigator_tree);
-            }
+            }*/
 
             backToWidgets();
 
             $content.find('.wrap-layouts').removeClass('loading');
 
             checkWrapsCount(id);
+
+            if($('body').hasClass('mfn-navigator-active')) be_navigator.show(id);
 
             blink();
 
@@ -1373,16 +1371,16 @@ function iframeReady(){
             if( $(e.target).closest('.vb-item').hasClass('mcb-section')){
                 $content.find('.mfn-builder-area-contextmenu').attr('data-edited', 'Section');
 
-                $content.find('.mfn-builder-area-contextmenu .mfn-context-header').text('Section');
+                $content.find('.mfn-builder-area-contextmenu .mfn-context-header').html('Section');
             }else if( $(e.target).closest('.mcb-column-inner').length ){
                 $content.find('.mfn-builder-area-contextmenu').attr('data-edited', this_el.title);
 
-                $content.find('.mfn-builder-area-contextmenu .mfn-context-header').text( this_el.title );
+                $content.find('.mfn-builder-area-contextmenu .mfn-context-header').html( this_el.title );
             }else{
                 $content.find('.mfn-builder-area-contextmenu').attr('data-edited', 'Wrap');
 
                 context_el = $(e.target).closest('.mcb-wrap').attr('data-uid');
-                $content.find('.mfn-builder-area-contextmenu .mfn-context-header').text('Wrap');
+                $content.find('.mfn-builder-area-contextmenu .mfn-context-header').html('Wrap');
             }
 
             if(!mfncopy){
@@ -1439,11 +1437,11 @@ function iframeReady(){
             $('.mfn-builder-area-contextmenu').show().css({left:e.pageX, top: e.pageY});
 
             if( $(e.target).closest('li').hasClass('navigator-section')){
-                $('.mfn-builder-area-contextmenu .mfn-context-header').text('Section').attr('data-element', 'Section');
+                $('.mfn-builder-area-contextmenu .mfn-context-header').html('Section').attr('data-element', 'Section');
             }else if( $(e.target).closest('li').hasClass('navigator-wrap')){
-                $('.mfn-builder-area-contextmenu .mfn-context-header').text('Wrap').attr('data-element', 'Wrap');
+                $('.mfn-builder-area-contextmenu .mfn-context-header').html('Wrap').attr('data-element', 'Wrap');
             }else if( $(e.target).closest('li').hasClass('navigator-item')){
-                $('.mfn-builder-area-contextmenu .mfn-context-header').text('Item').attr('data-element', 'Item');
+                $('.mfn-builder-area-contextmenu .mfn-context-header').html('Item').attr('data-element', 'Item');
             }
 
             if(!mfncopy){
@@ -1508,23 +1506,14 @@ function iframeReady(){
 
             var listStyles = {};
 
-            if( copied_el.jsclass == 'section' || copied_el.jsclass == 'wrap' ){
-                for (key in copied_el.attr) {
-                    if( key.startsWith('style:') || key.includes('_switcher') ) {
-                        this_el.attr[key] = JSON.parse( JSON.stringify(copied_el.attr[key]));
-
-                    }
-                }
-            }else{
-                for (key in copied_el.fields) {
-                    if( key.startsWith('style:') || key.includes('_switcher') ) {
-                        this_el.fields[key] =  JSON.parse( JSON.stringify(copied_el.fields[key]));
-                    }
+            for (key in copied_el.attr) {
+                if( key.startsWith('style:') || key.includes('_switcher') ) {
+                    this_el.attr[key] = JSON.parse( JSON.stringify(copied_el.attr[key]));
                 }
             }
-
+            openEditForm.do( $edited_div, false );
             loopAllStyleFields(context_el);
-            addHistory();
+            historyStorage.add();
         }else if(action == 'save-preset'){
             presets.modal( context_el );
         }else if(action == 'reset-style'){
@@ -1532,11 +1521,7 @@ function iframeReady(){
 
             var listStyles = {};
 
-            if( this_el.jsclass == 'section' || this_el.jsclass == 'wrap' ){
-                listStyles = this_el.attr;
-            }else{
-                listStyles = this_el.fields;
-            }
+            listStyles = this_el.attr;
 
             for(key in listStyles) {
                 if(key.startsWith('style:')) {
@@ -1545,23 +1530,15 @@ function iframeReady(){
             }
 
             $content.find('style.mfn-local-style').remove();
-
+            openEditForm.do( $edited_div, false );
             loopAllStyleFields();
 
              $content.find('.vb-item[data-uid="'+context_el+'"]').find('.mfn-header').first().find('.mfn-element-edit').trigger('click');
 
-            addHistory();
+            historyStorage.add();
         }else if(action == 'navigator'){
-            $('body').addClass('mfn-navigator-active');
-            if( !$navigator.find('li.nav-'+context_el).hasClass('active') ){
-                if( !$navigator.find('li.nav-'+context_el).closest('li.navigator-section').hasClass('active') ){
-                    $navigator.find('li.nav-'+context_el).closest('li.navigator-section').children('.navigator-arrow').trigger('click');
-                }
-                if( !$navigator.find('li.nav-'+context_el).closest('li.navigator-wrap').hasClass('active') ){
-                    $navigator.find('li.nav-'+context_el).closest('li.navigator-wrap').children('.navigator-arrow').trigger('click');
-                }
-                $navigator.find('li.nav-'+context_el+' > a').trigger('click');
-            }
+
+            be_navigator.show(context_el);
         }
         $content.find('.mfn-builder-area-contextmenu').hide();
     });
@@ -1774,7 +1751,7 @@ function iframeReady(){
 
         // sticky wrap
         stickyWrap.reset(true);
-        addHistory();
+        historyStorage.add();
     });
 
     // delete
@@ -1833,7 +1810,7 @@ function iframeReady(){
             backToWidgets();
             runSorting();
 
-            addHistory();
+            historyStorage.add();
         });
     });
 
@@ -1913,46 +1890,50 @@ $editpanel.on('click', '.btn-save-changes', function(e){
         }
 
         $.ajax({
-        url: ajaxurl,
-        data: datas,
-        type: 'POST',
-        success: function(response){
-            if(response){ displayRevisions(response, $list); }
-            window.onbeforeunload = null;
+            url: mfnajaxurl,
+            data: datas,
+            type: 'POST',
+            success: function(response){
+                if(response){ displayRevisions(response, $list); }
+                window.onbeforeunload = null;
 
-            $('.btn-save-changes').removeClass('loading disabled');
-            datas = {};
+                $('.btn-save-changes').removeClass('loading disabled');
+                datas = {};
 
-            if(formaction == 'publish'){
-                $('.btn-save-form-primary').attr('data-action', 'update');
-                $('.btn-save-form-primary span').text('Update');
+                if(formaction == 'publish'){
+                    $('.btn-save-form-primary').attr('data-action', 'update');
+                    $('.btn-save-form-primary span').text('Update');
 
-                savebutton = 'Update';
-                formaction = 'update';
+                    savebutton = 'Update';
+                    formaction = 'update';
 
-                $('.btn-save-form-secondary').attr('data-action', 'draft');
-                $('.btn-save-form-secondary span').text('Save as draft');
-            }else if(formaction == 'draft'){
-                $('.btn-save-form-primary').attr('data-action', 'publish');
-                $('.btn-save-form-primary span').text('Publish');
+                    $('.btn-save-form-secondary').attr('data-action', 'draft');
+                    $('.btn-save-form-secondary span').text('Save as draft');
+                }else if(formaction == 'draft'){
+                    $('.btn-save-form-primary').attr('data-action', 'publish');
+                    $('.btn-save-form-primary span').text('Publish');
 
-                savebutton = 'Publish';
-                formaction = 'publish';
+                    savebutton = 'Publish';
+                    formaction = 'publish';
 
-                $('.btn-save-form-secondary').attr('data-action', 'update');
-                $('.btn-save-form-secondary span').text('Save draft');
+                    $('.btn-save-form-secondary').attr('data-action', 'update');
+                    $('.btn-save-form-secondary span').text('Save draft');
+                }
+
+                if( $('.modal-display-conditions').length ){
+                    $('.modal-display-conditions .btn-modal-save').removeClass('loading disabled');
+                    $('.modal-display-conditions').removeClass('show');
+                }
+
+                if( settings.forceReload ){
+                    settings.continue();
+                }
+
+                $('#mfn-preview-wrapper').append('<div style="display: none;" class="mfn-snackbar"><span class="mfn-icon mfn-icon-information"></span><div class="snackbar-message">Page updated.</div><div class="snackbar-action"><a href="'+$('.menu-viewpage').attr('href')+'" target="_blank">View page</a></div></div>');
+                $('.mfn-snackbar').fadeIn();
+                closeSnackbar();
             }
-
-            if( $('.modal-display-conditions').length ){
-                $('.modal-display-conditions .btn-modal-save').removeClass('loading disabled');
-                $('.modal-display-conditions').removeClass('show');
-            }
-
-            $('#mfn-preview-wrapper').append('<div style="display: none;" class="mfn-snackbar"><span class="mfn-icon mfn-icon-information"></span><div class="snackbar-message">Page updated.</div><div class="snackbar-action"><a href="'+$('.menu-viewpage').attr('href')+'" target="_blank">View page</a></div></div>');
-            $('.mfn-snackbar').fadeIn();
-            closeSnackbar();
-        }
-    });
+        });
 
     }
 });
@@ -1978,10 +1959,10 @@ var prepareForm2 = {
             var vb_uid = $(this).attr('data-uid');
             var this_vb = mfnvbvars.pagedata.filter( (item) => item.uid === vb_uid )[0];
 
-            if( typeof this_vb['fields'] !== 'undefined' ) {
-                this_vb['fields']['vb'] = 1;
-                this_vb['fields']['rwd'] = screen;
-                this_vb['fields']['vb_postid'] = $(this).closest('.mfn-queryloop-item-wrapper').length ? $(this).closest('.mfn-queryloop-item-wrapper').attr('data-post') : pageid;
+            if( typeof this_vb['attr'] !== 'undefined' ) {
+                this_vb['attr']['vb'] = 1;
+                this_vb['attr']['rwd'] = screen;
+                this_vb['attr']['vb_postid'] = $(this).closest('.mfn-queryloop-item-wrapper').length ? $(this).closest('.mfn-queryloop-item-wrapper').attr('data-post') : pageid;
             }else if( typeof this_vb['attr'] !== 'undefined' ) {
                 this_vb['attr']['rwd'] = screen;
             }
@@ -2035,8 +2016,8 @@ var prepareForm2 = {
 
             if( !items.filter( (item) => item.uid === col_uid ).length ){
 
-                if( this_col && typeof this_col.fields !== 'undefined' && typeof this_col.fields.content !== 'undefined' ){
-                    var inline_editor = $.parseHTML( this_col.fields.content );
+                if( this_col && typeof this_col.attr !== 'undefined' && typeof this_col.attr.content !== 'undefined' ){
+                    var inline_editor = $.parseHTML( this_col.attr.content );
 
                     $.each( inline_editor, function( i, el ) {
                       if( $(el).find('span[data-font-family]').length ) {
@@ -2046,13 +2027,13 @@ var prepareForm2 = {
                       }
                     });
 
-                    this_col.fields['used_fonts'] = used_fonts.join(',');
+                    this_col.attr['used_fonts'] = used_fonts.join(',');
                 }
 
-                if( typeof this_col['fields'] !== 'undefined' ) {
-                    this_col['fields']['vb'] = 1;
-                    this_col['fields']['rwd'] = screen;
-                    this_col['fields']['vb_postid'] = $(this).closest('.mfn-queryloop-item-wrapper').length ? $(this).closest('.mfn-queryloop-item-wrapper').attr('data-post') : pageid;
+                if( typeof this_col['attr'] !== 'undefined' ) {
+                    this_col['attr']['vb'] = 1;
+                    this_col['attr']['rwd'] = screen;
+                    this_col['attr']['vb_postid'] = $(this).closest('.mfn-queryloop-item-wrapper').length ? $(this).closest('.mfn-queryloop-item-wrapper').attr('data-post') : pageid;
                 }
 
                 items.push(this_col);
@@ -2093,13 +2074,13 @@ function prepareForm( uid = false ){
 
                         if( this_col && !this_wrap.items.filter( (item) => item.uid === col_uid ).length ){
 
-                            if( typeof this_col['fields'] !== 'undefined' && typeof this_col['fields']['vb'] !== 'undefined' ) delete this_col['fields']['vb'];
-                            if( typeof this_col['fields'] !== 'undefined' && typeof this_col['fields']['rwd'] !== 'undefined' ) delete this_col['fields']['rwd'];
-                            if( typeof this_col['fields'] !== 'undefined' && typeof this_col['fields']['vb_postid'] !== 'undefined' ) delete this_col['fields']['vb_postid'];
+                            if( typeof this_col['attr'] !== 'undefined' && typeof this_col['attr']['vb'] !== 'undefined' ) delete this_col['attr']['vb'];
+                            if( typeof this_col['attr'] !== 'undefined' && typeof this_col['attr']['rwd'] !== 'undefined' ) delete this_col['attr']['rwd'];
+                            if( typeof this_col['attr'] !== 'undefined' && typeof this_col['attr']['vb_postid'] !== 'undefined' ) delete this_col['attr']['vb_postid'];
 
-                            if( this_col && typeof this_col.fields !== 'undefined' && typeof this_col.fields.content !== 'undefined' ){
+                            if( this_col && typeof this_col.attr !== 'undefined' && typeof this_col.attr.content !== 'undefined' ){
 
-                                var inline_editor = $.parseHTML( this_col.fields.content );
+                                var inline_editor = $.parseHTML( this_col.attr.content );
 
                                 $.each( inline_editor, function( i, el ) {
                                   if( $(el).find('span[data-font-family]').length ){
@@ -2109,7 +2090,7 @@ function prepareForm( uid = false ){
                                   }
                                 });
 
-                                this_col.fields['used_fonts'] = used_fonts.join(',');
+                                this_col.attr['used_fonts'] = used_fonts.join(',');
                             }
 
                             this_wrap.items.push(this_col);
@@ -2240,17 +2221,6 @@ function addNewWrap(id, is_divider) {
 
         $builder.find('.mcb-section-'+id+' .section_wrapper .vb-item.mcb-wrap').last().after( new_element.html );
 
-        var navigator_html = navigatorHtml('Wrap', new_element.uid, '1/1');
-
-        if( !$navigator.find('.navigator-tree .nav-'+id+' ul').length ){
-            $navigator.find('.navigator-tree .nav-'+id).append('<ul class="mfn-sub-nav">'+navigator_html+'</ul>');
-        }else{
-            $navigator.find('.navigator-tree .nav-'+id+' > ul').append(navigator_html);
-        }
-
-        $navigator.find('.navigator-tree .nav-'+id).addClass('active');
-        $navigator.find('.navigator-tree .nav-'+id+' > ul').slideDown(300);
-
         checkWrapsCount(id);
 
         $content.find('.mfn-wrap-add').removeClass('loading');
@@ -2260,6 +2230,8 @@ function addNewWrap(id, is_divider) {
         blink();
 
         runSorting();
+
+        if($('body').hasClass('mfn-navigator-active')) be_navigator.show(new_uid);
 
         loopAllStyleFields(new_element.uid);
 
@@ -2286,7 +2258,7 @@ function addNewWidget(item){
 
     var new_uid = $(new_element).attr('data-uid');
 
-    var navigator_html = navigatorHtml(item, new_uid, '1/1');
+    //var navigator_html = navigatorHtml(item, new_uid, '1/1');
 
     //delete new_element.html;
 
@@ -2298,10 +2270,10 @@ function addNewWidget(item){
 
         if(new_widget_position == 'before'){
             $builder.find('.mcb-item-'+new_widget_container).before(new_element);
-            $navigator.find('.navigator-tree .nav-'+new_widget_container).before(navigator_html);
+            //$navigator.find('.navigator-tree .nav-'+new_widget_container).before(navigator_html);
         }else{
             $builder.find('.mcb-item-'+new_widget_container).after(new_element);
-            $navigator.find('.navigator-tree .nav-'+new_widget_container).after(navigator_html);
+            //$navigator.find('.navigator-tree .nav-'+new_widget_container).after(navigator_html);
         }
 
     }else{
@@ -2313,7 +2285,7 @@ function addNewWidget(item){
             $builder.find('.mcb-wrap-'+new_widget_container+' .mcb-wrap-inner .mfn-wrap-new').remove();
         }
 
-        if( !$navigator.find('.navigator-tree .nav-'+new_widget_container+' ul').length ){
+        /*if( !$navigator.find('.navigator-tree .nav-'+new_widget_container+' ul').length ){
             $navigator.find('.navigator-tree .nav-'+new_widget_container).append('<ul class="mfn-sub-nav">'+navigator_html+'</ul>');
         }else{
             if(new_widget_position == 'before') {
@@ -2321,21 +2293,21 @@ function addNewWidget(item){
             }else{
                 $navigator.find('.navigator-tree .nav-'+new_widget_container+' > ul').append(navigator_html);
             }
-        }
+        }*/
     }
 
     setTimeout(function() {
 
         if( $builder.find('.vb-item.mcb-wrap-'+new_widget_container).closest('.mfn-looped-items').length ){
-            re_render2( $builder.find('.vb-item.mcb-wrap-'+new_widget_container).closest('.mfn-looped-items').attr('data-uid') );
+            re_render( $builder.find('.vb-item.mcb-wrap-'+new_widget_container).closest('.mfn-looped-items').attr('data-uid') );
         }
 
         if( $builder.find('.vb-item.mcb-wrap-'+new_widget_container+'.mfn-looped-items').length ){
-            re_render2( $builder.find('.vb-item.mcb-wrap-'+new_widget_container+'.mfn-looped-items').attr('data-uid') );
+            re_render( $builder.find('.vb-item.mcb-wrap-'+new_widget_container+'.mfn-looped-items').attr('data-uid') );
         }
 
         if( $builder.find('.vb-item.mcb-item-'+new_widget_container).closest('.mfn-looped-items').length ){
-            re_render2( $builder.find('.vb-item.mcb-item-'+new_widget_container).closest('.mfn-looped-items').attr('data-uid') );
+            re_render( $builder.find('.vb-item.mcb-item-'+new_widget_container).closest('.mfn-looped-items').attr('data-uid') );
         }
 
     }, 300);
@@ -2356,6 +2328,8 @@ function addNewWidget(item){
     loopAllStyleFields(new_uid);
     runSorting();
 
+    if($('body').hasClass('mfn-navigator-active')) be_navigator.show(new_uid);
+
     blink();
 }
 
@@ -2363,11 +2337,10 @@ function navigatorHtml(type, uid, size = false) {
     if( type == 'Section' ){
         $html = '<li class="navigator-section nav-'+uid+'"><a data-uid="'+uid+'" href="#" class="">'+type+'</a><span class="navigator-arrow"><i class="icon-down-open-big"></i></span></li>';
     }else if( type == 'Wrap'){
-        $html = '<li class="navigator-wrap nav-'+uid+'"><a data-uid="'+uid+'" href="#">'+type+' <span class="navigator-size-label">'+size+'</span><span class="navigator-add-item back-to-widgets"></span></a><span class="navigator-arrow"><i class="icon-down-open-big"></i></span></li>';
+        $html = '<li class="navigator-wrap nav-'+uid+'"><a data-uid="'+uid+'" href="#">'+type+' <span class="navigator-size-label">'+size+'</span></a><span class="navigator-arrow"><i class="icon-down-open-big"></i></span></li>';
     }else{
-        $html = '<li class="navigator-item nav-'+uid+'"><a data-uid="'+uid+'" href="#"><span class="mfn-icon mfn-icon-'+type.replace('_', '-')+'"></span><span class="navitemtype">'+type.replace('_', ' ')+'</span></a></li>';
+        $html = '<li data-name="'+type.replace('_', '-')+'" class="navigator-item nav-'+uid+' navitemtype"><a data-uid="'+uid+'" href="#"><span class="mfn-icon mfn-icon-'+type.replace('_', '-')+'"></span>'+type.replace('_', ' ')+'</a></li>';
     }
-
     return $html;
 }
 
@@ -2437,7 +2410,11 @@ $editpanel.on('change', '.mfn-form-row .browse-icon .mfn-field-value, .mfn-form-
         $(this).closest('.mfn-form-row').find('.form-addon-prepend .mfn-button-upload .label i').attr('class', icon);
         $(this).closest('.mfn-form-row').find('.browse-icon').removeClass('empty');
 
-        if($content.find('.'+it).hasClass('column_counter')){
+        // console.log('# icon change');
+
+        if( isBlocks() ){
+          $content.find('.'+it+' .item-preview-icon i').attr('class',icon).removeClass('empty');
+        } else if($content.find('.'+it).hasClass('column_counter')){
             // counter
             if( $content.find('.'+it+' .icon_wrapper').length ){
                 if($content.find('.'+it+' .icon_wrapper i').length){
@@ -2529,7 +2506,7 @@ $editpanel.on('change', '.mfn-form-row .browse-icon .mfn-field-value, .mfn-form-
             }
         }else if($content.find('.'+it).hasClass('column_blockquote')){
             // blockquote icon
-            if( $input.hasClass('preview-icon_authorinput') ){
+            if( $editrow.hasClass('icon_author') ){
                 $content.find('.'+it+' .blockquote .author i').attr('class', icon);
             }else{
                 $content.find('.'+it+' .blockquote .mfn-blockquote-icon i').attr('class', icon);
@@ -2539,9 +2516,9 @@ $editpanel.on('change', '.mfn-form-row .browse-icon .mfn-field-value, .mfn-form-
             if($content.find('.'+it+' .icon-wrapper').length){
                 $content.find('.'+it+' .icon-wrapper').html('<i class="'+icon+'" aria-hidden="true"></i>');
             }else{
-                $content.find('.'+it+' .desc_wrapper').before('<div class="icon-wrapper"><i class="'+icon+'" aria-hidden="true"></i></div>');
+                $content.find('.'+it+' .desc-wrapper').before('<div class="icon-wrapper"><i class="'+icon+'" aria-hidden="true"></i></div>');
             }
-        }else if($content.find('.'+it).hasClass('column_header_menu') && $editrow.hasClass('header_menu submenu_icon') ){
+        }else if($content.find('.'+it).hasClass('column_header_menu') && $editrow.hasClass('header_menu') && $editrow.hasClass('submenu_icon') ){
             // header menu submenu icon
             if($content.find('.'+it+' .menu-sub').length){
                 $content.find('.'+it+' .menu-sub').html('<i class="'+icon+'" aria-hidden="true"></i>');
@@ -2596,8 +2573,11 @@ $editpanel.on('change', '.mfn-form-row .browse-icon .mfn-field-value, .mfn-form-
         $(this).closest('.mfn-form-row').find('.mfn-field-value').val('');
         $(this).closest('.mfn-form-row').find('.browse-icon').addClass('empty');
 
+        // console.log('# preview icon');
 
-        if($content.find('.'+it).hasClass('column_counter')){
+        if( isBlocks() ){
+          $content.find('.'+it+' .item-preview-icon i').removeAttr('class');
+        } else if($content.find('.'+it).hasClass('column_counter')){
             // counter
             if($('.mfn-ui .panel-edit-item .mfn-form .mfn-form-control.preview-imageinput').val().length){
                 $content.find('.'+it+' .icon_wrapper').html( $('.mfn-ui .panel-edit-item .mfn-form .mfn-form-control.preview-imageinput').val() );
@@ -2664,7 +2644,7 @@ $editpanel.on('change', '.mfn-form-row .browse-icon .mfn-field-value, .mfn-form-
             re_render();
         }else if($content.find('.'+it).hasClass('column_blockquote')){
             // blockquote icon
-            if( $('.mfn-field-value', $editbox).hasClass('preview-icon_authorinput') ){
+            if( $editrow.hasClass('icon_author') ){
                 $content.find('.'+it+' .blockquote .author i').attr('class', 'icon-user');
             }else{
                 $content.find('.'+it+' .blockquote .mfn-blockquote-icon i').attr('class', 'icon-quote');
@@ -2675,18 +2655,18 @@ $editpanel.on('change', '.mfn-form-row .browse-icon .mfn-field-value, .mfn-form-
                 if($content.find('.'+it+' .icon-wrapper').length){
                     $content.find('.'+it+' .icon-wrapper').html('<img class="scale-with-grid" src="'+$editpanel.find('.panel-edit-item .mfn-form .icon_box_2.image .preview-imageinput').val()+'" alt="">');
                 }else{
-                    $content.find('.'+it+' .desc_wrapper').before('<div class="icon-wrapper"><img class="scale-with-grid" src="'+$editpanel.find('.panel-edit-item .mfn-form .icon_box_2.image .preview-imageinput').val()+' alt=""></div>');
+                    $content.find('.'+it+' .desc-wrapper').before('<div class="icon-wrapper"><img class="scale-with-grid" src="'+$editpanel.find('.panel-edit-item .mfn-form .icon_box_2.image .preview-imageinput').val()+' alt=""></div>');
                 }
             }else if( $editpanel.find('.panel-edit-item .mfn-form .icon_box_2.label .mfn-field-value').val().length ){
                 if( $content.find('.'+it+' .icon-wrapper').length ){
                     $content.find('.'+it+' .icon-wrapper').html('<span class="icon-label">'+$editpanel.find('.panel-edit-item .mfn-form .icon_box_2.label .mfn-field-value').val()+'</span>');
                 }else{
-                    $content.find('.'+it+' .desc_wrapper').before('<div class="icon-wrapper"><span class="icon-label">'+$editpanel.find('.panel-edit-item .mfn-form .icon_box_2.label .mfn-field-value').val()+'</span></div>');
+                    $content.find('.'+it+' .desc-wrapper').before('<div class="icon-wrapper"><span class="icon-label">'+$editpanel.find('.panel-edit-item .mfn-form .icon_box_2.label .mfn-field-value').val()+'</span></div>');
                 }
             }else{
                 $content.find('.'+it+' .icon-wrapper').remove();
             }
-        }else if($content.find('.'+it).hasClass('column_header_menu') && $editrow.hasClass('header_menu submenu_icon') ){
+        }else if($content.find('.'+it).hasClass('column_header_menu') && $editrow.hasClass('header_menu') && $editrow.hasClass('submenu_icon') ){
             // header menu submenu icon
             $content.find('.'+it+' .menu-sub').html('');
             $editpanel.find('.header_menu.submenu_icon_display ul.preview-submenu_icon_displayinput li:first-child a').trigger('click');
@@ -2769,7 +2749,7 @@ var presets = {
             }else{
                 $button.addClass('loading');
                 $.ajax({
-                    url: ajaxurl,
+                    url: mfnajaxurl,
                     data: {
                         action: 'mfnimportpreset',
                         'mfn-builder-nonce': wpnonce,
@@ -2800,7 +2780,7 @@ var presets = {
 
             var styles = mfnvbvars.presets.filter( (item) => item.uid == uid )[0];
 
-            if( !styles || typeof styles.fields == 'undefined' || typeof edited_item.fields == 'undefined' ) {
+            if( !styles || typeof styles.attr == 'undefined' || typeof edited_item.attr == 'undefined' ) {
                 $('.mfn-presets-list .dropdown-wrapper a').removeClass('loading');
                 return;
             }
@@ -2813,17 +2793,17 @@ var presets = {
             $edited_div = $content.find('.vb-item[data-uid="'+edited_item.uid+'"]');
 
             // reset first
-            for(key in edited_item.fields) {
+            for(key in edited_item.attr) {
                 if(key.startsWith('style:') || ( typeof presets_keys[edited_item.type] !== 'undefined' && presets_keys[edited_item.type].length && presets_keys[edited_item.type].includes(key) ) ) {
-                    delete edited_item.fields[key];
+                    delete edited_item.attr[key];
                 }
             }
 
             $content.find('style.mfn-local-style').remove();
 
             // set
-            for (key in styles.fields) {
-                edited_item.fields[key] = styles.fields[key];
+            for (key in styles.attr) {
+                edited_item.attr[key] = styles.attr[key];
             }
 
             openEditForm.do($edited_div, false);
@@ -2848,7 +2828,7 @@ var presets = {
             if( rerender ) {
                 re_render();
             }else if( edited_item.type !== 'column'){
-                addHistory();
+                historyStorage.add();
             }
 
         });
@@ -2903,7 +2883,7 @@ var presets = {
                     var uid = $a.attr('data-uid');
                     $(this).addClass('loading');
                     $.ajax({
-                        url: ajaxurl,
+                        url: mfnajaxurl,
                         data: {
                             action: 'mfnremovepreset',
                             'mfn-builder-nonce': wpnonce,
@@ -2965,14 +2945,14 @@ var presets = {
                 keys_in = presets_keys[formData.type];
             }
 
-            for (key in formData.fields) {
+            for (key in formData.attr) {
                 if (key.startsWith('style:') || ( keys_in.length && keys_in.includes(key) )) {
-                    save[key] = formData.fields[key];
+                    save[key] = formData.attr[key];
                 }
             }
 
             $.ajax({
-                url: ajaxurl,
+                url: mfnajaxurl,
                 data: {
                     action: 'mfnsavepreset',
                     'mfn-builder-nonce': wpnonce,
@@ -3023,7 +3003,7 @@ sliderInput = {
         var $editbox = $slider.closest('.mfn-vb-formrow');
         var $inputgroup = $slider.closest('.form-group');
 
-        var $hidden = $inputgroup.find('input.mfn-field-value');
+        var $hidden = $inputgroup.find('input.mfn-slider-hidden-input');
         var $input = $inputgroup.find('input.mfn-sliderbar-value');
 
         var css_path = $editbox.attr('data-csspath');
@@ -3032,7 +3012,10 @@ sliderInput = {
         min = $input.attr('min');
         max = $input.attr('max');
         var step = $input.attr('data-step');
-        var unit = typeof $input.attr('data-unit') !== 'undefined' ? $input.attr('data-unit') : "";
+        //var unit = typeof $input.attr('data-unit') !== 'undefined' ? $input.attr('data-unit') : "";
+
+        var unit = $editbox.find('.mfn-slider-unit li.active').length ? $editbox.find('.mfn-slider-unit li.active a').text() : $input.attr('data-unit');
+
         var value = $input.val() != '' ? $input.val() : 0;
 
         if( $inputgroup.find('.mfn-slider-unit').length ){
@@ -3066,70 +3049,51 @@ sliderInput = {
 
             },
             slide: function(event, ui) {
-              $input.val( ui.value );
+                $input.val( ui.value );
+                let value = ui.value;
 
-              // instant transform effect
-              if( $(ui.handle).closest('.transform_field') ){
-                const sidebarMenu = $(ui.handle).closest('.transform_field').closest('.mfn-form-row.transform');
+                // instant transform effect
+                if( $(ui.handle).closest('.transform_field').length ){
+                    $input.trigger('change');
 
-                Transforms
-                .insertSidebarMenu($(sidebarMenu))
-                .loopThrouInputs()
-                .createStringWithoutRotate()
-                .createTransformDuration()
-                .renderTransforms();
-              }
-
-              if( !$editbox.hasClass('gradient') && typeof css_path !== 'undefined' ){
-                    $content.find(css_path.replace('|hover', '').replace('|not', '').replace('|before', '').replace('|after', '')).css( css_style, ui.value+unit );
                 }else if($editbox.hasClass('themeoption grid-width')){
                     if( $content.find('style#themeoptiongrid-width').length ){
                         $content.find('style#themeoptiongrid-width').html('@media only screen and (min-width: 1240px){.section_wrapper, .container{max-width: '+ui.value+'px; }}');
                     }else{
                         $content.find('body').append('<style id="themeoptiongrid-width">@media only screen and (min-width: 1240px){.section_wrapper, .container{max-width: '+ui.value+'px; }}</style>');
                     }
-                 }else if($editbox.hasClass('gradient')){
-                  gradientValue($editbox, true);
-              }else if($(this).closest(".section").hasClass('filter')){
+                }else if($editbox.hasClass('filter')){
+                    // Set CSS filters in real time
+                    var filter = '';
+                    $editbox.closest('.css_filters_form').find('.mfn-sliderbar-value').each(function() {
+                      var filter_key = $(this).attr('data-key');
+                      var unit = $(this).attr('data-unit');
 
-                // Set CSS filters in real time
-                var filter = '';
-                $(this).closest(".section").find('.mfn-form-row.mfn-vb-formrow .mfn-sliderbar-value').each(function() {
-                  var filter_key = $(this).closest('.mfn-form-row').attr('data-name');
-                  var csspath = $(this).closest('.mfn-form-row').attr('data-csspath');
-                  var unit = $(this).attr('data-unit');
+                      if( $(this).val().length ){
+                        filter += filter_key+'('+$(this).val()+unit+') ';
+                        $content.find(css_path).attr('style', 'filter: ' + filter);
+                      }
 
-                  if( $(this).val().length ){
-                    filter += filter_key+'('+$(this).val()+unit+') ';
-                    $content.find(csspath).attr('style', 'filter: ' + filter);
-                  }
+                    });
 
-                });
+                }else if( !$editbox.hasClass('gradient') && typeof css_path !== 'undefined' ){
+                    $content.find(css_path.replace('|hover', '').replace('|not', '').replace('|before', '').replace('|after', '')).css( css_style, ui.value+unit );
+                }/*else if( typeof css_path !== 'undefined' ){
+                    $content.find(css_path.replace('|hover', '').replace('|not', '').replace('|before', '').replace('|after', '')).css( css_style, ui.value+unit );
+                }*/
 
-              }else if($(this).closest(".wrap").hasClass('filter')){
+                else if($editbox.hasClass('gradient')){
+                    gradientValue($editbox, true);
+                }
 
-                // Set CSS filters in real time
-                var filter = '';
-                $(this).closest(".wrap").find('.mfn-form-row.mfn-vb-formrow .mfn-sliderbar-value').each(function() {
-                  var filter_key = $(this).closest('.mfn-form-row').attr('data-name');
-                  var csspath = $(this).closest('.mfn-form-row').attr('data-csspath');
-                  var unit = $(this).attr('data-unit');
 
-                  if( $(this).val().length ){
-                    filter += filter_key+'('+$(this).val()+unit+') ';
-                    $content.find(csspath).attr('style', 'filter: ' + filter);
-                  }
-
-                });
-
-              }else if( typeof css_path !== 'undefined' ){
-                $content.find(css_path.replace('|hover', '').replace('|not', '').replace('|before', '').replace('|after', '')).css( css_style, ui.value+unit );
-              }
             },
             stop: function(event, ui) {
+
                 $input.val( ui.value ).trigger('change');
+
                 if( typeof css_path !== 'undefined' && css_style !== 'transform'){
-                  setTimeout(function() { changeInlineStyles(css_path.replaceAll('|hover', '').replaceAll('|before', '').replaceAll('|after', ''), css_style, 'remove'); }, 50);
+                    setTimeout(function() { changeInlineStyles(css_path.replaceAll('|hover', '').replaceAll('|before', '').replaceAll('|after', ''), css_style, 'remove'); }, 50);
                 }
 
                 $('.sidebar-wrapper').removeClass('mfn-vb-sidebar-overlay');
@@ -3158,6 +3122,7 @@ sliderInput = {
 
     customValue: function() {
         $editpanel.on('change', '.mfn-sliderbar-value', function() {
+
             var $editbox = $(this).closest('.form-group');
             var $editwrapper = $(this).closest('.mfn-form-row');
             var value = $(this).val();
@@ -3189,7 +3154,7 @@ sliderInput = {
             $editbox.find('.sliderbar').slider( "value", value );
 
             if( !$(this).hasClass('mfn-gradient-field') ){
-                var $hidden = $editbox.find('input.mfn-field-value');
+                var $hidden = $editbox.find('input.mfn-slider-hidden-input');
                 var unit = $editbox.find('.mfn-slider-unit li.active').length ? $editbox.find('.mfn-slider-unit li.active a').text() : $(this).attr('data-unit');
                 if( value != '' ){
                     if( typeof unit !== 'undefined' ){ value = value+unit; }
@@ -3199,13 +3164,29 @@ sliderInput = {
                     }else{
                         $hidden.val( value ).trigger('change');
                     }
-
-
                 }else{
                     $hidden.val( '' ).trigger('change');
                 }
+            }
 
+            // Set CSS filters in real time
+            if( $editwrapper.hasClass('filter') ){
 
+                var filter = '';
+                $editbox.closest('.css_filters_form').find('.mfn-sliderbar-value').each(function() {
+                  var filter_key = $(this).attr('data-key');
+                  var unit = $(this).attr('data-unit');
+
+                  if( $(this).val().length ){
+                    filter += filter_key+'('+$(this).val()+unit+') ';
+                  }
+
+                });
+                $editbox.closest('.css_filters_form').find('.mfn-field-value').val(filter).trigger('change');
+            }
+
+            if( $editwrapper.hasClass('gradient') ){
+                gradientValue($editwrapper);
             }
 
             if( $editwrapper.hasClass('query_item_default_width') ){
@@ -3226,14 +3207,14 @@ sliderInput = {
 
 function gradientValue($editbox, tmp = false){
 
-    var $hidden = $editbox.find('.mfn-field-value');
-    var type = $editbox.find('.gradient-type').val();
-    var color = $editbox.find('.gradient-color').val();
-    var location = $editbox.find('.gradient-location').val();
-    var color2 = $editbox.find('.gradient-color2').val();
-    var location2 = $editbox.find('.gradient-location2').val();
-    var position = $editbox.find('.gradient-position').val();
-    var angle = $editbox.find('.gradient-angle').val();
+    var $hidden = $editbox.closest('.gradient-form').find('.mfn-field-value');
+    var type = $editbox.closest('.gradient-form').find('.gradient-type').val();
+    var color = $editbox.closest('.gradient-form').find('.gradient-color').val();
+    var location = $editbox.closest('.gradient-form').find('.gradient.location .mfn-sliderbar-value').val();
+    var color2 = $editbox.closest('.gradient-form').find('.gradient-color2').val();
+    var location2 = $editbox.closest('.gradient-form').find('.gradient.location2 .mfn-sliderbar-value').val();
+    var position = $editbox.closest('.gradient-form').find('.gradient-position').val();
+    var angle = $editbox.closest('.gradient-form').find('.gradient.angle .mfn-sliderbar-value').val();
 
     var val = '';
 
@@ -3249,13 +3230,11 @@ function gradientValue($editbox, tmp = false){
         val += color2+' ';
         val += location2+'%)';
 
-        /*if( edited_item.jsclass == 'section' && typeof edited_item['attr']['style:.mcb-section-mfnuidelement:background-image'] !== 'undefined' ) delete edited_item['attr']['style:.mcb-section-mfnuidelement:background-image']; // delete bg image if gradient is set
-        if( edited_item.jsclass == 'wrap' && typeof edited_item['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'] !== 'undefined' ) delete edited_item['attr']['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner:background-image'];
-        if( typeof edited_item['fields'] !== 'undefined' && typeof edited_item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:background-image'] !== 'undefined' ) delete edited_item['fields']['style:.mcb-section .mcb-wrap .mcb-item-mfnuidelement .mcb-column-inner:background-image'];
-*/
+
         $content.find($editbox.attr('data-csspath').replace('|hover', '')).css( 'background-image', val );
 
     }
+
     if( !tmp ){
         $hidden.val( val ).trigger('change');
     }
@@ -3282,9 +3261,9 @@ var dynamicItems = {
             $content.find('.'+it+' .payment-methods-list li.uid-'+attr_uid).remove();
             $(this).closest('li').remove();
 
-            edited_item.fields.dynamic_items = edited_item.fields.dynamic_items.filter( (item) => item.uid != attr_uid );
+            edited_item.attr.dynamic_items = edited_item.attr.dynamic_items.filter( (item) => item.uid != attr_uid );
 
-            addHistory();
+            historyStorage.add();
         });
 
         $editpanel.on('click', '.dynamic_items_wrapper .di-show-modal', function(e) {
@@ -3313,8 +3292,8 @@ var dynamicItems = {
         var new_obj = {};
         var order = $('.dynamic_items_wrapper .dynamic_items_preview li').length;
 
-        if( typeof edited_item['fields'][name] == 'undefined' ){
-            edited_item['fields'][name] = [];
+        if( typeof edited_item['attr'][name] == 'undefined' ){
+            edited_item['attr'][name] = [];
         }
 
         var new_uid = getUid();
@@ -3325,7 +3304,7 @@ var dynamicItems = {
         if( $editpanel.find('.dynamic_items_wrapper .di-input-rule select').length ){
             new_obj['type'] = $editpanel.find('.dynamic_items_wrapper .di-input-rule select').val();
         }
-        edited_item['fields'][name].push(new_obj);
+        edited_item['attr'][name].push(new_obj);
 
         $('.dynamic_items_wrapper .dynamic_items_preview').append('<li data-uid="'+new_uid+'" class="uid-'+new_uid+'"><img src="'+url+'" alt=""><a class="mfn-option-btn mfn-button-delete di-remove" data-tooltip="Delete" href="#"><span class="mfn-icon mfn-icon-delete"></span></a></li>');
 
@@ -3335,7 +3314,7 @@ var dynamicItems = {
             setTimeout(re_render, 100);
         }
 
-        addHistory();
+        historyStorage.add();
     },
 
     sortable: function() {
@@ -3345,10 +3324,10 @@ var dynamicItems = {
                 var new_arr = [];
 
                 $('.dynamic_items_wrapper .dynamic_items_preview li').each(function(i) {
-                    new_arr.push( edited_item.fields.dynamic_items.filter( (item) => item.uid == $(this).attr('data-uid') )[0] );
+                    new_arr.push( edited_item.attr.dynamic_items.filter( (item) => item.uid == $(this).attr('data-uid') )[0] );
                 });
 
-                edited_item.fields.dynamic_items = new_arr;
+                edited_item.attr.dynamic_items = new_arr;
 
                 setTimeout(re_render, 100);
 
@@ -3383,7 +3362,7 @@ var multiSelectField = {
             multiSelectField.remove($(this));
         });
 
-        $editpanel.on('keyup', '.mfn-ui .mfn-form .form-group.mfn-multiselect-field-wrapper .form-control .mfn-multiselect-input', function() {
+        $editpanel.on('keyup paste change', '.mfn-ui .mfn-form .form-group.mfn-multiselect-field-wrapper .form-control .mfn-multiselect-input', function() {
             multiSelectField.search($(this));
         });
 
@@ -3408,17 +3387,11 @@ var multiSelectField = {
             edited_item.attr[name].push( { key: id, value: label} );
         }
 
-        /*setTimeout(function() {
-            console.log(edited_item);
-        }, 100);*/
-
     },
 
     remove: function( $span ) {
         var id = $span.attr('data-id');
         var name = $span.closest('.mfn-form-row').attr('data-id');
-
-        //console.log(typeof edited_item.attr[name]);
 
         if( typeof edited_item.attr[name] === 'object' ) {
             if( edited_item.attr[name].filter( (item) => item.key == id ).length ) {
@@ -3426,14 +3399,11 @@ var multiSelectField = {
             }
         }
 
-        re_render2(edited_item.uid);
+        re_render(edited_item.uid);
 
         $span.closest('.mfn-multiselect-field-wrapper').find('.mfn-multiselect-options li[data-id="'+id+'"]').removeClass('selected');
         $span.remove();
 
-        /*setTimeout(function() {
-            console.log(edited_item);
-        }, 100);*/
     },
 
     search: function($field) {
@@ -3464,7 +3434,7 @@ var multiSelectField = {
 
         if (!div.is(e.target) && div.has(e.target).length === 0){
 
-            re_render2(edited_item.uid);
+            re_render(edited_item.uid);
 
             $('.mfn-multiselect-field-wrapper.mfn-msf-focus input').val('');
             $('.mfn-multiselect-field-wrapper.mfn-msf-focus').removeClass('mfn-msf-focus');
@@ -3557,22 +3527,17 @@ var tabsField = {
                 new_obj[ $(this).attr('data-label') ] = $(this).val();
             });
 
-            if( typeof edited_item.fields.tabs !== 'undefined' ){
-                edited_item.fields.tabs.push(new_obj);
+            if( typeof edited_item.attr.tabs !== 'undefined' ){
+                edited_item.attr.tabs.push(new_obj);
             }else{
-                edited_item.fields.tabs = [];
-                edited_item.fields.tabs.push(new_obj);
+                edited_item.attr.tabs = [];
+                edited_item.attr.tabs.push(new_obj);
             }
 
             $clone.siblings().removeClass('show');
             $clone.hide().fadeIn(200);
             tabsField.reorder();
-            re_render(group);
-        });
-
-        $editpanel.on('change', 'ul.tabs-wrapper li input, ul.tabs-wrapper li textarea', function() {
-            var group = $(this).closest('.mfn-element-fields-wrapper').attr('data-group');
-            re_render(group);
+            re_render(edited_item.uid);
         });
 
         $editpanel.on('click', '.tabs .mfn-tab-delete', function(e) {
@@ -3581,7 +3546,7 @@ var tabsField = {
           $(this).closest('.tab').fadeOut( 200, function() {
             $(this).remove();
             tabsField.reorder();
-            setTimeout(re_render(group), 1000);
+            setTimeout(re_render(edited_item.uid), 1000);
           });
         });
 
@@ -3593,13 +3558,12 @@ var tabsField = {
           $tab.removeClass('show').after( $clone );
           $clone.hide().fadeIn(200);
           tabsField.reorder();
-          setTimeout(re_render(group), 1000);
+          setTimeout(re_render(edited_item.uid), 1000);
         });
 
         $editpanel.on('click', '.tabs .mfn-tab-toggle', function(e) {
           e.preventDefault();
           var $tab = $(this).closest('.tab');
-          $('input', $tab).trigger('change');
           $tab.toggleClass('show')
             .siblings().removeClass('show');
         });
@@ -3641,7 +3605,7 @@ var tabsField = {
 
                     }else{
                         tabsField.reorder();
-                        setTimeout(re_render(group), 500);
+                        setTimeout(re_render(edited_item.uid), 500);
                     }
 
                 }
@@ -3649,7 +3613,7 @@ var tabsField = {
         });
     },
     reorder: function() {
-        edited_item.fields.tabs = [];
+        edited_item.attr.tabs = [];
         $('.panel-edit-item .mfn-form ul.tabs-wrapper li.tab:not(.default)').each(function(i) {
             var new_obj = {};
             $(this).find('.field-to-object').each(function() {
@@ -3661,7 +3625,7 @@ var tabsField = {
                 $input.attr( 'data-order', i );
                 new_obj[ $input.attr('data-label') ] = $input.val();
             });
-            edited_item.fields.tabs.push(new_obj);
+            edited_item.attr.tabs.push(new_obj);
         });
     }
 }
@@ -3669,11 +3633,13 @@ var tabsField = {
 tabsField.init();
 
 // contact box address
-$editpanel.on('keyup', '.contact_box.address .preview-addressinput', function() {
+$editpanel.on('keyup paste change', '.contact_box.address .preview-addressinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
-    if(val.length){
+    if( isBlocks() ){
+      $content.find('.'+it+' .item-preview-content ').text(val);
+    } else if(val.length){
         if($content.find('.'+it+' .get_in_touch_wrapper ul li.address .address_wrapper').length){
             $content.find('.'+it+' .get_in_touch_wrapper ul li.address .address_wrapper').html(val);
         }else{
@@ -3686,7 +3652,7 @@ $editpanel.on('keyup', '.contact_box.address .preview-addressinput', function() 
 });
 
 // header search placeholder
-$editpanel.on('keyup', '.panel-edit-item .header_search.placeholder .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.panel-edit-item .header_search.placeholder .mfn-field-value', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3696,7 +3662,7 @@ $editpanel.on('keyup', '.panel-edit-item .header_search.placeholder .mfn-field-v
 
 
 // contact box phone
-$editpanel.on('keyup', '.contact_box.telephone .preview-telephoneinput', function() {
+$editpanel.on('keyup paste change', '.contact_box.telephone .preview-telephoneinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3713,7 +3679,7 @@ $editpanel.on('keyup', '.contact_box.telephone .preview-telephoneinput', functio
 });
 
 // contact box phone 2
-$editpanel.on('keyup', '.contact_box.telephone_2 .preview-telephone_2input', function() {
+$editpanel.on('keyup paste change', '.contact_box.telephone_2 .preview-telephone_2input', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3730,7 +3696,7 @@ $editpanel.on('keyup', '.contact_box.telephone_2 .preview-telephone_2input', fun
 });
 
 // contact box fax
-$editpanel.on('keyup', '.contact_box.fax .preview-faxinput', function() {
+$editpanel.on('keyup paste change', '.contact_box.fax .preview-faxinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3747,7 +3713,7 @@ $editpanel.on('keyup', '.contact_box.fax .preview-faxinput', function() {
 });
 
 // contact box email
-$editpanel.on('keyup', '.contact_box.email .preview-emailinput', function() {
+$editpanel.on('keyup paste change', '.contact_box.email .preview-emailinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3764,7 +3730,7 @@ $editpanel.on('keyup', '.contact_box.email .preview-emailinput', function() {
 });
 
 // contact box www
-$editpanel.on('keyup', '.contact_box.www .preview-wwwinput', function() {
+$editpanel.on('keyup paste change', '.contact_box.www .preview-wwwinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3781,14 +3747,13 @@ $editpanel.on('keyup', '.contact_box.www .preview-wwwinput', function() {
 });
 
 // call to action button
-$editpanel.on('keyup', '.preview-button_titleinput', function() {
-    let tmp_group = $(this).closest('.mfn-element-fields-wrapper').attr('data-group');
+$editpanel.on('keyup paste change', '.preview-button_titleinput', function() {
     let val = $(this).val();
     let icon = $(this).closest('.mfn-element-fields-wrapper').find('.preview-iconinput').val();
 
     if($edited_div.hasClass('column_call_to_action')){
         // call to action button
-        if(val){
+        if( val ){
             if( icon.length ){
                 $edited_div.find('.call_center').html('<a href="#" class="button has-icon "><span class="button_icon"><i class="'+$('.mfn-element-fields-wrapper .preview-iconinput').val()+'"></i></span><span class="button_label">'+val+'</span></a>');
             }else{
@@ -3801,7 +3766,7 @@ $editpanel.on('keyup', '.preview-button_titleinput', function() {
 });
 
 // helper title 1
-$editpanel.on('keyup', '.helper.title1 .preview-title1input', function() {
+$editpanel.on('keyup paste change', '.helper.title1 .preview-title1input', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3813,7 +3778,7 @@ $editpanel.on('keyup', '.helper.title1 .preview-title1input', function() {
 });
 
 // helper title 2
-$editpanel.on('keyup', '.helper.title2 .preview-title2input', function() {
+$editpanel.on('keyup paste change', '.helper.title2 .preview-title2input', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -3849,12 +3814,32 @@ function fieldUpdate($field){
         tag = tag+' '+tag_child;
     }
 
+    // console.log('# fieldUpdate');
+
+    if( isBlocks() ){
+
+      if( 'title' == $box.attr('data-id') ){
+        tag = '.item-preview-title';
+      } else if( 'content' == $box.attr('data-id') ) {
+        tag = '.item-preview-content';
+      } else if( 'subtitle' == $box.attr('data-id') ) {
+        tag = '.item-preview-subtitle';
+      } else if( 'slogan' == $box.attr('data-id') ) {
+        tag = '.item-preview-subtitle';
+      } else if( 'price' == $box.attr('data-id') ) { // pricing item
+        tag = '.item-preview-number';
+      } else {
+        return;
+        // re_render();
+      }
+    }
+
     if($content.find(it+' '+tag).length){
         if( val == '' ){
             $content.find(it+' '+tag).html('').hide();
             return;
         }else if( !$content.find(it+' '+tag).is(':visible') ){
-            $content.find(it+' '+tag).show();
+            $content.find(it+' '+tag).show().removeClass('empty');
         }
 
         if( $edited_div.hasClass('column_code') ){
@@ -3985,7 +3970,11 @@ $editpanel.on('change', '.preview-numberinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
-    if($edited_div.hasClass('column_counter')){
+    if( isBlocks() ){
+      if($content.find('.'+it+' .item-preview-number').length){
+        $content.find('.'+it+' .item-preview-number').text(val);
+      }
+    }else if($edited_div.hasClass('column_counter')){
         // counter
         if($content.find('.'+it+' .desc_wrapper .number').length){
             $content.find('.'+it+' .desc_wrapper .number').text(val);
@@ -4013,7 +4002,7 @@ $editpanel.on('change', '.preview-numberinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.preview-prefixinput', function() {
+$editpanel.on('keyup paste change', '.preview-prefixinput', function() {
     // prefix
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
@@ -4042,7 +4031,7 @@ $editpanel.on('keyup', '.preview-prefixinput', function() {
         }
     }
 });
-$editpanel.on('keyup', '.preview-labelinput', function() {
+$editpanel.on('keyup paste change', '.preview-labelinput', function() {
     // postfix
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
@@ -4141,7 +4130,7 @@ $editpanel.on('change', '.preview-positioninput', function() {
 
 });
 
-$editpanel.on('keyup', '.mfn-element-fields-wrapper .preview-titleinput', function() {
+$editpanel.on('keyup paste change', '.mfn-element-fields-wrapper .preview-titleinput', function() {
     // title
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
@@ -4181,21 +4170,21 @@ $editpanel.on('change', '.custom_id .preview-custom_idinput', function() {
     let uid = $edited_div.attr('data-uid');
     if(val.length){
         $edited_div.attr('id', val);
-        if( $navigator.find('.nav-'+uid+' .navigator-section-id').length ){
+        /*if( $navigator.find('.nav-'+uid+' .navigator-section-id').length ){
             $navigator.find('.nav-'+uid+' .navigator-section-id').text('#'+val);
         }else{
             $navigator.find('.nav-'+uid+' > a').append('<span class="navigator-section-id">#'+val+'</span>');
-        }
+        }*/
     }else{
         $edited_div.removeAttr('id');
-        if( $navigator.find('.nav-'+uid+' .navigator-section-id').length ){
+        /*if( $navigator.find('.nav-'+uid+' .navigator-section-id').length ){
             $navigator.find('.nav-'+uid+' .navigator-section-id').remove();
-        }
+        }*/
     }
 });
 
 // our team list links email fb twitter linkedin vcard
-$editpanel.on('keyup', '.our_team_list.email .preview-emailinput', function() {
+$editpanel.on('keyup paste change', '.our_team_list.email .preview-emailinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4213,7 +4202,7 @@ $editpanel.on('keyup', '.our_team_list.email .preview-emailinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.our_team_list.facebook .preview-facebookinput', function() {
+$editpanel.on('keyup paste change', '.our_team_list.facebook .preview-facebookinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4231,7 +4220,7 @@ $editpanel.on('keyup', '.our_team_list.facebook .preview-facebookinput', functio
     }
 });
 
-$editpanel.on('keyup', '.our_team_list.twitter .preview-twitterinput', function() {
+$editpanel.on('keyup paste change', '.our_team_list.twitter .preview-twitterinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4249,7 +4238,7 @@ $editpanel.on('keyup', '.our_team_list.twitter .preview-twitterinput', function(
     }
 });
 
-$editpanel.on('keyup', '.our_team_list.linkedin .preview-linkedininput', function() {
+$editpanel.on('keyup paste change', '.our_team_list.linkedin .preview-linkedininput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4266,7 +4255,7 @@ $editpanel.on('keyup', '.our_team_list.linkedin .preview-linkedininput', functio
         $content.find('.'+it+' .bq_wrapper .links a.linkedin').remove();
     }
 });
-$editpanel.on('keyup', '.our_team_list.vcard .preview-vcardinput', function() {
+$editpanel.on('keyup paste change', '.our_team_list.vcard .preview-vcardinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4285,7 +4274,7 @@ $editpanel.on('keyup', '.our_team_list.vcard .preview-vcardinput', function() {
 });
 
 // our team list blockquote
-$editpanel.on('keyup', '.our_team_list.blockquote .preview-blockquoteinput', function() {
+$editpanel.on('keyup paste change', '.our_team_list.blockquote .preview-blockquoteinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -4297,7 +4286,7 @@ $editpanel.on('keyup', '.our_team_list.blockquote .preview-blockquoteinput', fun
 });
 
 // our team
-$editpanel.on('keyup', '.our_team.blockquote .preview-blockquoteinput', function() {
+$editpanel.on('keyup paste change', '.our_team.blockquote .preview-blockquoteinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -4309,7 +4298,7 @@ $editpanel.on('keyup', '.our_team.blockquote .preview-blockquoteinput', function
 });
 
 // our team links email fb twitter linkedin vcard
-$editpanel.on('keyup', '.our_team.email .preview-emailinput', function() {
+$editpanel.on('keyup paste change', '.our_team.email .preview-emailinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4327,7 +4316,7 @@ $editpanel.on('keyup', '.our_team.email .preview-emailinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.our_team.facebook .preview-facebookinput', function() {
+$editpanel.on('keyup paste change', '.our_team.facebook .preview-facebookinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4345,7 +4334,7 @@ $editpanel.on('keyup', '.our_team.facebook .preview-facebookinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.our_team.twitter .preview-twitterinput', function() {
+$editpanel.on('keyup paste change', '.our_team.twitter .preview-twitterinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4363,7 +4352,7 @@ $editpanel.on('keyup', '.our_team.twitter .preview-twitterinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.our_team.linkedin .preview-linkedininput', function() {
+$editpanel.on('keyup paste change', '.our_team.linkedin .preview-linkedininput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4381,7 +4370,7 @@ $editpanel.on('keyup', '.our_team.linkedin .preview-linkedininput', function() {
     }
 });
 
-$editpanel.on('keyup', '.preview-cart_button_textinput', function() {
+$editpanel.on('keyup paste change', '.preview-cart_button_textinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
 
@@ -4390,7 +4379,7 @@ $editpanel.on('keyup', '.preview-cart_button_textinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.our_team.vcard .preview-vcardinput', function() {
+$editpanel.on('keyup paste change', '.our_team.vcard .preview-vcardinput', function() {
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
     if(val.length){
@@ -4408,7 +4397,7 @@ $editpanel.on('keyup', '.our_team.vcard .preview-vcardinput', function() {
     }
 });
 
-$editpanel.on('keyup', '.preview-phoneinput', function() {
+$editpanel.on('keyup paste change', '.preview-phoneinput', function() {
     // phone
     let it = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $(this).val();
@@ -4530,7 +4519,7 @@ function updateColumnsRwd() {
 
 // segmented options
 
-$editpanel.on("click", '.single-segmented-option.segmented-options li a', function(e) {
+$editpanel.on("click", '.panel:not(.panel-settings) .segmented-options.single-segmented-option li a', function(e) {
     e.preventDefault();
 
     let $li = $(this).closest('li');
@@ -4547,11 +4536,6 @@ $editpanel.on("click", '.single-segmented-option.segmented-options li a', functi
 
     let $editbox = $(this).closest('.mfn-form-row');
     let $editwrapper = $(this).closest('.mfn-element-fields-wrapper');
-
-    if( $editbox.hasClass('re_render') ){
-        //re_render2( edited_item.uid );
-        return;
-    }
 
     if(!$editbox.hasClass('inline-style-input')){
 
@@ -5069,7 +5053,7 @@ $editpanel.on("click", '.single-segmented-option.segmented-options li a', functi
 
 // header icon desc / empty desc
 
-$editpanel.on('keyup', '.mfn-element-fields-wrapper .header_icon.desc .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.mfn-element-fields-wrapper .header_icon.desc .mfn-field-value', function() {
     var val = $(this).val();
     if( val.length ){
         $edited_div.find('.mfn-icon-box').removeClass('mfn-icon-box-empty-desc');
@@ -5128,7 +5112,7 @@ $editpanel.on('keyup', '.multiple-inputs .field input', function() {
     if(!$editbox.hasClass('separated-fields')){
         updatePseudoField($editbox);
     }else{
-        addHistory();
+        historyStorage.add();
     }
 
     if($content.find('.vb-item[data-uid='+edited_item.uid+'] .slick-initialized').length){
@@ -5248,16 +5232,20 @@ $editpanel.on('change', '.preview-height_switcherinput', function(e) {
     }
 });
 
-$editpanel.on('change', '.preview-width_switcherinput', function(e) {
+$editpanel.on('change', '.width_switcher .mfn-field-value', function(e) {
     let val = $(this).val();
     let uid = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
 
-    $content.find('.'+uid).removeClass('mfn-item-inline custom-width full-width default-width');
+    $content.find('.'+uid).removeClass('mfn-item-inline custom-width full-width default-width mfn-item-custom-width');
 
     if( $content.find('.'+uid).hasClass('mcb-section')){
          $content.find('.'+uid).addClass(val+'-width');
-    }else if(val == 'inline' &&  $content.find('.'+uid).hasClass('mcb-column')){
-         $content.find('.'+uid).addClass('mfn-item-inline');
+    }else{
+        if(val == 'inline'){
+             $content.find('.'+uid).addClass('mfn-item-inline');
+        }else if(val == 'custom'){
+            $content.find('.'+uid).addClass('mfn-item-custom-width');
+        }
     }
 
     if( val == 'default' || val == 'inline' ){
@@ -5279,18 +5267,9 @@ $editpanel.on('change', '.preview-width_switcherinput', function(e) {
                 $('.mfn-ui .panel-edit-item .mfn-form .modalbox-card-advanced .mfn_field_mobile.advanced_flex.inline-style-input .mfn-field-value').val('').trigger('change');
             }
         }
-
     }
-});
 
-$editpanel.on('change', '.mfn-element-fields-wrapper .advanced_flex.inline-style-input .mfn-field-value', function() {
-    var val = $(this).val();
-    var uid = $(this).closest('.mfn-element-fields-wrapper').attr('data-element');
-
-    if( val.length ){
-        $content.find('.'+uid+' .mfn-header').first().find('.mfn-element-size-label').text( 'Custom' );
-        $content.find('.'+uid).attr('data-'+screen+'-size', 'Custom');
-    }
+    setTimeout(setSizeLabels, 100);
 
 });
 
@@ -5463,7 +5442,7 @@ $editpanel.on('change', '.mask_shape_position', function() {
 
 function shapeDividerGetAttrs( el ) {
     const sectionName = $(el).closest('.mfn-element-fields-wrapper').attr('data-element');
-    const sectionDom = $("iframe#mfn-vb-ifr").contents().find('body').find('.'+sectionName);
+    const sectionDom = $content.find('.'+sectionName);
 
     const inputName = $(el).attr('data-name');
     const inputValue = $(el).find('.mfn-field-value').val();
@@ -5502,7 +5481,7 @@ $editpanel.on('change', '.shape_divider_type_top, .shape_divider_type_bottom', f
     invertValSet = parseInt(invertValSet);
 
     let key = 'svg';
-    if( invertValSet && ( 'invert' in mfnvbvars.shape_dividers[inputValue]) ){
+    if( invertValSet && ( 'invert' in mfnvbvars.shape_dividers[inputValue] ) ) {
       key = 'invert';
     } else {
       invertValSet = 0;
@@ -5577,10 +5556,10 @@ $editpanel.on('click', '.multiple-segmented-options.segmented-options ul li a', 
     e.preventDefault();
 
     let $editbox = $(this).closest('.mfn-form-row');
-    let $hiddeninput = $('.mfn-field-value', $editbox);
     let $li = $(this).closest('li');
     let it = $editbox.closest('.mfn-element-fields-wrapper').attr('data-element');
     let val = $li.find('input').val();
+    let id = $li.find('input').attr('name');
 
     if($li.hasClass('active')){
         $li.find('input').prop('checked', false);
@@ -5612,7 +5591,19 @@ $editpanel.on('click', '.multiple-segmented-options.segmented-options ul li a', 
         value = value + ' ' + $(this).val();
     });
 
-    $hiddeninput.val(value).trigger('change');
+    if( value.length ){
+        edited_item['attr'][id] = value;
+    }else{
+        delete(edited_item['attr'][id]);
+    }
+
+    /*var value = '';
+
+    $('li input:checked', $editbox).each(function() {
+        value = value + ' ' + $(this).val();
+    });
+
+    $hiddeninput.val(value).trigger('change');*/
 });
 
 // gradient input change
@@ -5629,12 +5620,13 @@ $editpanel.on('click', '.checkboxes ul li', function() {
 
     let $input = $(this).find('input');
     let $editbox = $(this).closest('.mfn-form-row');
-    let val = $(this).children('input').val();
+    let input_name = $input.attr('name');
+    let val = $input.val();
 
     let windowH = $(window).height() || 0;
 
     if($(this).hasClass('active')){
-        $input.prop('checked', false);
+        $input.prop('checked', false).trigger('change');
         $(this).removeClass('active');
         if( $editbox.closest('.mfn-element-fields-wrapper').length ) $edited_div.removeClass(val);
 
@@ -5646,7 +5638,7 @@ $editpanel.on('click', '.checkboxes ul li', function() {
 
     }else{
         $(this).addClass('active');
-        $input.prop('checked', true);
+        $input.prop('checked', true).trigger('change');
         if( $editbox.closest('.mfn-element-fields-wrapper').length ) $edited_div.addClass(val);
     }
 
@@ -5657,9 +5649,11 @@ $editpanel.on('click', '.checkboxes ul li', function() {
             value = value + ' ' + $(this).val();
         });
 
+        edited_item['attr'][input_name] = value;
         $('.value', $editbox).val(value).trigger('change');
-    }else{
-        $input.trigger('change');
+    }else if( typeof edited_item['attr'] !== 'undefined' && typeof edited_item['attr'][input_name] !== 'undefined' ){
+        //$input.trigger('change');
+        delete(edited_item['attr'][input_name])
     }
 
 });
@@ -5723,7 +5717,7 @@ $editpanel.on('change', '.panel-view-options .option.popup_close_button_active .
     if( val == '' ){
         $content.find('.mfn-popup-tmpl').addClass('mfn-popup-tmpl-close-button-hidden');
     }
-    
+
 });
 
 $editpanel.on('change', '.panel-view-options .option.popup_width .mfn-field-value', function() {
@@ -5735,7 +5729,7 @@ $editpanel.on('change', '.panel-view-options .option.popup_width .mfn-field-valu
     }else{
         $content.find('.mfn-popup-tmpl').addClass('mfn-popup-tmpl-width-default');
     }
-    
+
 });
 
 $editpanel.on('change', '.panel-view-options .option.popup_close_button_align .mfn-field-value', function() {
@@ -5747,10 +5741,12 @@ $editpanel.on('change', '.panel-view-options .option.popup_close_button_align .m
     }else{
         $content.find('.mfn-popup-tmpl').addClass('mfn-popup-close-button-right');
     }
-    
+
 });
 
 function onOpenEditForm() {
+
+    if($('.mfn-ui').hasClass('mfn-sidebar-hidden-footer')) $('.mfn-ui').removeClass('mfn-sidebar-hidden-footer');
 
     /**
      * Query loop
@@ -5768,7 +5764,9 @@ function onOpenEditForm() {
             $('.mfn-element-fields-wrapper .query_terms_taxonomy .mfn-field-value').val('');
 
         }else if( ( typeof edited_item['attr']['query_type'] === 'undefined' || edited_item['attr']['query_type'] == 'terms' ) ) {
+
             $('.mfn-element-fields-wrapper .mfn-form-row.query_post_type .mfn-field-value').val('');
+
         }else if( typeof edited_item['attr']['query_type'] === 'undefined' || edited_item['attr']['query_type'] == 'posts' ) {
              $('.mfn-element-fields-wrapper .query_terms_taxonomy .mfn-field-value').val('');
         }
@@ -5776,14 +5774,25 @@ function onOpenEditForm() {
     }
 
     /**
+     * DOTS for edited
+     * */
+
+    /*if( $editpanel.find('.panel-edit-item .mfn-element-fields-wrapper .mfn-toggled.mfn-is-modified:not(.toggled_header)').length ) {
+        $editpanel.find('.panel-edit-item .mfn-element-fields-wrapper .mfn-toggled.mfn-is-modified:not(.toggled_header)').each(function() {
+            let header = $(this).attr('data-header');
+            if( !$(header).hasClass('mfn-is-modified') ) $(header).addClass('mfn-is-modified');
+        });
+    }*/
+
+    /**
      * Color pickers
     * */
 
-    $editpanel.find('.mfn-form .mfn-form-row .color-picker .form-control .color-picker-vb').each(function() {
+    /*$editpanel.find('.mfn-form .mfn-form-row .color-picker .form-control .color-picker-vb').each(function() {
         if( $(this).val() != '' ){
             $(this).closest('.color-picker').find('.form-addon-prepend .label').css('border-color', $(this).val()).css('background-color', $(this).val()).removeClass('light dark').addClass(getContrastYIQ( $(this).val() ));
         }
-    });
+    });*/
 
     /**
      * Sidebar nav trigger click
@@ -5800,11 +5809,13 @@ function onOpenEditForm() {
     * */
 
     if( $('.panel-edit-item .mfn-element-fields-wrapper .mfn-vb-formrow.mfn-deprecated').length ){
-        $('.panel-edit-item .mfn-element-fields-wrapper .mfn-vb-formrow.mfn-deprecated').each(function() {
+        /*$('.panel-edit-item .mfn-element-fields-wrapper .mfn-vb-formrow.mfn-deprecated').each(function() {
             if( $(this).find('.mfn-field-value').length && !$(this).find('.mfn-field-value').val().length ) $(this).remove();
-        });
+        });*/
         if( !$('.panel-edit-item .mfn-element-fields-wrapper .mfn-vb-formrow.mfn-deprecated .mfn-field-value').length ) $('.panel-edit-item .mfn-element-fields-wrapper .mfn-vb-formrow.mfn-deprecated').remove();
     }
+
+    //$('.panel-edit-item .mfn-element-fields-wrapper .mfn-vb-formrow .checkboxes.pseudo .mfn-deprecated:not(.active)').remove();
 
     if( $('.panel-edit-item .mfn-element-fields-wrapper .browse-image.multi .gallery-container li').length ){
         uploader.sortable();
@@ -5905,12 +5916,14 @@ $editpanel.on('click', '.mfn-form-row .color-picker .form-control .color-picker-
             mfnPickr.hide();
         }).on('change', (color, source, instance) => {
 
+            if( isBlocks() ) return;
+
             var cl = color.toHEXA().toString(0);
             if( color.a < 1 ) cl = color.toRGBA().toString(0).replaceAll(' ', '');
 
             $this_input.val( cl );
 
-            if( $edit_field.hasClass('inline-style-input option') ){
+            if( $edit_field.hasClass('inline-style-input') && $edit_field.hasClass('option') ){
                 $this_input.trigger('change');
             }
 
@@ -5994,15 +6007,16 @@ $editpanel.on('click', '.mfn-form-row .color-picker .form-control .color-picker-
 
 $editpanel.on('change', '.mfn-vb-formrow .color-picker-vb', function(e){
     e.preventDefault();
-
-    var color = $(this).val();
+    var $field = $(this);
+    var color = $field.val();
 
     if( color.length ){
-        $(this).closest('.color-picker-group').find('.form-addon-prepend .label').css('border-color', color).css('background-color', color);
-        $(this).closest('.color-picker-group').find('.form-addon-prepend .label').removeClass('light dark').addClass(getContrastYIQ( color ));
+        $field.closest('.color-picker-group').find('.form-addon-prepend .label').css('border-color', color).css('background-color', color);
+        $field.closest('.color-picker-group').find('.form-addon-prepend .label').removeClass('light dark').addClass(getContrastYIQ( color ));
     }else{
-        $(this).closest('.color-picker-group').find('.form-addon-prepend .label').removeAttr('style').removeClass('dark').addClass('light');
+        $field.closest('.color-picker-group').find('.form-addon-prepend .label').removeAttr('style').removeClass('dark').addClass('light');
     }
+
 });
 
 $editpanel.on('click', '.color-picker-clear', function(e){
@@ -6155,7 +6169,7 @@ function updatePseudoField($box){
         });
     }
     $box.find('input.pseudo-field').val(value).trigger('change');
-    addHistory();
+    historyStorage.add();
 }
 
 
@@ -6171,7 +6185,7 @@ function importFromClipboard(u, w){
     if( import_clipboard.clipboard && !$content.find('.vb-item[data-uid="' +u+ '"] .mfn-section-import').hasClass('pending') ){
         $content.find('.vb-item[data-uid="' +u+ '"] .mfn-section-import').addClass('pending');
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'importfromclipboard',
                 'mfn-builder-nonce': wpnonce,
@@ -6184,13 +6198,13 @@ function importFromClipboard(u, w){
 
                 if( w == 'replace' ){
                     $content.find('.vb-item[data-uid="' +u+ '"]').after(response.html).remove();
-                    $navigator.find('.navigator-tree li.nav-'+u).after(response.navigator).remove();
+                    //$navigator.find('.navigator-tree li.nav-'+u).after(response.navigator).remove();
                 }else if( w == 'after' ){
                   $content.find('.vb-item[data-uid="' +u+ '"]').after(response.html);
-                  $navigator.find('.navigator-tree li.nav-'+u).after(response.navigator);
+                  //$navigator.find('.navigator-tree li.nav-'+u).after(response.navigator);
                 }else{
                     $content.find('.vb-item[data-uid="' +u+ '"]').before(response.html);
-                    $navigator.find('.navigator-tree li.nav-'+u).before(response.navigator);
+                    //$navigator.find('.navigator-tree li.nav-'+u).before(response.navigator);
                 }
 
                 $content.find('.vb-item[data-uid="' +u+ '"] .mfn-section-import').removeClass('pending');
@@ -6241,7 +6255,7 @@ function elementToClipboard(u){
 
 
         /*$.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'mfntoclipboard',
                 'mfn-builder-nonce': wpnonce,
@@ -6294,7 +6308,7 @@ $('.mfn-import-button').on('click', function(e) {
             }
 
             $.ajax({
-                url: ajaxurl,
+                url: mfnajaxurl,
                 data: {
                     action: 'importdata',
                     'mfn-builder-nonce': wpnonce,
@@ -6310,13 +6324,13 @@ $('.mfn-import-button').on('click', function(e) {
 
                     if( type == 'after' ){
                         $builder.append(response.html);
-                        $navigator.find('.navigator-tree').append(response.navigator);
+                        //$navigator.find('.navigator-tree').append(response.navigator);
                     }else if( type == 'before' ){
                         $builder.prepend(response.html);
-                        $navigator.find('.navigator-tree').prepend(response.navigator);
+                        //$navigator.find('.navigator-tree').prepend(response.navigator);
                     }else{
                         $builder.html(response.html);
-                        $navigator.find('.navigator-tree').html(response.navigator);
+                        //$navigator.find('.navigator-tree').html(response.navigator);
                     }
 
                     $.each(response.form, function(i, el) {
@@ -6330,7 +6344,7 @@ $('.mfn-import-button').on('click', function(e) {
                       mfnvbvars.pagedata.push(el);
                     });
 
-                    if( $content.find('.vb-item .mfn-lottie-wrapper .lottie').length ){
+                    if( $content.find('.vb-item .mfn-lottie-wrapper .lottie').length ) {
                         $content.find('.vb-item .mfn-lottie-wrapper .lottie').each(function() {
                             $(this).attr('id', 'mfn_lottie_'+getUid());
                             $(this).closest('.vb-item').find('.mfn-header').first().find('.mfn-element-edit').trigger('click');
@@ -6378,7 +6392,7 @@ $('.mfn-import-single-page-button').on('click', function(e) {
             $('.mfn-import-single-page-button').addClass('loading disabled');
 
             $.ajax({
-                url: ajaxurl,
+                url: mfnajaxurl,
                 data: {
                     action: 'importsinglepage',
                     'mfn-builder-nonce': wpnonce,
@@ -6393,13 +6407,13 @@ $('.mfn-import-single-page-button').on('click', function(e) {
 
                     if(import_place == 'before'){
                         $builder.prepend(response.html);
-                        $navigator.find('.navigator-tree').prepend(response.navigator);
+                        //$navigator.find('.navigator-tree').prepend(response.navigator);
                     }else if(import_place == 'after'){
                         $builder.append(response.html);
-                        $navigator.find('.navigator-tree').append(response.navigator);
+                        //$navigator.find('.navigator-tree').append(response.navigator);
                     }else{
                         $builder.html(response.html);
-                        $navigator.find('.navigator-tree').html(response.navigator);
+                        //$navigator.find('.navigator-tree').html(response.navigator);
                     }
 
                     $('#mfn-items-import-page').val('');
@@ -6413,7 +6427,7 @@ $('.mfn-import-single-page-button').on('click', function(e) {
                     inlineEditor();
 
                     runAjaxElements();
-                    //addHistory();
+                    //historyStorage.add();
 
                     blink();
 
@@ -6445,7 +6459,7 @@ $('.mfn-builder-export-to-seo-button').on('click', function(e) {
         var formData = prepareForm();
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'mfnvb_builder_seo',
                 'mfn-builder-nonce': wpnonce,
@@ -6486,7 +6500,7 @@ $('.mfn-import-template-button').on('click', function(e) {
             var type = $('.mfn-import-template-type').val();
 
             $.ajax({
-                url: ajaxurl,
+                url: mfnajaxurl,
                 data: {
                     action: 'importtemplate',
                     'mfn-builder-nonce': wpnonce,
@@ -6500,13 +6514,13 @@ $('.mfn-import-template-button').on('click', function(e) {
                     removeStartBuilding();
                     if( type == 'after' ){
                         $builder.append(response.html);
-                        $navigator.find('.navigator-tree').append(response.navigator);
+                        //$navigator.find('.navigator-tree').append(response.navigator);
                     }else if( type == 'before' ){
                         $builder.prepend(response.html);
-                        $navigator.find('.navigator-tree').prepend(response.navigator);
+                        //$navigator.find('.navigator-tree').prepend(response.navigator);
                     }else{
                         $builder.html(response.html);
-                        $navigator.find('.navigator-tree').html(response.navigator);
+                        //$navigator.find('.navigator-tree').html(response.navigator);
                     }
 
                     $.each(response.form, function(i, el) {
@@ -6551,7 +6565,7 @@ $('.mfn-preview-generate').on('click', function(e) {
         var formData = prepareForm();
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 sections: formData,
                 action: 'generatepreview',
@@ -6595,7 +6609,7 @@ $('.take-post-editing').on('click', function(e) {
         $el.addClass('loading disabled');
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'takepostediting',
                 'mfn-builder-nonce': wpnonce,
@@ -6634,7 +6648,7 @@ $('.mfn-insert-prebuilt').on('click', function(e) {
         }
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 'mfn-builder-nonce': wpnonce,
                 action: 'insertprebuilt',
@@ -6652,15 +6666,15 @@ $('.mfn-insert-prebuilt').on('click', function(e) {
                 // be global sections pbl == remove content, no multiple sections
                 if ( isGlobalSectionEditor ) {
                     $($content).find('.mcb-section').remove();
-                    $($navigator).find('.navigator-section').remove();
+                    //$($navigator).find('.navigator-section').remove();
                 }
 
                 if( !$content.find('.mcb-section-'+prebuiltType).length || prebuiltType == 'end' ){
                     $builder.append(response.html);
-                    $navigator.find('.navigator-tree').append(response.navigator);
+                    //$navigator.find('.navigator-tree').append(response.navigator);
                 }else{
                     $content.find('.mcb-section-'+prebuiltType).after(response.html);
-                    $navigator.find('.navigator-tree li.nav-'+$content.find('.mcb-section-'+prebuiltType).attr('data-uid')).after(response.navigator);
+                    //$navigator.find('.navigator-tree li.nav-'+$content.find('.mcb-section-'+prebuiltType).attr('data-uid')).after(response.navigator);
                 }
 
                 if( $content.find('.mfn-builder-content .mfn-builder-content .mcb-section').length ){
@@ -6677,7 +6691,7 @@ $('.mfn-insert-prebuilt').on('click', function(e) {
 
                     if($content.find('.mcb-section-'+prebuiltType).hasClass('empty')){
                         var pre_uid = $content.find('.mcb-section-'+prebuiltType).attr('data-uid');
-                        $navigator.find('.nav-'+pre_uid).remove();
+                        //$navigator.find('.nav-'+pre_uid).remove();
                         $content.find('.mcb-section-'+prebuiltType).remove();
                         $('.mfn-form .mfn-vb-'+prebuiltType).remove();
                     }
@@ -6697,7 +6711,7 @@ $('.mfn-insert-prebuilt').on('click', function(e) {
                 loopAllStyleFields();
 
                 blink();
-
+                runSorting();
 
 
             }
@@ -6718,7 +6732,7 @@ function setRevision(type) {
     let formData = prepareForm();
 
     $.ajax({
-        url: ajaxurl,
+        url: mfnajaxurl,
         data: {
             'sections': formData,
             'action': 'setrevision',
@@ -6802,7 +6816,7 @@ function restoreRev($btn){
           revision;
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'restorerevision',
                 'mfn-builder-nonce': wpnonce,
@@ -6823,7 +6837,7 @@ function restoreRev($btn){
                 $builder.append(response.html);
                 displayRevisions(response.revisions, $list);
 
-                $navigator.find('.navigator-tree').html(response.navigator);
+                //$navigator.find('.navigator-tree').html(response.navigator);
 
                 // render local styles
 
@@ -6897,39 +6911,39 @@ var copypaste = {
 
         edited_item = mfnvbvars.pagedata.filter( (item) => item.uid == newuid )[0];
 
-        $copy_nav = $navigator.find('.nav-'+newuid).clone();
-        $navigator.find('.nav-'+newuid).remove();
+        //$copy_nav = $navigator.find('.nav-'+newuid).clone();
+        //$navigator.find('.nav-'+newuid).remove();
 
         if($p.hasClass('mcb-section') && mfncopy_type == 'wrap'){
             // wrap to section
             $p.find('.section_wrapper').append($copy_el);
-            $navigator.find('.nav-'+$p.attr('data-uid')+' ul').append($copy_nav);
+            //$navigator.find('.nav-'+$p.attr('data-uid')+' ul').append($copy_nav);
         }else if($p.hasClass('mcb-section') && mfncopy_type == 'column'){
             // column to section
             if($p.find('.mcb-wrap-inner').length){
                 $p.find('.mcb-wrap-inner').last().append($copy_el);
-                $navigator.find('.nav-'+$p.attr('data-uid')+' > ul > li:last-child ul').append($copy_nav);
+                //$navigator.find('.nav-'+$p.attr('data-uid')+' > ul > li:last-child ul').append($copy_nav);
             }else{
                 alert('Append wrap first.');
             }
         }else if($p.hasClass('mcb-wrap') && mfncopy_type == 'column'){
             // column to wrap
             $p.find('.mcb-wrap-inner').append($copy_el);
-            $navigator.find('.nav-'+$p.attr('data-uid')+' ul').append($copy_nav);
+            //$navigator.find('.nav-'+$p.attr('data-uid')+' ul').append($copy_nav);
         }else if( ( $p.hasClass('mcb-column') || $p.hasClass('mcb-wrap') ) && mfncopy_type == 'section'){
             // section to wrap or column
             $p.closest('.mcb-section').after($copy_el);
-            $navigator.find('.nav-'+$p.closest('.mcb-section').attr('data-uid')).after($copy_nav);
+            //$navigator.find('.nav-'+$p.closest('.mcb-section').attr('data-uid')).after($copy_nav);
         }else if( $p.hasClass('mcb-column') && mfncopy_type == 'wrap'){
             // wrap to column
             $p.closest('.mcb-wrap').after($copy_el);
-            $navigator.find('.nav-'+$p.closest('.mcb-wrap').attr('data-uid')).after($copy_nav);
+            //$navigator.find('.nav-'+$p.closest('.mcb-wrap').attr('data-uid')).after($copy_nav);
         }else if( $p.hasClass('mfn-builder-content')){
             $p.append($copy_el);
             //$navigator.find('.nav-'+$p.attr('data-uid')).after($copy_nav);
         }else{
             $p.after($copy_el);
-            $navigator.find('.nav-'+$p.attr('data-uid')).after($copy_nav);
+            //$navigator.find('.nav-'+$p.attr('data-uid')).after($copy_nav);
         }
 
         if( builder_type == 'header' && mfncopy_type == 'wrap' ){
@@ -6951,10 +6965,11 @@ var copypaste = {
 
         setTimeout(function() {
             $content.find('.vb-item[data-uid="'+newuid+'"]').find('.mfn-header').first().find('.mfn-element-edit').trigger('click');
-            addHistory();
 
             if( $content.find('.vb-item[data-uid="'+newuid+'"]').closest('.mfn-looped-items').length ){
-                re_render2( $content.find('.vb-item[data-uid="'+newuid+'"]').closest('.mfn-looped-items').attr('data-uid') );
+                re_render( $content.find('.vb-item[data-uid="'+newuid+'"]').closest('.mfn-looped-items').attr('data-uid') );
+            }else{
+                historyStorage.add();
             }
 
         }, 10);
@@ -6979,10 +6994,10 @@ var copypaste = {
         copy_obj.uid = new_uid;
         mfnvbvars.pagedata.push(copy_obj);
 
-        $copy_nav = $navigator.find('.navigator-tree li.nav-'+old_uid).clone();
-        $copy_nav.removeClass('nav-'+old_uid).addClass('nav-'+new_uid);
-        $copy_nav.children('a').attr('data-uid', new_uid);
-        $navigator.find('.navigator-tree li.nav-'+old_uid).after($copy_nav);
+        //$copy_nav = $navigator.find('.navigator-tree li.nav-'+old_uid).clone();
+        //$copy_nav.removeClass('nav-'+old_uid).addClass('nav-'+new_uid);
+        //$copy_nav.children('a').attr('data-uid', new_uid);
+        //$navigator.find('.navigator-tree li.nav-'+old_uid).after($copy_nav);
 
         loopAllStyleFields(new_uid);
 
@@ -7004,10 +7019,10 @@ var copypaste = {
         copy_obj.uid = new_uid;
         mfnvbvars.pagedata.push(copy_obj);
 
-        $copy_nav = $navigator.find('.navigator-tree li.nav-'+old_uid).clone();
-        $copy_nav.removeClass('nav-'+old_uid).addClass('nav-'+new_uid);
-        $copy_nav.children('a').attr('data-uid', new_uid);
-        $navigator.find('.navigator-tree li.nav-'+old_uid).after($copy_nav);
+        //$copy_nav = $navigator.find('.navigator-tree li.nav-'+old_uid).clone();
+        //$copy_nav.removeClass('nav-'+old_uid).addClass('nav-'+new_uid);
+        //$copy_nav.children('a').attr('data-uid', new_uid);
+        //$navigator.find('.navigator-tree li.nav-'+old_uid).after($copy_nav);
 
         // wraps childrens
 
@@ -7028,8 +7043,8 @@ var copypaste = {
                 copy_obj.uid = new_col_uid;
                 mfnvbvars.pagedata.push(copy_obj);
 
-                $navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_col_uid+' > a').attr('data-uid', new_col_uid);
-                $navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_col_uid).removeClass('nav-'+old_col_uid).addClass('nav-'+new_col_uid);
+                //$navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_col_uid+' > a').attr('data-uid', new_col_uid);
+                //$navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_col_uid).removeClass('nav-'+old_col_uid).addClass('nav-'+new_col_uid);
 
                 loopAllStyleFields(new_col_uid);
             });
@@ -7057,10 +7072,10 @@ var copypaste = {
         copy_obj.uid = new_uid;
         mfnvbvars.pagedata.push(copy_obj);
 
-        $copy_nav = $navigator.find('.navigator-tree li.nav-'+old_uid).clone();
-        $copy_nav.removeClass('nav-'+old_uid).addClass('nav-'+new_uid);
-        $copy_nav.children('a').attr('data-uid', new_uid);
-        $navigator.find('.navigator-tree li.nav-'+old_uid).after($copy_nav);
+        //$copy_nav = $navigator.find('.navigator-tree li.nav-'+old_uid).clone();
+        //$copy_nav.removeClass('nav-'+old_uid).addClass('nav-'+new_uid);
+        //$copy_nav.children('a').attr('data-uid', new_uid);
+        //$navigator.find('.navigator-tree li.nav-'+old_uid).after($copy_nav);
 
         // wraps childrens
 
@@ -7083,8 +7098,8 @@ var copypaste = {
                 copy_obj.uid = new_wrap_uid;
                 mfnvbvars.pagedata.push(copy_obj);
 
-                $navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_wrap_uid+' > a').attr('data-uid', new_wrap_uid);
-                $navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_wrap_uid).removeClass('nav-'+old_wrap_uid).addClass('nav-'+new_wrap_uid);
+                //$navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_wrap_uid+' > a').attr('data-uid', new_wrap_uid);
+                //$navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+old_wrap_uid).removeClass('nav-'+old_wrap_uid).addClass('nav-'+new_wrap_uid);
                 loopAllStyleFields(new_wrap_uid);
 
                 // wraps childrens
@@ -7107,8 +7122,8 @@ var copypaste = {
                         copy_obj.uid = new_col_uid;
                         mfnvbvars.pagedata.push(copy_obj);
 
-                        $navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+new_wrap_uid+' li.nav-'+old_col_uid+' > a').attr('data-uid', new_col_uid);
-                        $navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+new_wrap_uid+' li.nav-'+old_col_uid).removeClass('nav-'+old_col_uid).addClass('nav-'+new_col_uid);
+                        //$navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+new_wrap_uid+' li.nav-'+old_col_uid+' > a').attr('data-uid', new_col_uid);
+                        //$navigator.find('.navigator-tree li.nav-'+new_uid+' li.nav-'+new_wrap_uid+' li.nav-'+old_col_uid).removeClass('nav-'+old_col_uid).addClass('nav-'+new_col_uid);
                         loopAllStyleFields(new_col_uid);
                     });
                 }
@@ -7149,9 +7164,23 @@ function prepareStyleId(el){
     return el;
 }
 
+// is bebuilder blocks
+function isBlocks(){
+    let disabled_blocks = ['header', 'popup', 'megamenu', 'footer'];
+    if( !disabled_blocks.includes(builder_type)  ) {
+      return $content.find('body').hasClass('mfn-builder-blocks');
+    }
+    return false;
+}
+
 // add local style
 
 function addLocalStyle(u, v, s, r, uid){
+
+    if( isBlocks() ){
+      return;
+    }
+
     var el = u+s;
 
     if(typeof u === "undefined" || typeof s === "undefined") return;
@@ -7187,7 +7216,7 @@ function addLocalStyle(u, v, s, r, uid){
     selector_string = selector_string.replace('mcb-section-inner', 'mcb-section-inner-'+uid);
     selector_string = selector_string.replace('section_wrapper', 'mcb-section-inner-'+uid);
 
-    //console.log(selector_string+' / '+s+' / '+v);
+    // console.log(selector_string+' / '+s+' / '+v);
 
     s = s.replace('_v2', '');
 
@@ -7231,7 +7260,7 @@ function changeInlineStyles(u, s, v){
                         styles[sid] = s+': '+v;
                     }
 
-                }else{
+                }else if(v.length && v != 'remove'){
                     styles.push(s+': '+v);
                 }
                 //styles[sid] ? styles[sid] = s+': '+v : styles.push(s+': '+v);
@@ -7308,7 +7337,32 @@ function imageForWidget(u, v, p){
 
     p ? p = p : '';
 
-    if($content.find('.'+u).hasClass('column_article_box')){
+    // console.log('# imageForWidget');
+
+    if( isBlocks() ){
+      if( p != 'after' && p != 'hoverimg' ){
+
+        // hide icon
+        if( $content.find('.'+u).is('.column_counter, .column_icon_box, .column_icon_box_2, .column_list') ){
+          if(v){
+            $content.find('.'+u+' .item-preview-icon').addClass('empty');
+          } else {
+            $content.find('.'+u+' .item-preview-icon').removeClass('empty');
+          }
+        }
+
+        // change image src
+        $content.find('.'+u+' .item-preview-image').attr('src',v);
+
+        // empty class
+        if(v){
+          $content.find('.'+u+' .item-preview-image').parent().removeClass('empty');
+        } else {
+          $content.find('.'+u+' .item-preview-image').parent().addClass('empty');
+        }
+
+      }
+    } else if($content.find('.'+u).hasClass('column_article_box')){
         // article box
         $content.find('.'+u+' .article_box .photo_wrapper').html('<img class="scale-with-grid" src="'+v+'" alt="">');
     }else if($content.find('.'+u).hasClass('column_before_after')){
@@ -7414,9 +7468,9 @@ function imageForWidget(u, v, p){
         }
     }else if($content.find('.'+u).hasClass('mcb-section') && p == 'decortop'){
         // section decor top
-        if(v != ''){
+        if(v.length){
             if($content.find('.'+u+' .section-decoration.top').length){
-                $content.find('.'+u+' .section-decoration.top').css({ 'background-image': v});
+                $content.find('.'+u+' .section-decoration.top').css({ 'background-image': 'url('+v+')'});
             }else{
                 $content.find('.'+u).prepend('<div class="section-decoration top" style="background-image:url('+v+');"></div>');
             }
@@ -7427,7 +7481,7 @@ function imageForWidget(u, v, p){
         // section decor bottom
         if(v != ''){
             if($content.find('.'+u+' .section-decoration.bottom').length){
-                $content.find('.'+u+' .section-decoration.bottom').css({ 'background-image': v});
+                $content.find('.'+u+' .section-decoration.bottom').css({ 'background-image': 'url('+v+')'});
             }else{
                 $content.find('.'+u).append('<div class="section-decoration bottom" style="background-image:url('+v+');"></div>');
             }
@@ -7648,7 +7702,7 @@ var uploader = {
                         imageURLs.push(image.url);
                         imageIDs.push(image.id);
 
-                        if (image.sizes.medium) {
+                        if (typeof image.sizes !== 'undefined' && typeof image.sizes.medium !== 'undefined') {
                         imageURL = image.sizes.medium.url;
                         } else {
                         imageURL = image.url;
@@ -7660,9 +7714,7 @@ var uploader = {
                         '</li>';
 
                         galleryContainer.append(outputHTML);
-
                         uploader.sortable(galleryContainer);
-
 
                     });
 
@@ -7687,7 +7739,7 @@ var uploader = {
                     }else{
                         metaBox.removeClass('empty');
                         var attachment = frame.state().get('selection').first().toJSON();
-                        imgIdInput.val( attachment.url ).trigger('change');
+                        imgIdInput.val( attachment.url+'#'+attachment.id ).trigger('change');
                     }
 
                 });
@@ -7813,7 +7865,7 @@ var uploader = {
                 imageForWidget(eluid, attachment);
             }else if($modulebox.hasClass('zoom_box image') && imgIdInput.hasClass('preview-imageinput')){
                 imageForWidget(eluid, attachment, 'main');
-            }else if($moduleWrapper.attr('data-item') == 'zoom_box content_image' && imgIdInput.hasClass('preview-content_imageinput')){
+            }else if($modulebox.hasClass('zoom_box content_image')){
                 imageForWidget(eluid, attachment, 'desc');
             }else if($modulebox.hasClass('section') && imgIdInput.hasClass('preview-decor_topinput')){
                 imageForWidget(eluid, attachment, 'decortop');
@@ -7846,9 +7898,7 @@ var uploader = {
             }else if(!$modulebox.hasClass('image link_image')){
                 imageForWidget(eluid, attachment);
             }
-
         }
-
     },
 
     delete: function() {
@@ -7983,7 +8033,7 @@ var uploader = {
                         imageForWidget(eluid, sample_img);
                     }else if($modulebox.hasClass('zoom_box image') && imgIdInput.hasClass('preview-imageinput')){
                         imageForWidget(eluid, sample_img, 'main');
-                    }else if($moduleWrapper.attr('data-item') == 'zoom_box content_image' && imgIdInput.hasClass('preview-content_imageinput')){
+                    }else if($modulebox.hasClass('zoom_box content_image')){
                         imageForWidget(eluid, '', 'desc');
                     }else if($modulebox.hasClass('section') && imgIdInput.hasClass('preview-decor_topinput')){
                         imageForWidget(eluid, '', 'decortop');
@@ -8201,7 +8251,7 @@ $content.find('body').imagesLoaded(function() {
 
             setTimeout(function() {
                 if( $content.find('.mfn-force-rerender').length ){
-                    re_render2( $content.find('.mfn-force-rerender').attr('data-uid') );
+                    re_render( $content.find('.mfn-force-rerender').attr('data-uid') );
                 }
             }, 500);
 
@@ -8211,10 +8261,10 @@ $content.find('body').imagesLoaded(function() {
                 var nav_item = ui.item.attr('data-uid');
                 var nav_order = ui.item.attr('data-order');
 
-                var $nav_clone = $navigator.find('.navigator-tree li.nav-'+nav_item);
-                $navigator.find('.navigator-tree li.nav-'+nav_item).remove();
+                //var $nav_clone = $navigator.find('.navigator-tree li.nav-'+nav_item);
+                //$navigator.find('.navigator-tree li.nav-'+nav_item).remove();
 
-                if( $navigator.find('.navigator-tree li.nav-'+nav_parent+' ul').length ){
+                /*if( $navigator.find('.navigator-tree li.nav-'+nav_parent+' ul').length ){
                     if( nav_order == 0 ){
                         $navigator.find('.navigator-tree li.nav-'+nav_parent+' ul').prepend( $nav_clone );
                     }else{
@@ -8222,13 +8272,13 @@ $content.find('body').imagesLoaded(function() {
                     }
                 }else{
                     $navigator.find('.navigator-tree li.nav-'+nav_parent).append( '<ul>'+$nav_clone+'</ul>' );
-                }
+                }*/
 
                 if( ui.item.closest('.mfn-looped-items').length ){
-                    re_render2( ui.item.closest('.mfn-looped-items').attr('data-uid') );
+                    re_render( ui.item.closest('.mfn-looped-items').attr('data-uid') );
                 }
 
-                addHistory();
+                historyStorage.add();
             },100);
 
             checkEmptyWraps();
@@ -8284,13 +8334,13 @@ $content.find('body').imagesLoaded(function() {
 
             setTimeout(function() {
                 if( $content.find('.mfn-force-rerender').length ){
-                    re_render2( $content.find('.mfn-force-rerender').attr('data-uid') );
+                    re_render( $content.find('.mfn-force-rerender').attr('data-uid') );
                 }
             }, 500);
 
             setTimeout(function() {
 
-                var nav_parent = ui.item.closest('.mcb-section').attr('data-uid');
+               /* var nav_parent = ui.item.closest('.mcb-section').attr('data-uid');
                 var nav_item = ui.item.attr('data-uid');
                 var nav_order = ui.item.attr('data-order');
 
@@ -8305,13 +8355,13 @@ $content.find('body').imagesLoaded(function() {
                     }
                 }else{
                     $navigator.find('.navigator-tree li.nav-'+nav_parent).append( '<ul>'+$nav_clone+'</ul>' );
-                }
+                }*/
 
                 if( ui.item.closest('.mfn-looped-items').length ){
-                    re_render2( ui.item.closest('.mfn-looped-items').attr('data-uid') );
+                    re_render( ui.item.closest('.mfn-looped-items').attr('data-uid') );
                 }
 
-                addHistory();
+                historyStorage.add();
 
             },100);
 
@@ -8358,7 +8408,7 @@ $content.find('body').imagesLoaded(function() {
             });
 
             setTimeout(function() {
-                var nav_item = ui.item.attr('data-uid');
+                /*var nav_item = ui.item.attr('data-uid');
                 var nav_order = ui.item.attr('data-order');
 
                 var $nav_clone = $navigator.find('.navigator-tree li.nav-'+nav_item);
@@ -8370,9 +8420,9 @@ $content.find('body').imagesLoaded(function() {
                     }else{
                         $navigator.find('.navigator-tree > li:nth-child('+nav_order+')').after($nav_clone);
                     }
-                }
+                }*/
 
-                addHistory();
+                historyStorage.add();
             },100);
 
         },
@@ -8393,7 +8443,7 @@ $content.find('body').imagesLoaded(function() {
 function blink(his = false){
     setTimeout(function(){
         $builder.find('.blink').removeClass('blink');
-        if( !his ) addHistory();
+        if( !his ) historyStorage.add();
     }, 500);
 }
 
@@ -8420,7 +8470,7 @@ function blink(his = false){
 
 
 
-function re_render2( uid = false ){
+function re_render( uid = false ){
     //if( mfnvbvars.view == 'demo' ) return;
 
     var type = edited_item.jsclass == 'wrap' || edited_item.jsclass == 'section' ? edited_item.jsclass : 'item';
@@ -8445,7 +8495,7 @@ function re_render2( uid = false ){
     var formData = prepareForm2.get( uid );
 
     $.ajax({
-        url: ajaxurl,
+        url: mfnajaxurl,
         data: {
             action: 'mfnrerendersection',
             'mfn-builder-nonce': wpnonce,
@@ -8475,7 +8525,7 @@ function re_render2( uid = false ){
             checkEmptySections();
             checkEmptyWraps();
 
-            addHistory();
+            historyStorage.add();
             runAjaxElements();
 
             inlineEditor();
@@ -8485,164 +8535,22 @@ function re_render2( uid = false ){
 }
 
 
-
-
-
-
-
-// re renders
-
-function re_render(){
-
-    /*console.log('old re render');
-    return;*/
-
-    if( $content.find('.'+it).closest('.vb-item.mcb-column').length ){
-        re_render2( $content.find('.'+it).closest('.vb-item.mcb-column').attr('data-uid') );
-        return;
-    }
-
-    if( mfnvbvars.view == 'demo' ) return;
-    $box = $('.sidebar-wrapper .panel-edit-item .mfn-form .mfn-element-fields-wrapper');
-
-    var it = 'mcb-item-'+edited_item.uid;
-
-
-
-    let widget_attr = {};
-    let widget_type = edited_item.type;
-
-    widget_attr['vb'] = true;
-    widget_attr['uid'] = edited_item.uid;
-    widget_attr['type'] = edited_item.type;
-    widget_attr['size'] = edited_item.size;
-    widget_attr['tablet_size'] = edited_item.tablet_size;
-    widget_attr['mobile_size'] = edited_item.mobile_size;
-
-    $box.find('.modalbox-re_render .mfn-field-value').each(function() {
-        let f_name = $(this).attr('name');
-        widget_attr[f_name] = $(this).val();
-    });
-
-    $box.find('.modalbox-re_render .single-segmented-option.segmented-options li input:checked').each(function() {
-        let f_name = $(this).attr('name');
-        widget_attr[f_name] = $(this).val();
-    });
-
-    if(widget_type == 'image_gallery'){
-        widget_attr['ids'] = $box.find('.upload-input').val();
-    }
-
-    if(widget_type == 'payment_methods'){
-        widget_attr['dynamic_items'] = edited_item.fields['dynamic_items'];
-    }
-
-    if( edited_item.type == 'lottie' ){
-        $content.find('.'+it+' .mcb-column-inner').css('min-height', $content.find('.'+it+' .mfn-lottie-wrapper').outerHeight());
-        var it_lottie = $content.find('.mcb-item-'+edited_item.uid+' .lottie').attr('id');
-        if( typeof iframe.window[it_lottie] !== 'undefined' && typeof iframe.window[it_lottie] === "function" ) iframe.window[it_lottie].destroy();
-    }
-
-
-    if($box.find('.tabs-wrapper li.tab:not(.default)').length){
-        widget_attr['tabs'] = [];
-        $box.find('.tabs-wrapper li.tab:not(.default)').each(function(a) {
-
-            var arr = {};
-
-            $(this).find('.field-to-object').each(function() {
-                var field_label = $(this).attr('data-label');
-                arr[field_label] = $(this).val();
-            });
-
-            widget_attr['tabs'].push(arr);
-
-        });
-    }
-
-    $content.find('.'+it).addClass('loading disabled');
-
-    $.ajax({
-        url: ajaxurl,
-        data: {
-            action: 'rerenderwidget',
-            'mfn-builder-nonce': wpnonce,
-            type: widget_type,
-            pageid: pageid,
-            attri: widget_attr,
-            //attri: edited_item.fields,
-        },
-        type: 'POST',
-        success: function(response){
-            $content.find('.'+it+' .mcb-column-inner').children().not('.item-header, .mfn-drag-helper').remove();
-
-            if(Array.isArray(response)){
-
-                $content.find('.'+it+' .mcb-column-inner').append( response[0] );
-                var ajax_script = document.createElement("script");
-                ajax_script.innerHTML = response[1];
-                document.getElementById('mfn-vb-ifr').contentWindow.document.body.appendChild(ajax_script);
-
-            }else{
-                $content.find('.'+it+' .mcb-column-inner').append(response);
-            }
-
-            $content.find('.'+it).removeClass('loading disabled');
-
-            if( edited_item.type == 'lottie' ){
-                $content.find('.'+it+' .mcb-column-inner').css('min-height', '1px');
-            }
-
-            addHistory();
-            runAjaxElements();
-        }
-    });
-}
-
 var openEditForm = {
 
     do: function($edited_div, scroll = false) {
 
         if( wyswig_active ){
 
-            if( $editpanel.find( '.panel-edit-item .mfn-form .html-editor' ).length ) MfnFieldTextarea.destroy();
-            if( $editpanel.find( '.panel-edit-item .mfn-form .visual-editor' ).length ) tinymce.execCommand( 'mceRemoveEditor', false, 'mfn-editor' );
+            if( $editpanel.find( '.mfn-form .html-editor' ).length ) MfnFieldTextarea.destroy();
+            if( $editpanel.find( '.mfn-form .visual-editor' ).length ) tinymce.execCommand( 'mceRemoveEditor', false, 'mfn-editor' );
 
             wyswig_active = false;
 
             if( $content.find('.mcb-item-'+edited_item['uid']).length && $content.find('.mcb-item-'+edited_item['uid']).closest('.mfn-queryloop-item-wrapper').length ){
-                re_render2( $content.find('.'+edited_item['uid']).closest('.vb-item.mcb-section').attr('data-uid') );
+                re_render( $content.find('.'+edited_item['uid']).closest('.vb-item.mcb-section').attr('data-uid') );
             }else{
-                re_render2( $content.find('.'+edited_item['uid']).closest('.vb-item').attr('data-uid') );
+                re_render( $content.find('.'+edited_item['uid']).closest('.vb-item').attr('data-uid') );
             }
-
-            /*var old_uid = edited_item.uid;
-            var old_val = edited_item.fields.content;
-            $content.find('.mcb-item-'+old_uid).addClass('loading disabled');
-
-            // $content.find('.mcb-item-'+old_uid+' .mfn-inline-editor').html( old_uid +'<br>'+old_uid +'<br>'+old_uid +'<br>' );
-
-            $.ajax({
-                url: MfnVbApp.ajaxurl,
-                data: {
-                    action: 'rendercontent',
-                    'mfn-builder-nonce': wpnonce,
-                    val: old_val,
-                    vb_uid: pageid,
-                    uid: old_uid
-                },
-                type: 'POST',
-                success: function(response){
-                    $content.find('.mcb-item-'+response['uid']+' .mfn-inline-editor').removeClass('mfn-focused');
-                    $content.find('.mcb-item-'+response['uid']).removeClass('loading disabled');
-
-                    if( $content.find('.'+old_uid).closest('.mfn-queryloop-item-wrapper').length ){
-                        re_render2( $content.find('.'+old_uid).closest('.mcb-section.vb-item').attr('data-uid') );
-                    }else{
-                        $content.find('.mcb-item-'+response['uid']+' .mfn-inline-editor').html(response['html']);
-                    }
-                }
-            });*/
         }
 
         if( $content.find('.vb-item.mfn-current-editing').length ) $content.find('.vb-item.mfn-current-editing').removeClass('mfn-current-editing');
@@ -8661,7 +8569,7 @@ var openEditForm = {
             $('.sidebar-panel').removeClass('mfn-global-wrap-edit');
         }
 
-        if( typeof edited_item.jsclass !== 'undefined' ) $('.mfn-ui').removeClass('mfn-editing-'+edited_item.jsclass);
+        if( edited_item && typeof edited_item.jsclass !== 'undefined' ) $('.mfn-ui').removeClass('mfn-editing-'+edited_item.jsclass);
         $('.mfn-ui').removeClass('mfn-editing-element mfn-editing-section mfn-editing-wrap');
 
         $(".header:not(.header-edit-item):visible").hide();
@@ -8669,14 +8577,34 @@ var openEditForm = {
 
         edited_item = mfnvbvars.pagedata.filter( (item) => item.uid == id )[0];
 
-        $('.mfn-ui .panel-edit-item .mfn-form').html( renderMfnFields[edited_item.jsclass]( edited_item ) );
+        if( !edited_item ) return;
 
-        if( edited_item.jsclass != 'section' && edited_item.jsclass != 'wrap' && edited_item.jsclass != 'placeholder' ){
-            $('.mfn-ui .panel-edit-item .mfn-form .mfn-element-fields-wrapper').append( renderMfnFields['advanced']( edited_item ) );
+        let element_type = 'item';
+
+        if( edited_item.jsclass == 'section' ){
+            element_type = 'section';
+        }else if(edited_item.jsclass == 'wrap'){
+            element_type = 'wrap';
         }
 
-        //console.log(id);
-        //console.log(edited_item);
+        // console.log(edited_item);
+        // console.log(renderMfnFields[edited_item.jsclass]);
+
+        const mfn_form = new MfnForm( renderMfnFields[edited_item.jsclass] );
+        let form_html = mfn_form.render();
+
+        $('.mfn-ui .panel-edit-item .mfn-form').html('<div class="mfn-element-fields-wrapper" data-item="'+edited_item.jsclass+'" data-element="mcb-'+element_type+'-'+edited_item.uid+'"><ul class="mfn-vb-formrow sidebar-panel-content-tabs"><li data-tab="content" class="spct-li-content active">Settings</li><li data-tab="style" class="spct-li-style">Style</li><li data-tab="advanced" class="spct-li-advanced">Advanced</li></ul>');
+
+        // console.log(form_html);
+        $('.mfn-ui .panel-edit-item .mfn-form .mfn-element-fields-wrapper').append(form_html);
+
+        $('.mfn-ui .panel-edit-item .mfn-form').append('</div>');
+
+        if( edited_item.jsclass != 'section' && edited_item.jsclass != 'wrap' && edited_item.jsclass != 'placeholder' ){
+            const mfn_form_advanced = new MfnForm( renderMfnFields['advanced'] );
+            let form_html_advanced = mfn_form_advanced.render();
+            $('.mfn-ui .panel-edit-item .mfn-form .mfn-element-fields-wrapper').append( form_html_advanced );
+        }
 
         if( edited_item.jsclass != 'wrap' && edited_item.jsclass != 'section' ){
             $('.mfn-ui').addClass('mfn-editing-element');
@@ -8693,6 +8621,33 @@ var openEditForm = {
             $('.mfn-element-fields-wrapper').addClass('mfn-is-query-looped');
             if( typeof edited_item['attr']['type'] !== 'undefined' && edited_item['attr']['query_display'] == 'slider' ){
                 $('.mfn-element-fields-wrapper').addClass('mfn-is-ql-slider');
+            }
+        }
+
+        if( typeof edited_item['attr'] !== 'undefined' ){
+            // deprecated fields
+            if( edited_item.jsclass == 'wrap' ){
+                // empty now
+            }else if( edited_item.jsclass == 'section' ){
+                // empty now
+            }else if( deprecated_fields.item.length ){
+                deprecated_fields.item.map(function(id) {
+                    if( typeof edited_item.attr[id] !== 'undefined' ) delete(edited_item.attr[id])
+                });
+            }
+
+            // rewrited fields
+            if( edited_item.jsclass == 'wrap' ){
+                // empty now
+            }else if( edited_item.jsclass == 'section' ){
+                // empty now
+            }else if( typeof rewrited_fields.item[edited_item.jsclass] !== 'undefined' ){
+                rewrited_fields.item[edited_item.jsclass].map(function(it) {
+                    if( typeof edited_item.attr[it.old] !== 'undefined' ) {
+                        edited_item.attr[it.new] = edited_item.attr[it.old];
+                        delete(edited_item.attr[it.old]);
+                    }
+                });
             }
         }
 
@@ -8718,20 +8673,24 @@ var openEditForm = {
             $content.find('html, body').animate({ scrollTop: $edited_div.offset().top - 50 }, 1000);
         }
 
+        $(document).trigger('be:edit');
+
+        //if($('body').hasClass('mfn-navigator-active') && !$('.mfn-navigator ul.navigator-tree li.nav-'+edited_item.uid+' > a.active-element').length ) be_navigator.show(edited_item.uid, true);
+
         return;
 
     }
 }
 
 function initWyswig(){
-    if( $editpanel.find( '.panel-edit-item .mfn-form .html-editor' ).length ){
+    if( $editpanel.find( '.mfn-form .mfn-element-fields-wrapper .html-editor' ).length ){
         wyswig_active = true;
         preventEdit = true;
         MfnFieldTextarea.create();
         //$(document).trigger('mfn:vb:edit');
     }
 
-    if( $editpanel.find( '.panel-edit-item .mfn-form .visual-editor' ).length ){
+    if( $editpanel.find( '.mfn-form .mfn-element-fields-wrapper .visual-editor' ).length ){
         wyswig_active = true;
         preventEdit = true;
         MfnFieldVisual.init();
@@ -8744,16 +8703,44 @@ function initWyswig(){
  */
 
 var settings = {
+
+    option: false,
+    forceReload: false,
+
     start: function(){
+
+        // column text editor
+
         if( $('#mfn-visualbuilder').hasClass('column-visual') ){
           $('.mfn-ui .panel-settings .mfn-form .settings .form-control[data-option="column-visual"] li:first').removeClass('active')
             .siblings().addClass('active');
         }
 
+        // navigation
+
         if( !$content.find("body").hasClass('mfn-modern-nav') ){
           $('.mfn-ui .panel-settings .mfn-form .settings .form-control[data-option="mfn-modern-nav"] li:first').removeClass('active')
             .siblings().addClass('active');
         }
+
+        // builder blocks
+
+        if( $content.find("body").hasClass('mfn-builder-blocks') ){
+          $('.mfn-ui .panel-settings .mfn-form .settings .form-control[data-option="builder-blocks"] li:first').addClass('active')
+            .siblings().removeClass('active');
+        }
+
+        if( $content.find("body").hasClass('simple-view') ){
+          $('.mfn-ui .panel-settings .mfn-form .settings .form-control[data-option="simple-view"] li:first').removeClass('active')
+            .siblings().addClass('active');
+        }
+
+        if( $content.find("body").hasClass('hover-effects-disable') ){
+          $('.mfn-ui .panel-settings .mfn-form .settings .form-control[data-option="hover-effects"] li:first').addClass('active')
+            .siblings().removeClass('active');
+        }
+
+        // ui mode
 
         if( $('#mfn-visualbuilder').hasClass('mfn-ui-dark') && !$('#mfn-visualbuilder').hasClass('mfn-ui-auto') ){
             $('.mfn-ui .panel-settings .mfn-form .settings .form-control[data-option="ui-theme"] li').removeClass('active');
@@ -8773,11 +8760,63 @@ var settings = {
 
             if( mfnvbvars.view == 'demo' ) return;
 
-            var $el = $(this),
-            $li = $el.closest('li'),
-              $row = $el.closest('.mfn-row');
+            settings.forceReload = false;
+            settings.option = $(this);
 
-            var option = $el.closest('.form-control').data('option'),
+            var $li = settings.option.closest('li'),
+            $row = settings.option.closest('.mfn-row');
+
+            if( $row.hasClass('mfn-reload-required') ){
+                $('.mfn-ui').addClass('mfn-modal-open').append('<div class="mfn-modal modal-confirm mfn-modal-600 show"> <div class="mfn-modalbox mfn-form mfn-shadow-1"> <div class="modalbox-header"> <div class="options-group"> <div class="modalbox-title-group"> <span class="modalbox-icon mfn-icon-settings"></span> <div class="modalbox-desc"> <h4 class="modalbox-title">Confirmation box</h4> </div></div></div><div class="options-group"> <a class="mfn-option-btn mfn-option-blank btn-large btn-modal-close" title="Close" href="#"><span class="mfn-icon mfn-icon-close"></span></a> </div></div><div class="modalbox-content"> <img class="icon" alt="" src="'+mfnvbvars.themepath+'/muffin-options/svg/warning.svg"> <h3>Page reload is required</h3> <p>Continue?</p><a class="mfn-btn mfn-btn-red btn-wide btn-modal-close" href="#"><span class="btn-wrapper">Cancel</span></a> <a class="mfn-btn btn-wide btn-modal-confirm" href="#"><span class="btn-wrapper">Reload</span></a> <a class="mfn-btn mfn-btn-green btn-wide btn-modal-confirm-with-save" href="#"><span class="btn-wrapper">Save & Reload</span></a> </div></div></div>');
+
+                $('.btn-modal-close').on('click', function(e) {
+                    e.preventDefault();
+                    $('.mfn-ui').removeClass('mfn-modal-open');
+                    $('.modal-confirm.show').remove();
+                    return;
+                });
+
+                $('.btn-modal-confirm').on('click', function(e) {
+                    e.preventDefault();
+
+                    if( $(this).hasClass('loading') ) return;
+                    window.onbeforeunload = null;
+
+                    $(this).addClass('loading disabled');
+                    settings.forceReload = true;
+                    settings.continue();
+                });
+
+                $('.btn-modal-confirm-with-save').on('click', function(e) {
+                    e.preventDefault();
+
+                    if( $(this).hasClass('loading') ) return;
+                    window.onbeforeunload = null;
+
+                    $(this).addClass('loading disabled');
+                    settings.forceReload = true;
+
+                    if(!$('.btn-save-form-primary.btn-save-changes').hasClass('disabled')){
+                        $('.btn-save-form-primary.btn-save-changes').trigger('click');
+                    }
+
+                });
+                
+            }else{
+                settings.continue();
+            }
+
+        });
+    },
+
+    continue: function() {
+
+        console.log('continue');
+
+        var $li = settings.option.closest('li'),
+            $row = settings.option.closest('.mfn-row');
+
+        var option = settings.option.closest('.form-control').data('option'),
               value = false;
 
             $li.addClass('active')
@@ -8785,21 +8824,32 @@ var settings = {
 
             value = $li.data('value');
 
-            if( option == 'mfn-modern-nav' ){
+            if( option == 'mfn-modern-nav' || option == 'simple-view' ){
 
-                if( value == 1 && !$content.find("body").hasClass('mfn-modern-nav') ){
+                if( value == 1 && !$content.find("body").hasClass(option) ){
                     $content.find("body").addClass(option);
                 }else{
                     $content.find("body").removeClass(option);
                 }
 
+            }else if( option == 'hover-effects' ){
+
+                if( value == 1 && !$content.find("body").hasClass('hover-effects-disable') ){
+                    $content.find("body").addClass('hover-effects-disable');
+                }else{
+                    $content.find("body").removeClass('hover-effects-disable');
+                }
+
             }else if( option == 'ui-theme' ){
 
                 $("#mfn-visualbuilder").removeClass('mfn-ui-auto mfn-ui-dark mfn-ui-light').addClass(value);
-                $content.find('body').removeClass('mfn-ui-auto mfn-ui-dark mfn-ui-light').addClass(value);
 
-                if(value == 'mfn-ui-auto'){
-                    settings.detectOsTheme();
+                if( ! isBlocks() ){
+                  $content.find('body').removeClass('mfn-ui-auto mfn-ui-dark mfn-ui-light').addClass(value);
+
+                  if(value == 'mfn-ui-auto'){
+                      settings.detectOsTheme();
+                  }
                 }
 
             }else{
@@ -8810,7 +8860,7 @@ var settings = {
                 }
             }
 
-            $.ajax( ajaxurl, {
+            $.ajax( mfnajaxurl, {
               type : "POST",
               data : {
                 'mfn-builder-nonce': wpnonce,
@@ -8831,12 +8881,16 @@ var settings = {
                 triggerResize();
               }
 
+              if( settings.forceReload ){
+                location.reload();
+                settings.forceReload = false;
+              }
+
             });
-        });
     },
 
     detectOsTheme: function() {
-        if( $('#mfn-visualbuilder').hasClass('mfn-ui-auto') ){
+        if( $('#mfn-visualbuilder').hasClass('mfn-ui-auto') && !$('#mfn-visualbuilder').hasClass('builder-blocks') ){
             if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 $('#mfn-visualbuilder').addClass('mfn-ui-dark');
                 if($content) $content.find('body').addClass('mfn-ui-dark');
@@ -8892,7 +8946,7 @@ var introduction = {
 
         if( mfnvbvars.view == 'demo' ) return;
 
-      $.ajax( ajaxurl, {
+      $.ajax( mfnajaxurl, {
 
         type : "POST",
         data : {
@@ -9016,7 +9070,7 @@ const GlobalWraps = {
         that.wrapTriggered.addClass('mfn-global-wrap').attr('data-wrap', that.selectedUid);
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'importtemplate_wraponly',
                 'mfn-builder-nonce': wpnonce,
@@ -9049,17 +9103,17 @@ const GlobalWraps = {
                 const newUid = that.wrapTriggered.attr('data-uid');
 
                 // Change navigator info
-                const navigatorWrap = $navigator.find('.navigator-tree').find(`[data-uid=${that.selectedUid}]`);
+                /*const navigatorWrap = $navigator.find('.navigator-tree').find(`[data-uid=${that.selectedUid}]`);
                 navigatorWrap.closest('li').removeClass().addClass(`navigator-wrap nav-${newUid} toggle-disabled`);
                 navigatorWrap[0].firstChild.nodeValue = 'Global Wrap';
                 navigatorWrap[0].setAttribute('data-uid', newUid);
                 const navigatorLink = $(navigatorWrap).first();
-                navigatorLink.find('.navigator-size-label').text( that.wrapTriggered.attr( 'data-desktop-size' ) );
+                navigatorLink.find('.navigator-size-label').text( that.wrapTriggered.attr( 'data-desktop-size' ) );*/
 
                 // Remaining Lukas stuff
                 blink();
                 mfnChart();
-                addHistory();
+                historyStorage.add();
                 runAjaxElements();
 
                 // Open edit form again, reload HTML.
@@ -9093,13 +9147,13 @@ const GlobalWraps = {
         this.wrapTriggered = $content.find(`.wrap[data-uid=${newWrap.uid}]`);
 
         // Replace navigator ID to new
-        const navigatorWrap = $navigator.find('.navigator-tree').find(`[data-uid=${this.selectedUid}]`).attr('data-uid', newWrap.uid);
+        /*const navigatorWrap = $navigator.find('.navigator-tree').find(`[data-uid=${this.selectedUid}]`).attr('data-uid', newWrap.uid);
         navigatorWrap[0].firstChild.nodeValue = 'Wrap';
         navigatorWrap[0].setAttribute('data-uid', newWrap.uid);
-        navigatorWrap.closest('li').removeClass().addClass(`navigator-wrap nav-${newWrap.uid}`);
+        navigatorWrap.closest('li').removeClass().addClass(`navigator-wrap nav-${newWrap.uid}`);*/
 
         blink();
-        addHistory();
+        historyStorage.add();
 
         queueMicrotask(() => openEditForm.do( this.wrapTriggered ));
     },
@@ -9149,7 +9203,7 @@ const GlobalSections = {
         that.sectionTriggered.addClass('mfn-global-section').attr('data-section', that.selectedUid);
 
         $.ajax({
-            url: ajaxurl,
+            url: mfnajaxurl,
             data: {
                 action: 'importtemplate',
                 'mfn-builder-nonce': wpnonce,
@@ -9181,7 +9235,7 @@ const GlobalSections = {
                 // Remaining Lukas stuff
                 blink();
                 mfnChart();
-                addHistory();
+                historyStorage.add();
                 runAjaxElements();
             }
         });
@@ -9217,7 +9271,7 @@ const GlobalSections = {
         this.sectionTriggered = $content.find(`.section[data-uid=${newWrap.uid}]`);
 
         blink();
-        addHistory();
+        historyStorage.add();
 
         queueMicrotask(() => openEditForm.do( this.sectionTriggered ));
     },
@@ -9259,7 +9313,7 @@ $('.modal-dynamic-data-info .modalbox-content a').on('click', function(e) {
     $(target).closest('li').addClass('copied').siblings().removeClass('copied');
 
     var code = dynamicDataCodeLocation.text();
-    navigator.clipboard.writeText( code );
+    //navigator.clipboard.writeText( code );
 });
 
 $('.mfn-option-dropdown.btn-save-action a').on('click', function(e) {e.preventDefault();});
@@ -9343,8 +9397,8 @@ var headerTmpl = {
 
         var pageopts = mfnvbvars.pagedata.filter( (item) => item.uid == 'pageoptions' )[0];
 
-        if( typeof pageopts['fields']['header_sticky'] != 'undefined' && pageopts['fields']['header_sticky'] == 'enabled' ) $('.mfn-be-header-builder .mfn-preview-toolbar .mfn-header-type-preview a[data-preview="header-sticky"]').removeClass('disabled');
-        if( typeof pageopts['fields']['header_mobile'] != 'undefined' && pageopts['fields']['header_mobile'] == 'enabled' ) $('.mfn-be-header-builder .mfn-preview-toolbar .mfn-header-type-preview a[data-preview="header-mobile"]').removeClass('disabled');
+        if( typeof pageopts['header_sticky'] != 'undefined' && pageopts['header_sticky'] == 'enabled' ) $('.mfn-be-header-builder .mfn-preview-toolbar .mfn-header-type-preview a[data-preview="header-sticky"]').removeClass('disabled');
+        if( typeof pageopts['header_mobile'] != 'undefined' && pageopts['header_mobile'] == 'enabled' ) $('.mfn-be-header-builder .mfn-preview-toolbar .mfn-header-type-preview a[data-preview="header-mobile"]').removeClass('disabled');
 
         $('.mfn-preview-opt-header').on('click', function(e) {
             e.preventDefault();
@@ -9360,6 +9414,9 @@ var headerTmpl = {
         });
     },
     clickDefault: function() {
+
+        //console.log('default click');
+
         headerTmpl.resetEmpty();
         $('.mfn-preview-opt-header').removeClass('btn-active');
         elements_ver = 'default';
@@ -9375,7 +9432,15 @@ var headerTmpl = {
         checkEmptyPage();
     },
     clickSticky: function() {
+
+        //console.log('sticky click');
+
         headerTmpl.resetEmpty();
+
+        if( $('.mfn-preview-opt-header[data-preview="header-mobile"]').hasClass('btn-active') ){
+            $('.sidebar-panel-footer .mfn-preview-opt[data-preview="desktop"]').trigger('click');
+        }
+
         $('.mfn-preview-opt-header').removeClass('btn-active');
         elements_ver = 'header-sticky';
         $('.mfn-preview-opt-header[data-preview="header-sticky"]').addClass('btn-active');
@@ -9389,6 +9454,9 @@ var headerTmpl = {
         }
     },
     clickMobile: function() {
+
+        //console.log('mobile click');
+
         headerTmpl.resetEmpty();
         $('.mfn-preview-opt-header').removeClass('btn-active');
         elements_ver = 'header-mobile';
@@ -9496,7 +9564,7 @@ var dynamicData = {
             let $el = $(this);
             let text = $el.siblings('a').find('.mfn-dd-code').html();
 
-            navigator.clipboard.writeText(text);
+            //navigator.clipboard.writeText(text);
 
             $el.attr('data-tooltip', 'Coppied!');
             setTimeout(function() {
@@ -9574,6 +9642,8 @@ var dynamicData = {
                 dynamic_data.global[type].map( (el, i) => $('.modal-dynamic-data .mfn-dd-global-ul').append('<li><span class="mfn-dd-copy" data-tooltip="Copy"><i class="far fa-copy"></i></span><a data-type="'+type+'" href="#"><span class="mfn-dd-label">'+el.label+'</span><span class="mfn-dd-code">{'+el.key+'}</span></a></li>') );
             }
 
+            //console.log(type);
+
             if( $editpanel.find('.mfn-current-dynamic-data .mfn-field-value').length ) $editpanel.find('.mfn-current-dynamic-data').removeClass('mfn-current-dynamic-data');
             $ddbutton.closest('.mfn-form-row').addClass('mfn-current-dynamic-data');
             $('.modal-dynamic-data').addClass('show');
@@ -9582,6 +9652,7 @@ var dynamicData = {
             // static options dynamic set
             $('.modal-dynamic-data .modalbox-content .mfn-dd-dynamic-set ul li a').each(function() {
                 let subtype = $(this).attr('data-subtype');
+                $(this).attr('data-type', type);
                 $(this).find('.mfn-dd-code').text('{'+type+subtype+'}');
 
                 if( $(this).closest('.mfn-dd-type-wrapper').hasClass('mfn-dd-type-wrapper-global') && label == 'image' ){
@@ -9596,22 +9667,8 @@ var dynamicData = {
     },
 
     search: function() {
-        /*
-        for tabs filter
-        $editpanel.on('click', '.modal-dynamic-data .modalbox-header .modalbox-tabs li a', function(e) {
-            e.preventDefault();
-            let filter = $(this).parent('li').attr('data-filter');
 
-            $('.modal-dynamic-data .modalbox-header .modalbox-tabs li').removeClass('active');
-            $(this).parent('li').addClass('active');
-
-            $('.mfn-dd-type-wrapper').removeClass('dd-type-hidden');
-            if( filter != '*' ){
-                $('.mfn-dd-type-wrapper:not(.mfn-dd-type-wrapper-'+filter+')').addClass('dd-type-hidden');
-            }
-        });*/
-
-        $editpanel.on('keyup', '.modal-dynamic-data .modalbox-header .mfn-search', function() {
+        $editpanel.on('keyup paste change', '.modal-dynamic-data .modalbox-header .mfn-search', function() {
             var val = $(this).val().toLowerCase();
 
             if( val.length ){
@@ -9677,7 +9734,7 @@ function switchPreview(preview_type) {
 
     if( $content.find('.mfn-looped-items-slider-wrapper').length ){
         $content.find('.mfn-looped-items-slider-wrapper').each(function() {
-            re_render2($(this).attr('data-uid'));
+            re_render($(this).attr('data-uid'));
         });
     }
 
@@ -9686,88 +9743,165 @@ function switchPreview(preview_type) {
     runSorting();
 }
 
-$('.btn-navigator-switcher').on('click', function(e) {
-    e.preventDefault();
-    $('body').toggleClass('mfn-navigator-active');
-});
+let be_navigator = {
+    init: function() {
+        $('.btn-navigator-switcher').on('click', function(e) {
+            e.preventDefault();
+            be_navigator.open();
+        });
 
-$(".mfn-navigator").draggable({
-    handle: ".modalbox-header"
-});
+        $(document).on('click', '.btn-navigator-hide', function(e) {
+            e.preventDefault();
+            be_navigator.hide();
+        });
 
-$( ".mfn-navigator" ).resizable({
-  maxHeight: winH,
-  maxWidth: 600,
-  minHeight: 300,
-  minWidth: 250
-});
+        be_navigator.ui();
+    },
+    show: function(uid, click = false) {
+        be_navigator.open();
+        setTimeout(function() {
+            if( !$navigator.find('li.nav-'+uid).hasClass('active') ){
+                if( !$navigator.find('li.nav-'+uid).closest('li.navigator-section').hasClass('active') ){
+                    $navigator.find('li.nav-'+uid).closest('li.navigator-section').children('.navigator-arrow').trigger('click');
+                }
+                if( !$navigator.find('li.nav-'+uid).closest('li.navigator-wrap').hasClass('active') ){
+                    $navigator.find('li.nav-'+uid).closest('li.navigator-wrap').children('.navigator-arrow').trigger('click');
+                }
+                if(!click) {
+                    $navigator.find('li.nav-'+uid+' > a').trigger('click');
+                }else{
+                    $navigator.find('li.nav-'+uid+' > a').addClass('active-element');
+                }
+            }
+        }, 100);
+    },
+    search: function() {
+        $('.mfn-navigator-search-input').on('keyup paste change', function() {
+            var val = $(this).val().replace(/ /g, '_').toLowerCase();
+            if( val.length ){
+                if( val.length > 2 ){
+                    $(".mfn-navigator").addClass('mfn-nav-searching');
 
-$('.mfn-navigator-search-input').on('keyup', function() {
-    var val = $(this).val().replace(/ /g, '_').toLowerCase();
-    if( val.length ){
-        if( val.length > 2 ){
-            $(".mfn-navigator").addClass('mfn-nav-searching');
+                    $navigator.find('li').hide();
+                    $navigator.find('li.navitemtype[data-name*="'+val+'"]').closest('.navigator-section').show();
+                    $navigator.find('li.navitemtype[data-name*="'+val+'"]').closest('.navigator-wrap').show();
+                    $navigator.find('li.navitemtype[data-name*="'+val+'"]').parents('.mfn-sub-nav').show();
+                    $navigator.find('li.navitemtype[data-name*="'+val+'"]').show();
 
-            $navigator.find('li').hide();
-            $navigator.find('li.navitemtype[data-name*="'+val+'"]').closest('.navigator-section').show();
-            $navigator.find('li.navitemtype[data-name*="'+val+'"]').closest('.navigator-wrap').show();
-            $navigator.find('li.navitemtype[data-name*="'+val+'"]').parents('.mfn-sub-nav').show();
-            $navigator.find('li.navitemtype[data-name*="'+val+'"]').show();
+                }else{
+                    $(".mfn-navigator").removeClass('mfn-nav-searching');
+                    $navigator.find('li').removeAttr('style');
+                    $navigator.find('li:not(.active) > .mfn-sub-nav').removeAttr('style');
+                }
+            }else{
+                $navigator.find('li.navigator-section').show();
+                $(".mfn-navigator").removeClass('mfn-nav-searching');
+                $navigator.find('li').removeAttr('style');
+                $navigator.find('li:not(.active) > .mfn-sub-nav').removeAttr('style');
+            }
+        });
+    },
+    open: function() {
 
-        }else{
-            $(".mfn-navigator").removeClass('mfn-nav-searching');
-            $navigator.find('li').removeAttr('style');
-            $navigator.find('li:not(.active) > .mfn-sub-nav').removeAttr('style');
+        $('.mfn-navigator .navigator-tree').html('');
+
+        if( $builder.find('.section.vb-item:not(.mfn-global-section)').length ){
+            $builder.find('.section.vb-item:not(.mfn-global-section)').each(function() {
+                let $section = $(this);
+                $('.mfn-navigator .navigator-tree').append( navigatorHtml('Section', $section.attr('data-uid')) );
+                if( $section.find('.wrap.vb-item:not(.mfn-global-wrap)').length ){
+                    $('.mfn-navigator .navigator-tree li.nav-'+$section.attr('data-uid')).append('<ul class="mfn-sub-nav"></ul>');
+                    let $submenu_section = $('.mfn-navigator .navigator-tree li.nav-'+$section.attr('data-uid')+' .mfn-sub-nav');
+                    $section.find('.wrap.vb-item:not(.mfn-global-wrap)').each(function() {
+                        let $wrap = $(this);
+
+                        if( $wrap.hasClass('divider') ){
+                            $submenu_section.append( navigatorHtml('Divider', $wrap.attr('data-uid'), '') );
+                        }else{
+                            $submenu_section.append( navigatorHtml('Wrap', $wrap.attr('data-uid'), $wrap.attr('data-desktop-size')) );
+
+                            if( $wrap.find('.column.vb-item').length ){
+                                $('.mfn-navigator .navigator-tree li.nav-'+$wrap.attr('data-uid')).append('<ul class="mfn-sub-nav"></ul>');
+                                let $submenu_wrap = $('.mfn-navigator .navigator-tree li.nav-'+$wrap.attr('data-uid')+' .mfn-sub-nav');
+
+                                $wrap.find('.column.vb-item').each(function() {
+                                    let $item = $(this);
+                                    let itemObj = mfnvbvars.pagedata.filter( (item) => item.uid == $item.attr('data-uid') )[0];
+                                    $submenu_wrap.append( navigatorHtml(itemObj.jsclass, $item.attr('data-uid'), $item.attr('data-desktop-size')) );
+                                });
+                            }
+                        }
+
+                    });
+                }
+            });
         }
-    }else{
-        $navigator.find('li.navigator-section').show();
-        $(".mfn-navigator").removeClass('mfn-nav-searching');
-        $navigator.find('li').removeAttr('style');
-        $navigator.find('li:not(.active) > .mfn-sub-nav').removeAttr('style');
-    }
-});
 
-
-$('.mfn-navigator').on('click', '.navigator-tree li .navigator-arrow', function(e) {
-    var $li = $(this).closest('li');
-    $li.closest('.navigator-section').siblings().find('ul').slideUp();
-    $li.closest('.navigator-section').siblings().find('li.active').removeClass('active');
-    $li.closest('.navigator-section.active').siblings('li').removeClass('active');
-
-    if( !$li.hasClass('active') ){
-        $li.children('ul').slideDown(function() {
-            $li.addClass('active');
+        if( !$('body').hasClass('mfn-navigator-active') ) $('body').addClass('mfn-navigator-active');
+    },
+    ui: function() {
+        $(".mfn-navigator").draggable({
+            handle: ".modalbox-header"
         });
-    }else{
-        $li.children('ul').slideUp(function() {
-            $li.removeClass('active');
+
+        $( ".mfn-navigator" ).resizable({
+          maxHeight: winH,
+          maxWidth: 600,
+          minHeight: 300,
+          minWidth: 250
         });
-    }
-    if( $navigator.hasClass('mfn-nav-searching') ){
-        $navigator.find('li').removeAttr('style');
-        $navigator.find('li:not(.active) > .mfn-sub-nav').removeAttr('style');
-        $navigator.removeClass('mfn-nav-searching');
-    }
-});
 
-$('.mfn-navigator').on('click', '.navigator-tree li a', function(e) {
-    e.preventDefault();
-    var uid = $(this).attr('data-uid');
-    if( $('.mfn-navigator li a.active-element').length ){
-        $('.mfn-navigator li a').removeClass('active-element');
-    }
-    $edited_div = $content.find('.vb-item[data-uid="'+uid+'"]');
+        $(document).on('click', '.mfn-navigator .navigator-tree li .navigator-arrow', function(e) {
+            var $li = $(this).closest('li');
 
-    //Global section, prevent opening edit form, leave scroll only
-    if( !$(this).closest('.toggle-disabled').length ) {
-        openEditForm.do($edited_div, true);
-    } else {
-        backToWidgets();
-        $content.find('html, body').animate({ scrollTop: $edited_div.offset().top - 50 }, 1000);
-    }
+            if( $li.hasClass('navigator-section') && !$li.hasClass('active') ){
+                $('.mfn-navigator .navigator-tree li.active').find('ul').slideUp();
+                $('.mfn-navigator .navigator-tree li.active').removeClass('active');
+            }
 
-    $(this).addClass('active-element');
-});
+            if( !$li.hasClass('active') ){
+                $li.children('ul').slideDown(function() {
+                    $li.addClass('active');
+                });
+            }else{
+                $li.children('ul').slideUp(function() {
+                    $li.removeClass('active');
+                });
+            }
+            if( $navigator.hasClass('mfn-nav-searching') ){
+                $navigator.find('li').removeAttr('style');
+                $navigator.find('li:not(.active) > .mfn-sub-nav').removeAttr('style');
+                $navigator.removeClass('mfn-nav-searching');
+            }
+        });
+
+        $(document).on('click', '.mfn-navigator .navigator-tree li a', function(e) {
+            e.preventDefault();
+            var uid = $(this).attr('data-uid');
+            $edited_div = $content.find('.vb-item[data-uid="'+uid+'"]');
+
+            if( $('.mfn-navigator li a.active-element').length ){
+                $('.mfn-navigator li a').removeClass('active-element');
+            }
+
+            //Global section, prevent opening edit form, leave scroll only
+            if( !$(this).closest('.toggle-disabled').length ) {
+                openEditForm.do($edited_div, true);
+            } else {
+                backToWidgets();
+            }
+
+            $content.find('html, body').animate({ scrollTop: $edited_div.offset().top - 50 }, 1000);
+
+            $(this).addClass('active-element');
+        });
+
+    },
+    hide: function() {
+        $('body').removeClass('mfn-navigator-active');
+    }
+}
+be_navigator.init();
 
 // end preview
 
@@ -9915,6 +10049,8 @@ $('.mfn-settings-tab').on('click', function(e) {
     e.preventDefault();
     if (mfnvbvars.view == 'demo') return;
 
+    $('.mfn-ui').addClass('mfn-sidebar-hidden-footer');
+
     $(".panel").hide();
     $(".header").hide();
     $(".panel-settings").show();
@@ -9932,9 +10068,17 @@ $('.mfn-view-options-tab').on('click', function(e) {
     $(".panel-view-options").show();
     $(".header-view-options").show();
     edited_item = mfnvbvars.pagedata.filter( (item) => item.uid == 'pageoptions' )[0];
-    $('.mfn-ui .panel-view-options .mfn-form.mfn-form-options').html( mfnDbLists.pageoptions( edited_item ) );
+    //$('.mfn-ui .panel-view-options .mfn-form.mfn-form-options').html( mfnDbLists.pageoptions( edited_item ) );
+
+    //console.log(edited_item);
+
+    const mfn_form_po = new MfnForm( mfnDbLists.pageoptions );
+    let form_html = mfn_form_po.render();
+    $('.mfn-ui .panel-view-options .mfn-form.mfn-form-options').html('<div class="page-options-form-wrapper">'+form_html+'</div>');
+
     onOpenEditForm();
     mfnoptsinputs.start();
+    MfnFieldTextarea.initForCSSandJS();
 
     /**
      * Slider bar
@@ -9947,6 +10091,31 @@ $('.mfn-view-options-tab').on('click', function(e) {
     }
 });
 
+$(document).on('click', '.mfn-copytoclipboard', function(e) {
+    e.preventDefault();
+
+    if( typeof $(this).attr('data-clipboard') === 'undefined' ) return;
+    let cb = $(this).attr('data-clipboard');
+    let $link = $(this);
+    navigator.clipboard.writeText(cb);
+    $link.attr('data-tooltip', 'Copied');
+
+    setTimeout(function() {
+        $link.attr('data-tooltip', 'Click to copy to clipboard');
+    }, 3000);
+});
+
+$(document).on('click', '.sidebar-menu-inner ul li:not(.menu-wordpress) a', function() {
+
+    if( $(this).hasClass('mfn-settings-tab') ){
+        $('.mfn-ui').addClass('mfn-sidebar-hidden-footer');
+    }else{
+        $('.mfn-ui').removeClass('mfn-sidebar-hidden-footer');
+    }
+
+    if( $builder.find('.mfn-current-editing').length ) $builder.find('.mfn-current-editing').removeClass('mfn-current-editing');
+});
+
 // theme options [themeoptions]
 
 var sidebar_themeoptions = {
@@ -9955,6 +10124,8 @@ var sidebar_themeoptions = {
         $('.sidebar-menu ul li.menu-themeoptions a').on('click', function(e) {
             e.preventDefault();
             if (mfnvbvars.view == 'demo') return;
+
+            if( $builder.find('.mfn-current-editing').length ) $builder.find('.mfn-current-editing').removeClass('mfn-current-editing');
 
             $('.mfn-ui .panel-view-themeoptions .mfn-form.mfn-form-themeoptions').empty();
             let $tabler = $('.panel-view-themeoptions .vb-themeoptions');
@@ -9966,26 +10137,11 @@ var sidebar_themeoptions = {
             sidebar_themeoptions.startView();
 
             edited_item = mfnDbLists.themeoptions;
+            edited_item['jsclass'] = 'themeoption';
             $('.mfn-ui .panel-view-themeoptions .mfn-form.mfn-form-themeoptions').html( renderMfnFields.themeoptions( edited_item ) );
-            mfnoptsinputs.start();
 
-            //console.log(edited_item);
+            // console.log(edited_item);
 
-            /**
-             * Slider bar
-            * */
-
-            if( $('.panel-view-themeoptions .mfn-form .mfn-vb-formrow .sliderbar:not(.mfn-initialized)').length ){
-                $('.panel-view-themeoptions .mfn-form .mfn-vb-formrow .sliderbar:not(.mfn-initialized)').each(function() {
-                    sliderInput.init($(this));
-                });
-            }
-
-            $editpanel.find('.panel-view-themeoptions .mfn-form .mfn-form-row .color-picker .form-control .color-picker-vb').each(function() {
-                if( $(this).val() != '' ){
-                    $(this).closest('.color-picker-group').find('.form-addon-prepend .label').css('border-color', $(this).val()).css('background-color', $(this).val()).removeClass('light dark').addClass(getContrastYIQ( $(this).val() ));
-                }
-            });
         });
 
         $editpanel.on('click', '.header-themeoptions .header-to-back a', function(e) {
@@ -10004,6 +10160,7 @@ var sidebar_themeoptions = {
             var $tab = $(this).closest('.vb-to');
             var $tabler = $(this).closest('.vb-themeoptions');
             var href = $(this).attr('href');
+            var id = href.replace('#themeoptions-', '');
 
             if( $(this).hasClass('vb-themeoptions-link-expander') ){
                 if( $tab.hasClass('active') ){
@@ -10028,7 +10185,24 @@ var sidebar_themeoptions = {
                     $('.header-to-back').show();
                     $tabler.addClass('vb-to-form-view');
                     $tab.find(href).addClass('vb-to-active');
+
+                    if( !$tab.find(href+' .mfn-form-row').length ){
+
+                        const mfn_form_to = new MfnForm( renderMfnFields['themeoptions_fields'][id] );
+                        let form_html_to = mfn_form_to.render();
+
+                        $tab.find(href).html(form_html_to);
+                    }
+
+                    mfnoptsinputs.start();
+                    if( $('.panel-view-themeoptions .mfn-form .mfn-vb-formrow .sliderbar:not(.mfn-initialized)').length ){
+                        $('.panel-view-themeoptions .mfn-form .mfn-vb-formrow .sliderbar:not(.mfn-initialized)').each(function() {
+                            sliderInput.init($(this));
+                        });
+                    }
+                    initSocialSorting($tab);
                     initFontSelect($tab);
+                    MfnFieldTextarea.initForCSSandJS();
                     $(this).parent('li').addClass('vb-to-li-active');
                 }
             }
@@ -10079,19 +10253,6 @@ function updateExportInput(){
     var formData = prepareForm();
 
     $('.panel-export-import .mfn-export-field').val(formData);
-
-    /*$.ajax({
-        url: ajaxurl,
-        data: {
-            action: 'mfntoclipboard',
-            'mfn-builder-nonce': wpnonce,
-            sections: formData
-        },
-        type: 'POST',
-        success: function(response){
-            $('.panel-export-import .mfn-export-field').val(response);
-        }
-    });*/
 }
 
 /*$(document).ajaxComplete(function() {
@@ -10181,6 +10342,10 @@ function runAjaxElements(){
 
     if($content && $content.find('.blog_wrapper .isotope:not( .masonry ), .portfolio_wrapper .isotope:not( .masonry-flat, .masonry-hover, .masonry-minimal').length){
         portfolioIsotope();
+    }
+
+    if( $content && $content.find('.mfn-language-switcher-dropdown:not(.mfn-initialized)').length ) {
+        wpmlLangSwitcher();
     }
 
     if($content && $content.find('.isotope.masonry, .isotope.masonry-hover, .isotope.masonry-minimal').length){
@@ -10877,6 +11042,38 @@ $content.find('.content_slider_ul').each(function() {
   });
 
 });
+}
+
+// WPML language switcher
+
+function wpmlLangSwitcher() {
+    if( $content.find('.mfn-language-switcher-dropdown:not(.mfn-initialized)').length ) {
+      $content.find('.mfn-language-switcher-dropdown:not(.mfn-initialized)').each(function() {
+        let that = $(this);
+        that.addClass('mfn-initialized');
+
+        let $ul = that.find('ul');
+        let $current = $ul.find('li.wpml-ls-current-language');
+
+        $current.append($ul.clone());
+
+        $ul.children('li:not(.wpml-ls-current-language)').remove();
+
+        $current.find('ul li.wpml-ls-current-language').remove();
+
+        if( that.hasClass('mfn-language-switcher-dropdown-icon') ){
+          let icon_html = '';
+          if( that.attr('data-icon') == 'image' ){
+            icon_html = '<span class="mfn-arrow-icon"><img src="'+that.attr('data-path')+'" alt=""></span>';
+          }else if( that.attr('data-icon') == 'icon' ){
+            icon_html = '<span class="mfn-arrow-icon"><i class="'+that.attr('data-path')+'"></i></span>';
+          }
+
+          $current.children('a').append(icon_html);
+        }
+
+      });
+    }
 }
 
  // Portfolio - Isotope
@@ -12092,21 +12289,52 @@ $editpanel.on('click', '.mfn-form-row.toggle_fields > label > .mfn-vb-label-butt
 });
 
 function initFontSelect($box){
+
     let options = '';
     if( $box.find('.form-group.font-family-select select').length ){
         $box.find('.form-group.font-family-select select').each(function() {
             var $select = $(this);
+
             if( typeof mfnvbvars.mfn_google_fonts !== 'undefined' ){
               mfnvbvars.mfn_google_fonts.forEach((entry) => {
                 options += '<option value="'+ entry +'">'+ entry +'</option>';
               });
               if( $select.find('optgroup[data-type="google-fonts"] option').length == 1 ){
                 $select.find('optgroup[data-type="google-fonts"]').html(options);
-                value = $select.attr('data-value');
-                if( typeof value !== 'undefined' ){ $select.val(value); }
               }
             }
+
+            let value = $select.attr('data-value');
+            if( typeof value !== 'undefined' ){
+                if( $select.find('option[value="'+value+'"]').length ){
+                    $select.val(value);
+                }else if($select.find('option[value="#'+value+'"]').length){
+                    $select.val('#'+value);
+                }
+                
+            }
         });
+    }
+}
+
+function initSocialSorting($box) {
+    if( $box.find('.social-link .social-wrapper:not(.mfn-initialized)').length ){
+
+        let $wrapper = $box.find('.social-link .social-wrapper:not(.mfn-initialized)');
+        let $input = $box.find('input.social-order');
+
+        $wrapper.sortable({
+            axis: "y",
+            handle: ".drag",
+            stop: function(event, elem) {
+                var arr = [];
+                $wrapper.find('li').each(function() {
+                    arr.push( $(this).attr('data-key') );
+                });
+                $input.val(arr.join(',')).trigger('change');
+            }
+        });
+        $wrapper.addClass('mfn-initialized');
     }
 }
 
@@ -12114,11 +12342,11 @@ function initFontSelect($box){
 $editpanel.on('click', '.mfn-form-row.toggle_fields > label > a.reset-css-filters', function(e) {
   e.preventDefault();
 
-  if( typeof edited_item.attr['style:.mcb-section-mfnuidelement .mcb-background-overlay:filter'] === 'undefined' ) return;
+  //if( typeof edited_item.attr['style:.mcb-section-mfnuidelement .mcb-background-overlay:filter'] === 'undefined' ) return;
 
   var $editrow = $(this).closest('.mfn-vb-formrow');
 
-  $editrow.find('.mfn-sliderbar-value, .mfn-field-value').each(function() {
+  $editrow.find('.mfn-sliderbar-value, .field-to-object').each(function() {
     $(this).val('').trigger('change');
   });
 
@@ -12156,9 +12384,11 @@ $editpanel.on('click', '.mfn-form-row.mfn-sidebar-fields-tabs > ul.mfn-sft-nav l
 
     $box.find('.mfn-sft-'+tab).addClass('mfn-tabs-fields-active');
     $box.find('.mfn-sft-'+tab+' .mfn-vb-formrow').removeClass('mfn-toggled');
+
     if( !$box.find('.mfn-sft-'+tab+' .mfn-vb-formrow.mfn-fields-switcher .segmented-options li.active').length ){
         $box.find('.mfn-sft-'+tab+' .mfn-vb-formrow.mfn-fields-switcher .segmented-options li:first-child a').trigger('click');
     }
+
     $(this).parent().addClass('active');
 });
 
@@ -12173,6 +12403,12 @@ $editpanel.on('click', '.panel-edit-item ul.sidebar-panel-content-tabs > li', fu
         $(this).addClass('active');
         $(this).siblings().removeClass('active');
         $('.panel-edit-item .modalbox-card-'+tab).addClass('active');
+
+        if( $(this).hasClass('spct-li-style') || $(this).hasClass('spct-li-advanced') ){
+            if( !$('.mfn-element-fields-wrapper .modalbox-card.active .toggled_header').first().hasClass('mfn-toggle-expanded') ){
+                $('.mfn-element-fields-wrapper .modalbox-card.active .toggled_header').first().trigger('click');
+            }
+        }
     }
 
     return;
@@ -12181,11 +12417,11 @@ $editpanel.on('click', '.panel-edit-item ul.sidebar-panel-content-tabs > li', fu
 
 /* CSS */
 
-$('.mfnopt.body_offset_header .mfn-form-control').on('change', function() {
+$('.body_offset_header .mfn-form-control').on('change', function() {
     var val = $(this).val();
     if(val == 'active'){
         var header_height = $builder.outerHeight()+'px';
-        $('.mfnopt.body-offset-header-value .mfn-form-control').val(header_height);
+        $('.body-offset-header-value .mfn-form-control').val(header_height);
     }
 });
 
@@ -12208,7 +12444,7 @@ $editpanel.on('change', '.inline-style-input .mfn-field-value, .inline-style-inp
         }
     }
 
-    if( $field.find('option:selected').parent().attr('data-type') == 'google-fonts' && $field.closest('.mfn-form-row').attr('data-name') == 'font-family' ){
+    if( $field.closest('.typography.font-family').length && $field.val().length ){
         fonts.push($(this).val());
     }
 
@@ -12268,6 +12504,7 @@ function grabArrStyle(sel, val, uid){
             }else{
                 addLocalStyle(csspath, v, cssstyle+'-'+k, rwd, uid);
             }
+
         });
 
         if( filter.length ) {
@@ -12302,7 +12539,6 @@ function grabArrStyle(sel, val, uid){
     if( (cssstyle == 'background-image' || cssstyle == 'background-image_tablet' || cssstyle == 'background-image_mobile' || cssstyle == '-webkit-mask-image') && val.length ){
 
         if( val == '{featured_image}' ){
-            //val = 'url('+mfnvbvars.themepath+'/muffin-options/svg/placeholders/featured-image.png'+')';
             val = 'var(--mfn-featured-image)';
         }else{
             val = 'url('+val+')';
@@ -12322,6 +12558,10 @@ function grabFieldStyle($field){
     let val = $field.val();
     let it =  $box.closest('.mfn-element-fields-wrapper').attr('data-element');
     let uid = $content.find('.'+it).attr('data-uid');
+
+    if( $box.hasClass('transform') ){
+        return;
+    }
 
     if($box.hasClass('mfn_field_tablet')){
         rwd = 'tablet';
@@ -12385,25 +12625,7 @@ function grabFieldStyle($field){
         addLocalStyle(csspath, 'translateY('+val+')', 'transform', rwd, uid);
     }
 
-    if( $box.closest('.mfn-form-row.filter').length ){
-        var filter = '';
-        $('.panel-edit-item .mfn-element-fields-wrapper .mfn-form-row.filter .mfn-field-value').each(function() {
-            var filter_key = $(this).closest('.mfn-form-row').attr('data-name');
-            if( $(this).val().length ){
-                filter += filter_key+'('+$(this).val()+') ';
-            }
-        });
-
-        if(edited_item.jsclass == 'section'){
-          edited_item.attr['style:.mcb-section-mfnuidelement .mcb-background-overlay:filter']['string'] = filter;
-        } else {
-          edited_item.attr['style:.mcb-section .mcb-wrap-mfnuidelement .mcb-wrap-inner .mcb-wrap-background-overlay:filter']['string'] = filter;
-        }
-        addLocalStyle(csspath, filter, 'filter', 'desktop', uid);
-
-    }else{
-        addLocalStyle(csspath, val, cssstyle, rwd, uid);
-    }
+    addLocalStyle(csspath, val, cssstyle, rwd, uid);
 
 }
 
@@ -12412,14 +12634,19 @@ function grabFieldStyle($field){
 function setSizeLabels(){
     $content.find('.mfn-size-label .mfn-element-size-label').each(function() {
         let uid = $(this).closest('.vb-item').attr('data-uid');
-        let curr_size = $(this).closest('.vb-item').attr('data-'+screen+'-size');
-        let custom_size = $('.mfn-ui .mfn-form-row.mfn-vb-'+uid+' .mfn_field_'+screen+'.advanced_flex .mfn-field-value').val();
 
+        let curr_object = mfnvbvars.pagedata.filter( (item) => item.uid == uid )[0];
 
-        if( custom_size && custom_size.length ){
-            $(this).text('Custom');
-        }else{
-            $(this).text(curr_size);
+        /*let curr_size = $(this).closest('.vb-item').attr('data-'+screen+'-size');
+        let custom_size = $('.mfn-ui .mfn-form-row.mfn-vb-'+uid+' .mfn_field_'+screen+'.advanced_flex .mfn-field-value').val();*/
+
+        if( typeof curr_object !== 'undefined' && typeof curr_object['attr'] !== 'undefined' ) {
+            if( typeof curr_object['attr']['width_switcher'] !== 'undefined' && curr_object['attr']['width_switcher'] == 'custom' ){
+                $(this).text('Custom');
+            }else{
+                let curr_size = $(this).closest('.vb-item').attr('data-'+screen+'-size');
+                $(this).text(curr_size);
+            }
         }
 
         setTimeout(function() {
@@ -12606,7 +12833,7 @@ var mfnoptsinputs = {
         if( $(this).find('.single-segmented-option.segmented-options').length || $(this).find('.visual-options').length ){
             val = $(this).find('input:checked').val();
         }else{
-            val = $(this).find('.mfn-field-value, .condition-field').val();
+            val = $(this).find('.mfn-field-value, .condition-field, .field-to-object').val();
         }
 
         mfnoptsinputs.getField(id, val, visibility);
@@ -12615,7 +12842,7 @@ var mfnoptsinputs = {
 
   watchChanges: function() {
     // segmented options is in segmented click function
-    $editpanel.on('change', '.watchChanges .mfn-field-value, .watchChanges .condition-field', function() {
+    $editpanel.on('change', '.watchChanges .mfn-field-value, .watchChanges .condition-field, .watchChanges .field-to-object', function() {
         var $formrow = $(this).closest('.watchChanges');
         var val = $(this).val();
         var id = $formrow.attr('id');
@@ -12657,7 +12884,7 @@ const Transforms = {
     // DOM RELATED
     sidebarMenu: '',  // Sidemenu from BeBuilder
     insertSidebarMenu( sidebarMenu ){
-        if ( !sidebarMenu.closest('.transform') ) return console.error('Wrong DOM location of transform inputs');
+        if ( !sidebarMenu.closest('.transform_field') ) return console.error('Wrong DOM location of transform inputs');
         this.sidebarMenu = sidebarMenu;
 
         return this;
@@ -12673,6 +12900,8 @@ const Transforms = {
         return this;
     },
     createOrExtendString( queriedValue, transform ) {
+
+        // console.log(queriedValue);
         // First conditional is for ROTATE only
         if (transform.key === this.inputs[this.inputs.length-1].key) {
             this.readyString += queriedValue;
@@ -12685,7 +12914,9 @@ const Transforms = {
     createStringWithoutRotate(){
         if (!this.readyString || this.readyString === '') return console.error('String of transforms is not created!');
 
-        this.readyStringWithoutRotate = this.readyString.split(/,(\d+)(?!.*\d)/)[0];
+        // this.readyStringWithoutRotate = this.readyString.split(/,(\d+)(?!.*\d)/)[0];
+        let last_index = this.readyString.split(",");
+        this.readyStringWithoutRotate = last_index.slice(0, last_index.length - 1).join(",");
         return this;
     },
     createTransformDuration(){
@@ -12693,7 +12924,7 @@ const Transforms = {
 
         transformDuration = $(this.sidebarMenu).closest('.mfn-form-row').siblings('*[data-name="transition"]');
         if (transformDuration) {
-            this.transformDuration = $(transformDuration).find('input.mfn-sliderbar-value').val();
+            this.transformDuration = $(transformDuration).find('input.mfn-field-value').val();
         }
 
         return this;
@@ -12716,7 +12947,7 @@ const Transforms = {
         this.readyString = ''; //every loop this needs to be refreshed
 
         for(let transform of this.inputs) {
-            let queriedDOM = this.sidebarMenu.closest('.transform').find(transform.domLocation);
+            let queriedDOM = this.sidebarMenu.closest('.transform_field').find(transform.domLocation);
             let queriedValue = !!queriedDOM.val() ? parseFloat(queriedDOM.val()) : parseFloat(transform.defaultValue);
 
             this.createOrExtendObject( queriedValue, transform )
@@ -12754,23 +12985,14 @@ const Transforms = {
     renderTransforms(){
         const tempInnerClass = $($edited_div).hasClass('wrap') ? `.mcb-wrap-inner` : `.mcb-column-inner`; //left for wrap transforms!
         const uidEdited = $($edited_div).closest('.mfn-current-editing').attr('data-uid');
-        const domLocation = `body #Content div[data-uid="${uidEdited}"] > div${tempInnerClass}`;
+        const domLocation = this.sidebarMenu.closest('.transform').attr('data-csspath');
 
         // If has no transform class, add it and attach initial value!
         if( !$($edited_div).hasClass('mfn-transformed') ){
             $($edited_div).addClass('mfn-transformed');
             this.attachInitialMargins();
         }
-
-        // Turn the hover effect just for a moment
-        if ($(this.sidebarMenu).hasClass('mfn-hover-input')){
-            const transformDurationTime = this.transformDuration ? this.transformDuration : '0s';
-
-            addLocalStyle(`${domLocation}:hover`, `${transformDurationTime}s`, 'transition-duration', 'desktop', uidEdited);
-            addLocalStyle(`${domLocation}:hover`, `matrix(${this.readyStringWithoutRotate}) rotate(${this.readyObject.rotate}deg)`, 'transform', 'desktop', uidEdited);
-        } else {
-            addLocalStyle(`${domLocation}`, `matrix(${this.readyStringWithoutRotate}) rotate(${this.readyObject.rotate}deg)`, 'transform', 'desktop', uidEdited);
-        }
+        addLocalStyle(`${domLocation}`, `matrix(${this.readyStringWithoutRotate}) rotate(${this.readyObject.rotate}deg)`, 'transform', 'desktop', uidEdited);
 
         return this;
     },
@@ -12785,7 +13007,7 @@ const Transforms = {
         })
 
         $editpanel.on('change', '.transform input', function(){
-          const sidebarMenu = $(this).closest('.transform_field').closest('.mfn-form-row.transform');
+          const sidebarMenu = $(this).closest('.transform').closest('.mfn-form-row.transform');
 
           that
           .insertSidebarMenu($(sidebarMenu))
@@ -12802,8 +13024,9 @@ const Transforms = {
     }
 }
 
+
 /* FIELDS */
-$editpanel.on('change paste', '.panel-edit-item .mfn-form input[type="checkbox"], .panel-edit-item .mfn-form .field-to-object, .panel-edit-item .mfn-form input.mfn-field-value, .panel-edit-item .mfn-form textarea.mfn-field-value, .panel-edit-item .mfn-form select.mfn-field-value', function() {
+$editpanel.on('change', '.panel-edit-item .mfn-form .field-to-object, .panel-edit-item .mfn-form .mfn-field-value', function() {
     getFieldChange($(this));
 });
 
@@ -12812,82 +13035,115 @@ function getFieldChange($field){
     var it = $field.closest('.mfn-element-fields-wrapper').attr('data-element');
     var $editrow = $field.closest('.mfn-vb-formrow');
 
+    //console.log('field change '+$field.val());
+
     if( $editrow.hasClass('themeoption') ) return;
 
     var name = typeof $field.attr('name') !== 'undefined' ? $field.attr('name') : $field.attr('data-name');
     var id = $editrow.attr('data-id');
-    var prefix = $editrow.attr('data-prefix');
 
     var editedd_item = mfnvbvars.pagedata.filter( (item) => item.uid == edited_item.uid )[0];
 
-    if ( $editrow.attr('data-name') === 'transform' ){
+    if ( $editrow.closest('.transform_field').length ){
+
         const { readyString, readyObject } = Transforms
             .insertSidebarMenu($editrow)
             .loopThrouInputs()
             .get();
 
-        editedd_item[prefix][id] = {
+        editedd_item['attr'][id] = {
             ...readyObject,
             ...{'string': readyString}
         };
 
-        $editrow.find('.mfn-pseudo-val').val( readyString );
+        $editrow.closest('.transform_field').find('.mfn-pseudo-val').val( readyString );
 
     }else if( $editrow.find('.separated-fields').length ){
-        var keyy = $field.attr('data-key');
-        if( typeof editedd_item[prefix][id] !== 'undefined' ){
-            editedd_item[prefix][id][keyy] = $field.val();
+        if( typeof $field.attr('data-key') !== 'undefined' ){
+            var keyy = $field.attr('data-key');
+            if( typeof editedd_item['attr'][id] !== 'undefined' ){
+                editedd_item['attr'][id][keyy] = $field.val();
+            }else{
+                editedd_item['attr'][id] = {};
+                editedd_item['attr'][id][keyy] = $field.val();
+            }
         }else{
-            editedd_item[prefix][id] = {};
-            editedd_item[prefix][id][keyy] = $field.val();
+            editedd_item['attr'][id] = $field.val();
         }
-    }else if( $editrow.closest('.typography').length ){
-        var keyy = $editrow.attr('data-name');
-        $typorow = $editrow.closest('.typography');
-        id = $typorow.attr('data-id');
-        prefix = $typorow.attr('data-prefix');
+    }else if( $editrow.hasClass('typography') ){
+        var keyy = $field.attr('data-key');
         var val = $field.val();
 
-        if( screen == 'tablet' ) keyy += '_tablet';
-        if( screen == 'mobile' ) keyy += '_mobile';
+        if( keyy.includes('font-family') && val.length ) val = val.replace('#', '');
 
-        if( keyy == 'font-family' ) val = val.replace('#', '');
+        if( typeof editedd_item['attr'][id] !== 'undefined' ){
+            if( val.length ){
+                editedd_item['attr'][id][keyy] = val;
+            }else{
+                delete( editedd_item['attr'][id][keyy] );
 
-        if( typeof editedd_item[prefix][id] !== 'undefined' ){
-            editedd_item[prefix][id][keyy] = val;
+                if( _.isEmpty(editedd_item['attr'][id]) ){
+                    delete( editedd_item['attr'][id] );
+                }
+            }
         }else{
-            editedd_item[prefix][id] = {};
-            editedd_item[prefix][id][keyy] = val;
+            editedd_item['attr'][id] = {};
+            editedd_item['attr'][id][keyy] = val;
         }
-    }else if( $editrow.closest('.filter').length ){
-        var keyy = $editrow.attr('data-name');
-        $typorow = $editrow.closest('.filter');
-        id = $typorow.attr('data-id');
-        prefix = $typorow.attr('data-prefix');
-        if( typeof editedd_item[prefix][id] !== 'undefined' ){
-            editedd_item[prefix][id][keyy] = $field.val();
+    }else if( $editrow.hasClass('filter') ){
+        var keyy = $field.attr('data-key');
+        if( typeof editedd_item['attr'][id] !== 'undefined' ){
+            if( $field.val().length ){
+                editedd_item['attr'][id][keyy] = $field.val();
+            }else{
+                delete(editedd_item['attr'][id][keyy]);
+                if( _.isEmpty(editedd_item['attr'][id]) ){
+                    delete( editedd_item['attr'][id] );
+                }
+            }
         }else{
-            editedd_item[prefix][id] = {};
-            editedd_item[prefix][id][keyy] = $field.val();
+            editedd_item['attr'][id] = {};
+            editedd_item['attr'][id][keyy] = $field.val();
         }
+
     }else if( $editrow.hasClass('gradient') ){
         var keyy = $field.attr('data-key');
-        if( typeof editedd_item[prefix][id] !== 'undefined' ){
-            editedd_item[prefix][id][keyy] = $field.val();
+
+        if( typeof editedd_item['attr'][id] !== 'undefined' ){
+            if( $field.val().length ){
+                editedd_item['attr'][id][keyy] = $field.val();
+            }else{
+                delete(editedd_item['attr'][id][keyy]);
+                if( _.isEmpty(editedd_item['attr'][id]) ){
+                    delete( editedd_item['attr'][id] );
+                }
+            }
         }else{
-            editedd_item[prefix][id] = {};
-            editedd_item[prefix][id][keyy] = $field.val();
+            editedd_item['attr'][id] = {};
+            editedd_item['attr'][id][keyy] = $field.val();
         }
     }else if( $editrow.hasClass('tabs') && $field.closest('li.tab').length ){
         var keyy = $field.attr('data-label');
         var order = $field.attr('data-order');
-        editedd_item[prefix][id][order][keyy] = $field.val();
+
+        if( $field.val().length ){
+            if( typeof editedd_item['attr'][id][order][keyy] === 'undefined' ){
+                editedd_item['attr'][id][order][keyy] = {};
+            }
+            editedd_item['attr'][id][order][keyy] = $field.val();
+        }else if( typeof editedd_item['attr'][id][order][keyy] !== 'undefined' ){
+            delete(editedd_item['attr'][id][order][keyy]);
+        }
+
     }else{
 
         if( $field.val().length ){
-            editedd_item[prefix][name] = $field.val();
-        }else if( typeof editedd_item[prefix][name] !== 'undefined' ){
-            delete editedd_item[prefix][name];
+            if( typeof editedd_item['attr'] === 'undefined' ) editedd_item['attr'] = {};
+            editedd_item['attr'][name] = $field.val();
+        }else if( typeof editedd_item['attr'][name] !== 'undefined' ){
+            delete editedd_item['attr'][name];
+
+            if( $field.closest('.mfn-is-modified').length ) $field.closest('.mfn-is-modified').removeClass('mfn-is-modified');
         }
 
     }
@@ -12904,25 +13160,25 @@ function getFieldChange($field){
 
             // re render whole loop wrapper
             if( $content.find('.'+it).closest('.mfn-queryloop-item-wrapper').length ) {
-                re_render2( $content.find('.'+it).closest('.mcb-section.vb-item').attr('data-uid') );
+                re_render( $content.find('.'+it).closest('.mcb-section.vb-item').attr('data-uid') );
             }else{
-                re_render2( $content.find('.'+it).closest('.vb-item').attr('data-uid') );
+                re_render( $content.find('.'+it).closest('.vb-item').attr('data-uid') );
             }
             $editrow.addClass('mfn-field-loading');
-        }else if( $editrow.hasClass('re_render') ) {
-            re_render2( edited_item.uid );
+        }else if( $editrow.hasClass('re_render') || $editrow.hasClass('tabs') ) {
+            re_render( edited_item.uid );
             $editrow.addClass('mfn-field-loading');
         }
 
     }, 100);
 
-    if( !$editrow.hasClass('re_render') && !$editrow.find('.multiple-inputs').length && !$editrow.hasClass('disable-history') ) addHistory();
+    if( !$editrow.hasClass('re_render') && !$editrow.hasClass('disable-history') && !$content.find('.'+it).closest('.mfn-queryloop-item-wrapper').length ) historyStorage.add();
     enableBeforeUnload();
 
 }
 
 
-$editpanel.on('change paste', '.panel-view-options .mfn-form input, .panel-view-options .mfn-form select, .panel-view-options .mfn-form textarea', function() {
+$editpanel.on('change paste', '.panel-view-options .mfn-form .mfn-field-value', function() {
     var $editrow = $(this).closest('.mfn-vb-formrow');
     var name = $(this).attr('name');
     var value = $(this).val();
@@ -12936,21 +13192,21 @@ $editpanel.on('change paste', '.panel-view-options .mfn-form input, .panel-view-
 
         if( $(this).is(':checked') ){
 
-            if( typeof edited_item['fields'][data_name] !== 'undefined' && typeof edited_item['fields'][data_name] !== 'string' ){
-                edited_item['fields'][data_name][data_key] = value;
+            if( typeof edited_item[data_name] !== 'undefined' && typeof edited_item[data_name] !== 'string' ){
+                edited_item[data_name][data_key] = value;
             }else{
-                edited_item['fields'][data_name] = {};
-                edited_item['fields'][data_name][data_key] = value;
+                edited_item[data_name] = {};
+                edited_item[data_name][data_key] = value;
             }
 
         }else{
-            delete(edited_item['fields'][data_name][data_key]);
+            delete(edited_item[data_name][data_key]);
         }
 
-        value = edited_item['fields'][data_name];
+        value = edited_item[data_name];
 
     }else{
-        edited_item['fields'][name] = value;
+        edited_item[name] = value;
     }
 
     if( name == 'mfn-post-layout' ){
@@ -12991,6 +13247,22 @@ $editpanel.on('change paste', '.panel-view-options .mfn-form input, .panel-view-
             }
 
         }
+
+        if( $editrow.hasClass('option header_width') ){
+            if( value == 'inherited' ){
+                $content.find('.mfn-header-tmpl').addClass('mfn-header-layout-width');
+            }else{
+                $content.find('.mfn-header-tmpl').removeClass('mfn-header-layout-width');
+            }
+        }
+
+        if( $editrow.hasClass('option header_sticky_width') ){
+            if( value == 'inherited' ){
+                $content.find('.mfn-header-tmpl').addClass('mfn-sticky-layout-width');
+            }else{
+                $content.find('.mfn-header-tmpl').removeClass('mfn-sticky-layout-width');
+            }
+        }
     }
     /* END header options */
 
@@ -13001,7 +13273,7 @@ $editpanel.on('change paste', '.panel-view-options .mfn-form input, .panel-view-
 
 
 function updatePageOpt(name, value){
-    $.ajax( ajaxurl, {
+    $.ajax( mfnajaxurl, {
         type : "POST",
         data : {
           'mfn-builder-nonce': wpnonce,
@@ -13020,7 +13292,7 @@ Transforms.addInputsListener();
 
 /* THEME OPTIONS */
 
-$editpanel.on('keyup', '.themeoption.logo-text .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.logo-text .mfn-field-value', function() {
     let val = $(this).val();
     if( val.length ){
         $content.find('#Top_bar .logo, #Header_creative .logo').addClass('text-logo');
@@ -13031,7 +13303,7 @@ $editpanel.on('keyup', '.themeoption.logo-text .mfn-field-value', function() {
     }
 });
 
-$editpanel.on('keyup', '.themeoption.header-slogan .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.header-slogan .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Action_bar').length ) return;
 
@@ -13046,7 +13318,7 @@ $editpanel.on('keyup', '.themeoption.header-slogan .mfn-field-value', function()
     }
 });
 
-$editpanel.on('keyup', '.themeoption.header-phone .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.header-phone .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Action_bar').length ) return;
 
@@ -13061,7 +13333,7 @@ $editpanel.on('keyup', '.themeoption.header-phone .mfn-field-value', function() 
     }
 });
 
-$editpanel.on('keyup', '.themeoption.header-phone-2 .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.header-phone-2 .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Action_bar').length ) return;
 
@@ -13076,7 +13348,7 @@ $editpanel.on('keyup', '.themeoption.header-phone-2 .mfn-field-value', function(
     }
 });
 
-$editpanel.on('keyup', '.themeoption.header-email .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.header-email .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Action_bar').length ) return;
 
@@ -13091,7 +13363,7 @@ $editpanel.on('keyup', '.themeoption.header-email .mfn-field-value', function() 
     }
 });
 
-$editpanel.on('keyup', '.themeoption.footer-copy .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.footer-copy .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Footer .footer_copy .copyright').length ) return;
 
@@ -13102,7 +13374,7 @@ $editpanel.on('keyup', '.themeoption.footer-copy .mfn-field-value', function() {
     }
 });
 
-$editpanel.on('keyup', '.themeoption.header-menu-text .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.header-menu-text .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('.mobile-header-mini #Top_bar a.responsive-menu-toggle').length ) return;
 
@@ -13113,7 +13385,7 @@ $editpanel.on('keyup', '.themeoption.header-menu-text .mfn-field-value', functio
     }
 });
 
-$editpanel.on('keyup', '.themeoption.footer-call-to-action .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.footer-call-to-action .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Footer').length ) return;
 
@@ -13128,7 +13400,7 @@ $editpanel.on('keyup', '.themeoption.footer-call-to-action .mfn-field-value', fu
     }
 });
 
-$editpanel.on('keyup', '.themeoption.header-action-title .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.header-action-title .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#Header_wrapper .top_bar_right_wrapper').length ) return;
 
@@ -13143,21 +13415,21 @@ $editpanel.on('keyup', '.themeoption.header-action-title .mfn-field-value', func
     }
 });
 
-$editpanel.on('keyup', '.themeoption.gdpr-content .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.gdpr-content .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#mfn-gdpr').length ) return;
 
     $content.find('#mfn-gdpr .mfn-gdpr-content').html(val);
 });
 
-$editpanel.on('keyup', '.themeoption.gdpr-content-button_text .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.gdpr-content-button_text .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#mfn-gdpr').length ) return;
 
     $content.find('#mfn-gdpr .mfn-gdpr-button').html(val);
 });
 
-$editpanel.on('keyup', '.themeoption.gdpr-content-more_info_text .mfn-field-value', function() {
+$editpanel.on('keyup paste change', '.themeoption.gdpr-content-more_info_text .mfn-field-value', function() {
     let val = $(this).val();
     if( !$content.find('#mfn-gdpr').length ) return;
 
@@ -13170,41 +13442,14 @@ $editpanel.on('click', '.themeoption .ajax a', function(e) {
     //console.log('randomize');
 });
 
-$editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn-prevent-change), .panel-view-themeoptions .mfn-form select, .panel-view-themeoptions .mfn-form textarea, .panel-view-themeoptions .added-sidebars li input', function() {
+$editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn-prevent-change), .panel-view-themeoptions .mfn-form .mfn-field-value', function() {
     var $editrow = $(this).closest('.mfn-vb-formrow');
     var name = $(this).attr('name');
     var value = $(this).val();
 
-    /*if( $editrow.hasClass('re_render_if') ) {
-
-        $('.mfn-ui').addClass('mfn-modal-open').append('<div class="mfn-modal modal-confirm show"> <div class="mfn-modalbox mfn-form mfn-shadow-1"> <div class="modalbox-header"> <div class="options-group"> <div class="modalbox-title-group"> <span class="modalbox-icon mfn-icon-delete"></span> <div class="modalbox-desc"> <h4 class="modalbox-title">Delete element</h4> </div></div></div><div class="options-group"> <a class="mfn-option-btn mfn-option-blank btn-large btn-modal-close" title="Close" href="#"><span class="mfn-icon mfn-icon-close"></span></a> </div></div><div class="modalbox-content"> <img class="icon" alt="" src="'+mfnvbvars.themepath+'/muffin-options/svg/warning.svg"> <h3>Delete element?</h3> <p>Please confirm. There is no undo.</p><a class="mfn-btn mfn-btn-red btn-wide btn-modal-confirm" href="#"><span class="btn-wrapper">Delete</span></a> </div></div></div>');
-
-        $('.btn-modal-close').on('click', function(e) {
-            e.preventDefault();
-            $('.mfn-ui').removeClass('mfn-modal-open');
-            $('.modal-confirm.show').remove();
-        });
-
-        $('.btn-modal-confirm').on('click', function(e){
-            e.preventDefault();
-            $('.modal-confirm.show').remove();
-
-            var re_type = $editrow.attr('data-retype');
-            var re_elem = $editrow.attr('data-reelement');
-
-            if( re_type == 'div' && $content.find(re_elem).length ) {
-                $('body').addClass('mfn-preloader-active');
-                $('.mfn-preloader').fadeIn(300);
-                $('.mfn-preloader .loading-text').text('Please wait...');
-                scroll_top = $content.find("html, body").scrollTop();
-            }
-
-        });
-    }*/
-
     if( $editrow.find('.multiple-inputs').length ){
 
-        let data_name = $editrow.attr('data-name');
+        let data_name = $editrow.attr('name');
         let data_key = typeof $(this).attr('data-key') !== 'undefined' ? $(this).attr('data-key') : 'color';
 
         if( value.length ) {
@@ -13221,7 +13466,7 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
 
     }else if( $editrow.find('.checkboxes').length ){
 
-        let data_name = $(this).attr('data-name');
+        let data_name = $(this).attr('name');
         let data_key = $(this).attr('data-key');
 
         if( $(this).is(':checked') ){
@@ -13236,11 +13481,12 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
         }
 
     }else if( $editrow.find('.added-sidebars').length ){
-        name = $editrow.attr('data-name');
+        name = $(this).attr('name');
 
         if( !value.length ) {
             delete( edited_item[name][$(this).attr('data-key')] );
         }else{
+
             if( typeof edited_item[name] === 'undefined' && typeof edited_item[name] !== 'array' ){
                 edited_item[name] = [];
             }
@@ -13249,7 +13495,7 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
         }
 
     }else if( $editrow.find('.social-icons').length ){
-        let data_key = $(this).closest('li').attr('data-key');
+        let data_key = $(this).closest('li').length ? $(this).closest('li').attr('data-key') : $(this).attr('data-key');
         let data_name = $editrow.attr('data-name');
 
         if( typeof edited_item[data_name] !== 'undefined' && typeof edited_item[data_name] !== 'string' ) {
@@ -13260,7 +13506,7 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
         }
 
     }else if( $editrow.find('.color-picker.multi').length ){
-        let data_name = $(this).attr('data-name');
+        let data_name = $(this).attr('name');
         let data_key = $(this).attr('data-key');
 
         if( value.length ){
@@ -13278,7 +13524,7 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
 
     }else if( $editrow.find('.form-group.typography').length ){
 
-        let data_name = $editrow.attr('data-name');
+        let data_name = $(this).attr('name');
         let data_key = $(this).attr('data-obj');
 
         if( value.length ){
@@ -13299,7 +13545,7 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
     }
 
 
-    if( $editrow.hasClass('themeoption') && ($editrow.hasClass('img-page-bg') || $editrow.hasClass('img-subheader-bg') || $editrow.hasClass('top-bar-bg-img') || $editrow.hasClass('subheader-image') || $editrow.hasClass('footer-bg-img') ) ){
+    if( $editrow.hasClass('themeoption') && ($editrow.hasClass('img-page-bg') || $editrow.hasClass('img-subheader-bg') || $editrow.hasClass('top-bar-bg-img') || $editrow.hasClass('subheader-image') || $editrow.hasClass('footer-bg-img') ) ) {
         // themeoption background image
 
         var field_class = 'img-page-bg';
@@ -13665,7 +13911,7 @@ $editpanel.on('change paste', '.panel-view-themeoptions .mfn-form input:not(.mfn
 
     if( mfnvbvars.view == 'demo' ) return;
 
-    $.ajax( ajaxurl, {
+    $.ajax( mfnajaxurl, {
     type : "POST",
     data : {
       'mfn-builder-nonce': wpnonce,
@@ -13745,7 +13991,7 @@ function refreshIframe(){
         $('.mfn-preloader').hide();
         $content.find("html, body").scrollTop(scroll_top);
 
-        initWyswig();
+        //initWyswig();
 
     });
 }
@@ -13760,10 +14006,9 @@ mfnoptsinputs.watchChanges();
 
 return {
   init: init,
-  addHistory: addHistory,
+  addHistory: historyStorage.add,
   wpnonce: wpnonce,
-  ajaxurl: ajaxurl,
-  re_render2: re_render2,
+  re_render: re_render,
   dynamicData:dynamicData,
   settings: settings,
   changeInlineStyles: changeInlineStyles,
@@ -13842,23 +14087,6 @@ jQuery.fn.clone = function() {
 };
 })(jQuery.fn.clone);
 
-function getContrastYIQ( hexcolor, tolerance ){
-    hexcolor = hexcolor.replace( "#", "" );
-    tolerance = typeof tolerance !== 'undefined' ? tolerance : 169;
-
-    if( 6 != hexcolor.length ){
-    return false;
-    }
-
-    var r = parseInt( hexcolor.substr(0,2),16 );
-    var g = parseInt( hexcolor.substr(2,2),16 );
-    var b = parseInt( hexcolor.substr(4,2),16 );
-
-    var yiq = ( ( r*299 ) + ( g*587 ) + ( b*114 ) ) / 1000;
-
-    return ( yiq >= tolerance ) ? 'light' : 'dark';
-}
-
 (function($){
 $.fn.inputDrag = function(options) {
 
@@ -13896,6 +14124,7 @@ $.fn.inputDrag = function(options) {
 
         if( $(el).closest('.isLinked').length ) isLinked = true;
         if( $(el).closest('.pseudo').length ) pseudo = true;
+
         css_style = postfix != '' && !isLinked ? $(el).closest('.mfn-form-row').attr('data-name')+'-'+postfix : $(el).closest('.mfn-form-row').attr('data-name');
 
         if( unit == '' ) unit = 'px';

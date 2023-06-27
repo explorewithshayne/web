@@ -45,6 +45,10 @@ if (! class_exists('Mfn_Builder'))
 
       } else {
 
+				if( mfn_is_blocks() ){
+					require_once(get_theme_file_path('/functions/builder/class-mfn-builder-fields.php'));
+				}
+
 				require_once(get_theme_file_path('/functions/builder/class-mfn-builder-styles.php'));
 				require_once(get_theme_file_path('/functions/builder/class-mfn-builder-front.php'));
 				require_once(get_theme_file_path('/functions/builder/class-mfn-builder-items.php'));

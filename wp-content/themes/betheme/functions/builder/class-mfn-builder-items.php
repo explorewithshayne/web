@@ -95,6 +95,14 @@ if( ! class_exists('Mfn_Builder_Items') )
 			echo sc_header_promo_bar( $fields );
 		}
 
+		/**
+		 * [top_bar]
+		 */
+
+    public static function item_header_language_switcher( $fields ){
+			echo sc_header_language_switcher( $fields );
+		}
+
   	/**
 		 * [shop_products]
 		 */
@@ -425,7 +433,7 @@ if( ! class_exists('Mfn_Builder_Items') )
 
 						$style .= implode(';', $aBg) .';';
 					}
-	
+
 				}
 
 				// background size
@@ -1076,7 +1084,7 @@ if( ! class_exists('Mfn_Builder_Items') )
 			if( empty(Mfn_Builder_Front::$item_id) && !empty($fields['vb_postid']) && get_post_type($fields['vb_postid']) != 'template' && strpos($fields['content'], '}') !== false ){
 				$fields['content'] = str_replace('}', ':'.$fields['vb_postid'].'}', $fields['content']);
 			}
-			
+
 			echo '<div class="mfn-visualeditor-content mfn-inline-editor">';
 				echo do_shortcode( be_dynamic_data($fields['content']) );
 			echo '</div>';
@@ -1093,6 +1101,302 @@ if( ! class_exists('Mfn_Builder_Items') )
 			}
 
 			echo sc_zoom_box( $fields, $fields['content'] );
+		}
+
+		/**
+		 * BeBuilder BLOCKS
+		 */
+
+		public static function blocks( $item, $fields ){
+
+			// return;
+
+			$output = '';
+
+			if( empty($item['attr']) ){
+				return;
+			}
+
+			$item_type = $item['type'];
+			$item_fields = $fields->get_item_fields( $item_type );
+
+			// label
+
+			$label = false;
+			if( ! empty( $item['attr']['title'] ) ){
+				$label = $item['attr']['title'];
+			}
+
+			// header
+
+			$output .= '<div class="card-header">';
+				$output .= '<div class="card-title-group">';
+					$output .= '<span class="card-icon"></span>';
+					$output .= '<div class="card-desc">';
+						$output .= '<h5 class="card-title">'. esc_html( $item_fields['title'] ) .'</h5>';
+						// subtitle shows in simple view only
+						$output .= '<p class="card-subtitle mfn-item-label">'. esc_html( $label ) .'</p>';
+					$output .= '</div>';
+				$output .= '</div>';
+			$output .= '</div>';
+
+			// content
+
+			$preview = [
+				'image' => '',
+				'title' => '',
+				'subtitle' => '',
+				'content' => '',
+				'style' => '',
+				'number' => '',
+				'category' => '',
+				'category-all' => '',
+				'icon' => '',
+				'tabs' => '',
+				'images' => '',
+				'align' => '',
+			];
+
+			$preview_empty = [];
+			$preview_tabs_primary = 'title';
+
+			// $output .= json_encode($item['attr']);
+
+			if( ! empty($item_fields['attr']) ){
+
+				foreach ( $item_fields['attr'] as $field ) {
+					if ( isset( $field['preview'] ) ){
+
+						$prev_key = $field['preview'];
+						$prev_id = $field['id'];
+
+						// existing item or default value
+
+						if( isset( $item['attr'] ) ){
+
+							if( isset( $item['attr'][$prev_id] ) ){
+								$preview[$prev_key] = $item['attr'][$prev_id];
+							}
+
+							if( 'tabs' === $field['type'] && empty( $item['attr']['tabs'] ) ){
+								$preview[$prev_key] = '';
+							}
+
+						} elseif( ! empty( $field['std'] ) ){
+
+							$preview[$prev_key] = $field['std'];
+
+						}
+
+						// tabs
+
+						if( 'tabs' == $field['preview'] ){
+							if( ! empty( $field['primary'] ) ){
+								$preview_tabs_primary = $field['primary'];
+							}
+						}
+
+						// category
+
+						if( 'category' == $field['preview'] ){
+
+							if( $preview['category'] ){
+
+								$cat_obj = get_category_by_slug( $preview['category'] );
+
+								if( is_object( $cat_obj ) ){
+									$preview['category'] = $cat_obj->name;
+								} else {
+									$preview['category'] = 'All';
+								}
+
+							} else {
+								$preview['category'] = 'All';
+							}
+
+						}
+
+					}
+				}
+
+			}
+
+			// multiple categories
+
+			if ( $preview['category-all'] ){
+				$preview['category'] = $preview['category-all'];
+			}
+
+			// icon
+
+			if ( in_array( $item_type, ['counter','icon_box','icon_box_2','list'] ) && $preview['image'] ){
+				// image replaces icon in some items
+				$preview['icon'] = '';
+			}
+
+			// SVG placeholder
+
+			if ( in_array( $item_type, ['map','map_basic'] ) ){
+				$preview['image'] = get_theme_file_uri( '/muffin-options/svg/placeholders/map.svg' );
+			}
+
+			if ( in_array( $item_type, ['code','content','fancy_divider','livesearch','lottie','sidebar_widget','slider_plugin','video'] ) ){
+				$preview['image'] = get_theme_file_uri( '/muffin-options/svg/placeholders/'. $item_type .'.svg' );
+			}
+
+			// image dynamic data
+
+			if( ! empty($preview['image']) && false !== strpos('{featured_image}', $preview['image']) ){
+				$src_dynamic = be_dynamic_data($preview['image']);
+				if( is_numeric( $src_dynamic ) ){
+					$preview['image'] = wp_get_attachment_image_url( $src_dynamic, 'full' );
+				}
+			}
+
+			// empty
+
+			foreach( $preview as $prev_key => $prev_val ){
+				if( $prev_val ){
+					$preview_empty[ $prev_key ] = '';
+				} else {
+					$preview_empty[ $prev_key ] = 'empty';
+				}
+			}
+
+			// content limit
+
+			if ( $preview['content'] ){
+
+				$excerpt = $preview['content'];
+
+				if ( in_array( $item_type, ['column', 'visual'] ) ){
+
+					// remove unwanted HTML tags
+					$excerpt = wp_kses( $excerpt, Mfn_Builder_Helper::allowed_html() );
+
+					// wrap shortcodes into span to highlight
+					$excerpt = preg_replace( '/(\[(.*?)?\[\/)((.*?)?\])|(\[(.*?)?\])/', '<span class="item-preview-shortcode">$0</span>', $excerpt);
+
+					// autoclose tags
+					$excerpt = force_balance_tags( $excerpt );
+
+				} else {
+
+					$excerpt = strip_shortcodes( strip_tags( $excerpt ) );
+
+					$excerpt = preg_split( '/\b/', $excerpt, 16 * 2 + 1 );
+
+					array_pop( $excerpt );
+					$excerpt = implode( $excerpt );
+
+					if( strlen( $excerpt ) < strlen( $preview['content'] ) ){
+						$excerpt = $excerpt .'...';
+					}
+
+				}
+
+				$preview['content'] = $excerpt;
+
+			}
+
+			$output .= '<div class="card-content item-preview align-'. esc_attr( $preview['align'] ) .'">';
+
+				$output .= '<div class="preview-group image '. esc_attr( $preview_empty['image'] ) .'">';
+					$output .= '<img class="item-preview-image" src="'. esc_url( $preview['image'] ) .'" />';
+				$output .= '</div>';
+
+				$output .= '<div class="preview-group content">';
+
+					$output .= '<p class="item-preview-title '. esc_attr( $preview_empty['title'] ) .'">'. esc_html( $preview['title'] ) .'</p>';
+					$output .= '<p class="item-preview-subtitle '. esc_attr( $preview_empty['subtitle'] ) .'">'. esc_html( $preview['subtitle'] ) .'</p>';
+					$output .= '<div class="item-preview-content '. esc_attr( $preview_empty['content'] ) .'">'. $preview['content'] .'</div>';
+
+					$output .= '<p class="item-preview-placeholder-parent">';
+
+						$placeholder_type = self::get_item_placeholder_type( $item_type );
+
+						if( 'standard' == $placeholder_type ){
+
+							$placeholder = get_theme_file_uri( '/muffin-options/svg/placeholders/'. $item_type .'.svg' );
+							$output .= '<img class="item-preview-placeholder" src="'. esc_url( $placeholder ) .'" />';
+
+						} elseif ( 'variable' == $placeholder_type ) {
+
+							// existing item or default value
+
+							if( isset( $item['fields'] ) ){
+								$item_style = str_replace( array( ',', ' ' ), '-', $item['fields']['style'] );
+							} else {
+								$item_style = 'grid';
+							}
+
+							$placeholder_dir = get_theme_file_uri( '/muffin-options/svg/select/'. $item_type .'/' );
+							$placeholder = $placeholder_dir . $item_style .'.svg';
+
+							$output .= '<img class="item-preview-placeholder" src="'. esc_url( $placeholder ) .'" data-dir="'. esc_url( $placeholder_dir ) .'"/>';
+
+						}
+
+						$output .= '<span class="item-preview-number '. esc_attr( $preview_empty['number'] ) .'">'. esc_html( $preview['number'] ) .'</span>';
+
+					$output .= '</p>';
+
+					$output .= '<p class="item-preview-icon '. esc_attr( $preview_empty['icon'] ) .'"><i class="'. esc_attr( $preview['icon'] ) .'"></i></p>';
+					$output .= '<p class="item-preview-category-parent '. esc_attr( $preview_empty['category'] ) .'"><span class="label">'. esc_html__('Category', 'mfn-opts') .':</span><span class="item-preview-category">'. esc_html( $preview['category'] ) .'</span></p>';
+
+					$output .= '<ul class="item-preview-tabs '. esc_attr( $preview_empty['tabs'] ) .'">';
+						if ( $preview['tabs'] ){
+							foreach ( $preview['tabs'] as $tab ) {
+								$output .= '<li>'. $tab[$preview_tabs_primary] .'</li>';
+							}
+						}
+					$output .= '</ul>';
+
+					$output .= '<ul class="item-preview-images '. esc_attr( $preview_empty['images'] ) .'">';
+						if ( $preview['images'] ){
+							$preview['images'] = explode( ',', $preview['images'] );
+							foreach ( $preview['images'] as $image ){
+								$output .= '<li>'. wp_get_attachment_image( $image, 'thumbnail' ) .'</li>';
+							}
+						}
+					$output .= '</ul>';
+
+				$output .= '</div>';
+
+			$output .= '</div>';
+
+			return $output;
+
+ 		}
+
+		/**
+		 * BeBuilder BLOCKS GET item placeholder type
+		 */
+
+		public static function get_item_placeholder_type( $item ){
+
+			$return = false;
+
+			$array = [
+				'standard' => [
+					'blog_news', 'blog_slider', 'blog_teaser', 'clients', 'clients_slider', 'offer', 'offer_thumb',
+					'portfolio_grid', 'portfolio_photo', 'portfolio_slider', 'shop', 'shop_slider',
+				 	'slider', 'testimonials', 'testimonials_list'
+				],
+				'variable' => [
+					'blog', 'portfolio'
+				],
+			];
+
+			foreach( $array as $type => $items ){
+				if( in_array( $item, $items ) ){
+					$return = $type;
+					break;
+				}
+			}
+
+			return $return;
+
 		}
 
   }

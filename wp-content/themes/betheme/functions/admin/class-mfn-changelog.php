@@ -31,7 +31,7 @@ class Mfn_Changelog extends Mfn_API {
 		$is_changelog_disabled = apply_filters('betheme_disable_changelog', false);
 
 		if ( ! $is_changelog_disabled ) {
-			$this->page = add_submenu_page(
+			$page = add_submenu_page(
 				apply_filters('betheme_dynamic_slug', 'betheme'),
 				$title,
 				$title,
@@ -41,7 +41,7 @@ class Mfn_Changelog extends Mfn_API {
 			);
 
 			// Fires when styles are printed for a specific admin page based on $hook_suffix.
-			add_action( 'admin_print_styles-'. $this->page, array( $this, 'enqueue' ) );
+			add_action( 'admin_print_styles-'. $page, array( $this, 'enqueue' ) );
 		}
 	}
 

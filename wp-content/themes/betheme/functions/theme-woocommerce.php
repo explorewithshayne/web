@@ -11,14 +11,23 @@
 * WooCommerce | Theme support & actions
 */
 
+/*error_reporting(E_ALL);
+ini_set("display_errors", 1);*/
+
 function mfn_woo_support(){
 
-	$thumbnail_image_width = mfn_opts_get( 'shop-image-width', 800 );
-	$single_image_width = mfn_opts_get( 'shop-image-width', 800 );
+	// single
 
+	$single_image_width = 800;
 	if( 'modern' == mfn_opts_get('shop-product-style') ){
 		$single_image_width = 1200;
 	}
+
+	// archives
+
+	$thumbnail_image_width = mfn_opts_get( 'shop-image-width', 800 );
+
+	// add theme support
 
 	add_theme_support('woocommerce', array(
 		'thumbnail_image_width' => $thumbnail_image_width,
@@ -185,6 +194,8 @@ if (! function_exists('mfn_woo_styles')) {
 		if( $performance_minify_js ){
 			$min_js = '.min';
 		}
+
+		wp_enqueue_script( 'wc-cart-fragments' );
 
 		wp_enqueue_style('mfn-woo', get_theme_file_uri('/css/woocommerce'. $min_css .'.css'), 'woocommerce-general-css', MFN_THEME_VERSION, 'all');
 
@@ -534,11 +545,12 @@ function mfn_display_custom_attributes_single(){
 }
 
 function mfn_display_custom_attributes_loop($p = false){
-	if($p){
+	global $product;
+	/*if($p){
 		$product = wc_get_product( $p );
 	}else{
 		$product = wc_get_product( get_the_ID() );
-	}
+	}*/
 	mfn_display_custom_attributes($product, false);
 }
 
@@ -948,25 +960,38 @@ function mfn_quickview() {
 function mfn_woo_attr_filter( $query ) {
     if ( !is_admin() && $query->is_main_query() ) {
 
+    	$filters = array();
+
     	if( !empty($_GET['mfn_attr_filter']) ){
+
+    		$query->set( 'posts_per_page', mfn_get_per_page() );
 
     		// filters woocommerce attributes
 
-	    	unset($_GET['mfn_attr_filter']);
-	    	$taxquery = array('relation' => 'AND');
+    		$filters = $_GET;
 
-	    	foreach($_GET as $f=>$filter){
-	    		if( strpos($f, 'mfn_') !== false ){
-	        		$taxquery[] =array(
-			            'taxonomy' => str_replace('mfn_', '', $f),
-			            'field' => 'slug',
-			            'terms' => $filter,
-			            'operator'=> 'IN'
-				    );
-	        }
+	    	unset($filters['mfn_attr_filter']);
+	    	unset($filters['mfn-shop']);
+	    	unset($filters['per_page']);
+
+	    	if( !empty($filters) ){
+		    	$taxquery = array('relation' => 'AND');
+
+		    	foreach($filters as $f=>$filter){
+		    		if( strpos($f, 'mfn_') !== false ){
+		        		$taxquery[] =array(
+				            'taxonomy' => str_replace('mfn_', '', $f),
+				            'field' => 'slug',
+				            'terms' => $filter,
+				            'operator'=> 'IN'
+					    );
+		        }
+		    	}
+		      $query->set( 'tax_query', $taxquery );
 	    	}
-	      $query->set( 'tax_query', $taxquery );
+	      
 	    }
+
     }
 }
 
@@ -1015,26 +1040,24 @@ function mfn_woo_products_list_filter_wrapper_end() {
 
 }
 
-if (! function_exists('mfn_woo_per_page')) {
+/*if (! function_exists('mfn_woo_per_page')) {
 	function mfn_woo_per_page($cols){
 		return mfn_get_per_page();
 	}
 }
-add_filter('loop_shop_per_page', 'mfn_woo_per_page', 20);
+add_filter('loop_shop_per_page', 'mfn_woo_per_page', 20);*/
 
-add_filter( 'woocommerce_product_single_add_to_cart_text', 'mfn_template_single_add_to_cart_text' );
-function mfn_template_single_add_to_cart_text() {
-	global $product;
+add_filter( 'woocommerce_product_single_add_to_cart_text', 'mfn_template_single_add_to_cart_text', 10, 2 );
+function mfn_template_single_add_to_cart_text( $add_to_cart_text, $product ) {
+	//global $product;
 	$tmp_id = mfn_ID();
 
-	if( method_exists($product,'get_id') && get_post_meta($product->get_id(), '_button_text', true)){
+	if( !empty($product) && method_exists($product,'get_id') && get_post_meta($product->get_id(), '_button_text', true) ){
 		return get_post_meta($product->get_id(), '_button_text', true);
-	}else{
-		if(isset($tmp_id) && is_numeric($tmp_id) && get_post_status($tmp_id) == 'publish' && get_post_type($tmp_id) == 'template' && !empty(get_post_meta($tmp_id, 'mfn_cart_button', true)) ){
-			return get_post_meta($tmp_id, 'mfn_cart_button', true);
-		}
-		return __( 'Add to cart', 'woocommerce' );
+	}elseif(isset($tmp_id) && is_numeric($tmp_id) && get_post_status($tmp_id) == 'publish' && get_post_type($tmp_id) == 'template' && !empty(get_post_meta($tmp_id, 'mfn_cart_button', true)) ){
+		return get_post_meta($tmp_id, 'mfn_cart_button', true);
 	}
+	return $add_to_cart_text;
 }
 
 add_filter( 'woocommerce_product_tabs', 'mfn_woo_description_tab' );

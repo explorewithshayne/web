@@ -40,7 +40,7 @@ if( $has_shop && empty( $shop_icons_hide['user'] ) ){
 
 if( $has_user ){
   echo '<div aria-disabled="false" class="mfn-header-login is-side woocommerce '. ( is_user_logged_in() ? "mfn-header-modal-nav" : "mfn-header-modal-login" ) .'" aria-expanded="false" role="navigation" aria-label="'. __('shop account menu', 'betheme') .'">';
-    echo '<a class="mfn-close-icon toggle-login-modal close-login-modal" tabindex="0"><span class="icon" aria-label="'. __('close menu', 'betheme') .'">&#10005;</span></a>';
+    echo '<a href="#" class="mfn-close-icon toggle-login-modal close-login-modal" tabindex="0"><span class="icon" aria-label="'. __('close menu', 'betheme') .'">&#10005;</span></a>';
     if( ! is_user_logged_in()){
       echo '<h4>'; esc_html_e( 'Login', 'woocommerce' ); echo '</h4>';
       echo woocommerce_login_form();

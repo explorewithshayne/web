@@ -47,6 +47,7 @@ if (! defined('ABSPATH')) {
 		'htaccess'				=> $this->wp_filesystem->is_writable($htaccess_path) && $this->wp_filesystem->is_readable($htaccess_path),
 
 		'siteurl'					=> false,
+		'https'						=> true,
 		'wp_version'			=> version_compare( get_bloginfo( 'version' ), '5.0' ) >= 0,
 	);
 
@@ -63,6 +64,15 @@ if (! defined('ABSPATH')) {
 		if( $parse['home']['path'] == $parse['siteurl']['path'] ){
 			$status['siteurl'] = true;
 		}
+	}
+
+	// HTTPS
+
+	if( isset( $parse['home']['scheme'] ) && 'https' != $parse['home']['scheme'] ){
+		$status['https'] = false;
+	}
+	if( isset( $parse['siteurl']['scheme'] ) && 'https' != $parse['siteurl']['scheme'] ){
+		$status['https'] = false;
 	}
 
 	// count errors

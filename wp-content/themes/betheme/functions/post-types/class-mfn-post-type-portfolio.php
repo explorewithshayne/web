@@ -55,6 +55,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 				'fields' => array(
 
 					array(
+						'type' => 'header',
   					'title' => __('Header & Footer', 'mfn-opts'),
   				),
 
@@ -62,7 +63,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
   					'id' => 'mfn_header_template',
   					'type' => 'select',
   					'title' => __('Custom Header', 'mfn-opts'),
-  					'options' => mfna_templates('header'),
+  					'php_options' => mfna_templates('header'),
   					'js_options' => 'headers',
   				),
 
@@ -70,13 +71,14 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
   					'id' => 'mfn_footer_template',
   					'type' => 'select',
   					'title' => __('Custom Footer', 'mfn-opts'),
-  					'options' => mfna_templates('footer'),
+  					'php_options' => mfna_templates('footer'),
   					'js_options' => 'footers',
   				),
 
 					// layout
 
   				array(
+  					'type' => 'header',
   					'title' => __('Layout', 'mfn-opts'),
   				),
 
@@ -114,7 +116,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
   					'type' => 'select',
   					'title' => __('Sidebar', 'mfn-opts'),
   					'desc' => __('Shows only if layout with sidebar is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+  					'php_options' => mfn_opts_get('sidebars'),
   					'js_options' => 'sidebars',
   				),
 
@@ -123,7 +125,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
   					'type' => 'select',
   					'title' => __('Sidebar 2nd', 'mfn-opts'),
   					'desc' => __('Shows only if layout with both sidebars is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+  					'php_options' => mfn_opts_get('sidebars'),
   					'js_options' => 'sidebars',
   				),
 
@@ -141,6 +143,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 					// media
 
   				array(
+  					'type' => 'header',
   					'title' => __('Media', 'mfn-opts'),
   				),
 
@@ -148,7 +151,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
   					'id' => 'mfn-post-slider',
   					'type' => 'select',
   					'title' => __('Slider Revolution', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('rev'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('rev'),
   					'js_options' => 'rev_slider',
   				),
 
@@ -156,7 +159,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
   					'id' => 'mfn-post-slider-layer',
   					'type' => 'select',
   					'title' => __('Layer Slider', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('layer'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('layer'),
   					'js_options' => 'layer_slider',
   				),
 
@@ -183,6 +186,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 					// description
 
   				array(
+  					'type' => 'header',
   					'title' => __('Description', 'mfn-opts'),
   				),
 
@@ -207,6 +211,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 					// options
 
 					array(
+						'type' => 'header',
 						'title' => __('Options', 'mfn-opts'),
 					),
 
@@ -261,13 +266,14 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 						'type' => 'select',
 						'title' => __('Custom layout', 'mfn-opts'),
 						'desc' => __('Custom Layout overwrites Theme Options', 'mfn-opts'),
-						'options' 	=> $this->get_layouts(),
+						'php_options' => $this->get_layouts(),
 						'js_options' => 'layouts',
 					),
 
 					// advanced
 
 					array(
+						'type' => 'header',
 						'title' => __('Advanced', 'mfn-opts'),
 					),
 
@@ -303,6 +309,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 					// intro
 
 					array(
+						'type' => 'header',
 						'title' => __('Intro header', 'mfn-opts'),
 					),
 
@@ -322,6 +329,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 					// seo
 
   				array(
+  					'type' => 'header',
   					'title' => __('SEO', 'mfn-opts'),
   				),
 
@@ -353,6 +361,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 					// custom css
 
 					array(
+						'type' => 'header',
 						'title' => __('Custom CSS', 'mfn-opts'),
 					),
 
@@ -452,7 +461,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Portfolio' ) ) {
 			switch ($column) {
 				case 'portfolio_thumbnail':
 					if (has_post_thumbnail()) {
-						the_post_thumbnail('50x50');
+						the_post_thumbnail('thumbnail');
 					}
 					break;
 				case 'portfolio_types':

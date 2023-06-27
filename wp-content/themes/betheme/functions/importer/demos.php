@@ -468,6 +468,43 @@ $demos = [
 
   // pre-built
 
+  'bistro5' => [
+		'name' => 'Bistro 5',
+    'layouts' => [ 'one', 'ele', 'mfn' ],
+		'categories' => [ 'foo', 'peo', 'oth' ],
+		'plugins' => [ 'cf7', 'ele' ],
+		'wrapper' => '1270',
+    'media' => [
+      'medium_size_w' => 500,
+      'medium_size_h' => 700,
+      'large_size_w' => 720,
+      'large_size_h' => 720,
+    ],
+	],
+  'leasing2' => [
+		'name' => 'Leasing 2',
+    'layouts' => [ 'sho', 'ele', 'mfn' ],
+		'categories' => [ 'car', 'cor', 'fin', 'peo' ],
+		'plugins' => [ 'cf7', 'woo', 'ele' ],
+		'wrapper' => '1430',
+    'pages' => [
+      'woocommerce_shop_page_id' => 'All cars',
+    ],
+	],
+  'weddingcar' => [
+		'name' => 'Wedding Car',
+    'layouts' => [ 'lig', 'ele', 'mfn' ],
+		'categories' => [ 'car', 'ent', 'occ', 'peo' ],
+		'plugins' => [ 'cf7', 'ele' ],
+		'wrapper' => '1280',
+	],
+  'business7' => array(
+		'name' => 'Business 7',
+    'layouts' => [ 'lig', 'ele', 'mfn' ],
+		'categories' => [ 'cor' ],
+		'plugins' => [ 'cf7', 'ele' ],
+		'wrapper' => '1180',
+	),
   'lingerie' => [
 		'name' => 'Lingerie',
 		'layouts' => [ 'sho', 'ele', 'mfn' ],
@@ -488,6 +525,12 @@ $demos = [
 		'categories' => [ 'cor', 'hou' ],
 		'plugins' => [ 'cf7', 'rev', 'woo', 'ele' ],
 		'wrapper' => '1270',
+    'media' => [
+      'medium_size_w' => 450,
+      'medium_size_h' => 450,
+      'large_size_w' => 600,
+      'large_size_h' => 600,
+    ],
     'pages' => [
       'page_on_front' => 'HOME',
       'woocommerce_shop_page_id' => 'SHOP',

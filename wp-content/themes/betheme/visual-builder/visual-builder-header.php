@@ -59,6 +59,11 @@ _wp_admin_html_begin();
 
 ?>
 <title><?php echo esc_html( $admin_title ); ?></title>
+
+<script>
+var ajaxurl = "<?php echo admin_url( 'admin-ajax.php' ); ?>";
+</script>
+
 <?php
 
 // favicon
@@ -67,12 +72,16 @@ if( mfn_opts_get('favicon-img' ) || ( ! has_site_icon() ) ){
 	echo '<link rel="shortcut icon" href="'. esc_url(mfn_opts_get('favicon-img', get_theme_file_uri('/images/favicon.ico'))) .'" type="image/x-icon" />'."\n";
 }
 
+do_action( 'mfn_header_enqueue' );
+
+
+
 wp_enqueue_style( 'colors' );
 
-do_action( 'admin_enqueue_scripts' );
+//do_action( 'admin_enqueue_scripts' );
 do_action( 'admin_print_styles' );
-do_action( 'admin_print_scripts' );
-do_action( 'admin_head' );
+//do_action( 'admin_print_scripts' );
+//do_action( 'admin_head' );
 
 $body_classes = apply_filters( 'admin_body_class', '' );
 

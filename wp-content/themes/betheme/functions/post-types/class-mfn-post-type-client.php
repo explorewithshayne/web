@@ -149,7 +149,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Client' ) ) {
 			switch ($column) {
   			case 'client_thumbnail':
   				if (has_post_thumbnail()) {
-  					the_post_thumbnail('50x50');
+  					the_post_thumbnail('thumbnail');
   				}
   				break;
   			case 'client_types':

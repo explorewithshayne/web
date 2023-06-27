@@ -58,6 +58,8 @@ echo '<div class="sidebar-panel-header">
                 	echo 'Mega menu options';
                 }else if( $this->template_type && $this->template_type == 'popup' ){
                     echo 'Popup options';
+                }else if( $this->template_type ){
+                    echo 'Template options';
                 }else{
                 	echo 'Page options';
                 }

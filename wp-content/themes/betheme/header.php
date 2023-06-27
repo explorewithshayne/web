@@ -24,43 +24,57 @@
 
 <body <?php body_class(); ?>>
 
-	<?php if( !empty(get_post_meta(get_the_ID(), 'mfn-post-one-page', true)) && get_post_meta(get_the_ID(), 'mfn-post-one-page', true) == '1' ) echo '<div id="home"></div>'; ?>
+	<?php if( mfn_is_blocks() ): ?>
 
-	<?php do_action('mfn_hook_top'); ?>
+		<div id="Wrapper">
 
-	<?php get_template_part('includes/header', 'sliding-area'); ?>
+	<?php else: // mfn_is_blocks() ?>
 
-	<?php
-		if (mfn_header_style(true) == 'header-creative') {
-			get_template_part('includes/header', 'creative');
-		}
-	?>
+		<?php
+			if( !empty(get_post_meta(get_the_ID(), 'mfn-post-one-page', true)) && get_post_meta(get_the_ID(), 'mfn-post-one-page', true) == '1' ){
+				echo '<div id="home"></div>';
+			}
+		?>
 
-	<div id="Wrapper">
+		<?php do_action('mfn_hook_top'); ?>
 
-	<?php
-		if (mfn_header_style(true) == 'header-below') {
-			echo mfn_slider();
-		}
+		<?php get_template_part('includes/header', 'sliding-area'); ?>
 
-		$header_tmp_id = mfn_template_part_ID('header');
+		<?php
+			if (mfn_header_style(true) == 'header-creative') {
+				get_template_part('includes/header', 'creative');
+			}
+		?>
 
-		// be setup wizard
-		if( isset( $_GET['mfn-setup-preview'] ) ){
-			$header_tmp_id = false;
-		}
+		<div id="Wrapper">
 
-		if( $header_tmp_id ){
-			$is_visual = false;
-			if( !empty($_GET['visual']) ) $is_visual = true;
-			get_template_part( 'includes/header', 'template', array( 'id' => $header_tmp_id, 'visual' => $is_visual ) );
-		}else{
-			get_template_part( 'includes/header', 'classic' );
-		}
+		<?php
+			if (mfn_header_style(true) == 'header-below') {
+				echo mfn_slider();
+			}
 
-		if ( 'intro' == get_post_meta( mfn_ID(), 'mfn-post-template', true ) ) {
-			get_template_part( 'includes/header', 'single-intro' );
-		}
-	?>
+			$header_tmp_id = mfn_template_part_ID('header');
 
-	<?php do_action( 'mfn_hook_content_before' );
+			// be setup wizard
+			if( isset( $_GET['mfn-setup-preview'] ) ){
+				$header_tmp_id = false;
+			}
+
+			if( $header_tmp_id ){
+				$is_visual = false;
+				if( !empty($_GET['visual']) ) $is_visual = true;
+				get_template_part( 'includes/header', 'template', array( 'id' => $header_tmp_id, 'visual' => $is_visual ) );
+			}else{
+				get_template_part( 'includes/header', 'classic' );
+			}
+
+			if ( 'intro' == get_post_meta( mfn_ID(), 'mfn-post-template', true ) ) {
+				get_template_part( 'includes/header', 'single-intro' );
+			}
+		?>
+
+		<?php do_action( 'mfn_hook_content_before' ); ?>
+
+	<?php endif; // mfn_is_blocks() ?>
+
+<?php // omit closing php tag

@@ -81,7 +81,7 @@ if (! class_exists('Mfn_Love')) {
 				$class = 'loved';
 			}
 
-			return '<a href="#" class="mfn-love '. esc_attr($class) .'" data-id="'. esc_attr($post->ID) .'"><span class="icons-wrapper"><i class="icon-heart-empty-fa" aria-label="loved"></i><i class="icon-heart-fa" aria-label="loved"></i></span><span class="label">'. esc_html($love_count) .'</span></a>';
+			return '<a href="#" class="mfn-love '. esc_attr($class) .'" data-id="'. esc_attr($post->ID) .'"><span class="icons-wrapper"><i class="icon-heart-empty-fa"></i><i class="icon-heart-fa"></i></span><span class="label">'. esc_html($love_count) .'</span></a>';
 		}
 	}
 }

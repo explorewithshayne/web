@@ -200,7 +200,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 			    		echo '<option '. ( $menu_item_mm && $menu_item_mm == $m ? "selected" : "" ) .' value="'.$m.'">'.$mm.'</option>';
 			    	}
 			    }
-			echo '</select> 
+			echo '</select>
 
 			</div>';
 
@@ -378,6 +378,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 				$template_types['single-product'] = 'Single product';
 			}
 
+			$template_types['popup'] = 'Popup';
 			$template_types['header'] = 'Header';
 			$template_types['megamenu'] = 'Mega menu';
 			$template_types['footer'] = 'Footer';
@@ -398,9 +399,41 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'std' => $type,
 					),
 
+				array(
+  					'id' => 'mfn_header_template',
+  					'type' => 'select',
+  					'title' => __('Custom Header Template', 'mfn-opts'),
+  					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=header">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
+  					'php_options' => mfna_templates('header'),
+  					'js_options' => 'headers',
+  				),
+
+  				array(
+  					'id' => 'mfn_footer_template',
+  					'type' => 'select',
+  					'title' => __('Custom Footer Template', 'mfn-opts'),
+  					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=footer">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
+  					'php_options' => mfna_templates('footer'),
+  					'js_options' => 'footers',
+  				),
+
+  				array(
+  					'title' => __('Popup', 'mfn-opts'),
+  				),
+
+  				array(
+  					'id' => 'mfn_popup_included',
+  					'type' => 'select',
+  					'title' => __('Popup', 'mfn-opts'),
+  					'desc' => __('Choose popup to display', 'mfn-opts'),
+  					'php_options' => mfna_templates('popup'),
+  					'js_options' => 'popups',
+  				),
+
 					// layout
 
   				array(
+  					'type' => 'header',
   					'title' => __('Layout', 'mfn-opts'),
   				),
 
@@ -439,7 +472,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'type' => 'select',
   					'title' => __('Sidebar', 'mfn-opts'),
   					'desc' => __('Shows only if layout with sidebar is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+						'php_options' => is_array(mfn_opts_get('sidebars')) ? array_merge(array( '' => __('-- Default --', 'mfn-opts')), mfn_opts_get('sidebars')) : array('' => __('-- Default --', 'mfn-opts')),
   					'js_options' => 'sidebars',
   				),
 
@@ -448,13 +481,14 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'type' => 'select',
   					'title' => __('Sidebar 2nd', 'mfn-opts'),
   					'desc' => __('Shows only if layout with both sidebars is selected', 'mfn-opts'),
-  					'options' => mfn_opts_get('sidebars'),
+						'php_options' => is_array(mfn_opts_get('sidebars')) ? array_merge(array( '' => __('-- Default --', 'mfn-opts')), mfn_opts_get('sidebars')) : array('' => __('-- Default --', 'mfn-opts')),
   					'js_options' => 'sidebars',
   				),
 
 					// media
 
   				array(
+  					'type' => 'header',
   					'title' => __('Media', 'mfn-opts'),
   				),
 
@@ -462,7 +496,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'id' => 'mfn-post-slider',
   					'type' => 'select',
   					'title' => __('Slider Revolution', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('rev'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('rev'),
   					'js_options' => 'rev_slider',
   				),
 
@@ -470,7 +504,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'id' => 'mfn-post-slider-layer',
   					'type' => 'select',
   					'title' => __('Layer Slider', 'mfn-opts'),
-  					'options' => Mfn_Builder_Helper::get_sliders('layer'),
+  					'php_options' => Mfn_Builder_Helper::get_sliders('layer'),
   					'js_options' => 'layer_slider',
   				),
 
@@ -490,6 +524,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 					// options
 
   				array(
+  					'type' => 'header',
   					'title' => __('Options', 'mfn-opts'),
   				),
 
@@ -544,7 +579,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'type' => 'select',
   					'title' => __('Custom layout', 'mfn-opts'),
   					'desc' => __('Custom layout overwrites Theme Options', 'mfn-opts'),
-  					'options' => $this->get_layouts(),
+  					'php_options' => $this->get_layouts(),
   					'js_options' => 'layouts',
   				),
 
@@ -553,13 +588,14 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					'type' => 'select',
   					'title' => __('Custom menu', 'mfn-opts'),
   					'desc' => __('Does not work with Split Menu', 'mfn-opts'),
-  					'options' => mfna_menu(),
+  					'php_options' => mfna_menu(),
   					'js_options' => 'menus',
   				),
 
 					// custom css
 
   				array(
+  					'type' => 'header',
   					'title' => __('Custom CSS', 'mfn-opts'),
   				),
 
@@ -585,6 +621,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 				'fields' => array(
 
 					array(
+						'type' => 'header',
 	  					'title' => __('Default header', 'mfn-opts'),
 	  				),
 
@@ -610,6 +647,18 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 	  					'options' => array(
 	  						'' => __('No', 'mfn-opts'),
 	  						'active' => __('Yes', 'mfn-opts'),
+	  					),
+	  					'std' => '',
+  					),
+
+  					array(
+	  					'id' => 'header_width',
+	  					'condition' => array( 'id' => 'header_position', 'opt' => 'is', 'val' => 'fixed' ),
+	  					'type' => 'select',
+	  					'title' => __('Width', 'mfn-opts'),
+	  					'options' => array(
+	  						'' => __('Full width', 'mfn-opts'),
+	  						'inherited' => __('Inherited from Layout', 'mfn-opts'),
 	  					),
 	  					'std' => '',
   					),
@@ -656,11 +705,13 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 					),
 
   					array(
+  						'type' => 'header',
 	  					'title' => __('Sticky header', 'mfn-opts'),
 	  				),
 
   					array(
 	  					'id' => 'header_sticky',
+	  					'attr_id' => 'header_sticky',
 	  					'type' => 'select',
 	  					'title' => __('Status', 'mfn-opts'),
 	  					'options' => array(
@@ -671,6 +722,19 @@ if (! class_exists('Mfn_Post_Type_Template')) {
   					),
 
   					array(
+	  					'id' => 'header_sticky_width',
+	  					'condition' => array( 'id' => 'header_sticky', 'opt' => 'is', 'val' => 'enabled' ),
+	  					'type' => 'select',
+	  					'title' => __('Width', 'mfn-opts'),
+	  					'options' => array(
+	  						'' => __('Full width', 'mfn-opts'),
+	  						'inherited' => __('Inherited from Layout', 'mfn-opts'),
+	  					),
+	  					'std' => '',
+  					),
+
+  					array(
+						'type' => 'header',
 	  					'title' => __('Mobile header', 'mfn-opts'),
 	  				),
 
@@ -758,7 +822,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 	  						'on-exit' => __('On exit', 'mfn-opts'),
 	  						'on-scroll' => __('After scroll', 'mfn-opts'),
 	  						'scroll-to-element' => __('After scroll to element', 'mfn-opts'),
-	  						'on-click' => __('On button click', 'mfn-opts'),
+	  						'on-click' => __('On click', 'mfn-opts'),
 	  					),
 	  					'std' => 'on-start',
   					),
@@ -767,7 +831,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						'condition' => array( 'id' => 'popup_display', 'opt' => 'is', 'val' => 'on-click' ),
 						'type' => 'html',
 						'condition' => array( 'id' => 'query_display', 'opt' => 'is', 'val' => 'slider' ),
-						'html' => '<div class="mfn-form-row mfn-vb-formrow mfn-alert activeif activeif-popup_display conditionally-hide" data-id="popup_display" data-opt="is" data-val="on-click"><div class="alert-content"><p>Use <span style="color: #72a5d8;">#mfn-popup-template-postid</span> to open this popup with an external button</p></div></div>',
+						'html' => '<div class="mfn-form-row mfn-vb-formrow mfn-alert activeif activeif-popup_display conditionally-hide" data-id="popup_display" data-opt="is" data-val="on-click"><div class="alert-content"><p>Use <span class="mfn-copytoclipboard" data-tooltip="Click to copy to clipboard" data-clipboard="#mfn-popup-template-postid" style="color: #72a5d8;">#mfn-popup-template-postid</span> to open this popup with an external button</p></div></div>',
 					),
 
   					array(
@@ -1055,6 +1119,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						),
 						'preview' => 'number',
 						'after' => 'px',
+	  					'std' => '30px',
   					),
 
   					array(
@@ -1072,6 +1137,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						),
 						'preview' => 'number',
 						'after' => 'px',
+	  					'std' => '30px',
   					),
 
   					array(
@@ -1089,6 +1155,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						),
 						'preview' => 'number',
 						'after' => 'px',
+	  					'std' => '30px',
   					),
 
   					array(
@@ -1106,6 +1173,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						),
 						'preview' => 'number',
 						'after' => 'px',
+	  					'std' => '3px',
   					),
 
   					array(
@@ -1123,6 +1191,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						),
 						'preview' => 'number',
 						'after' => 'px',
+	  					'std' => '3px',
   					),
 
   					array(
@@ -1140,6 +1209,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						),
 						'preview' => 'number',
 						'after' => 'px',
+	  					'std' => '3px',
   					),
 
   					array(
@@ -1530,7 +1600,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 						'html' => '</div></div>',
 					),
 
-					
+
   				),
 			);
 		}
@@ -1544,6 +1614,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 				'fields' => array(
 
 					array(
+						'type' => 'header',
 	  					'title' => __('Settings', 'mfn-opts'),
 	  				),
 
@@ -1659,6 +1730,7 @@ if (! class_exists('Mfn_Post_Type_Template')) {
 				'fields' => array(
 
 					array(
+						'type' => 'header',
 	  					'title' => __('Settings', 'mfn-opts'),
 	  				),
 

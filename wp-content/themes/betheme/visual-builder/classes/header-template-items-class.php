@@ -7,7 +7,7 @@ if( ! defined( 'ABSPATH' ) ){
 ini_set("display_errors", 1);*/
 
 class Mfn_Vb_Header_Tmpl extends Walker_Nav_Menu {
-
+	
 	public function start_el( &$output, $data_object, $depth = 0, $args = null, $current_object_id = 0 ) {
 		// Restores the more descriptive, specific name for use within this method.
 		$menu_item = $data_object;
@@ -85,7 +85,7 @@ class Mfn_Vb_Header_Tmpl extends Walker_Nav_Menu {
 		 * @param int      $depth     Depth of menu item. Used for padding.
 		 */
 		$id = apply_filters( 'nav_menu_item_id', 'menu-item-' . $menu_item->ID, $menu_item, $args, $depth );
-
+		
 		//print_r($args);
 		if( $id && !empty( $args->li_id_prefix ) ){
 			$id = ' id="'.$args->li_id_prefix. esc_attr( $id ) . '"';
@@ -157,7 +157,7 @@ class Mfn_Vb_Header_Tmpl extends Walker_Nav_Menu {
 		 * @param int      $depth     Depth of menu item. Used for padding.
 		 */
 		$title = apply_filters( 'nav_menu_item_title', $title, $menu_item, $args, $depth );
-
+		
 		$item_output = '';
 
 		if( isset($args->before) ) $item_output .= $args->before;
@@ -172,7 +172,7 @@ class Mfn_Vb_Header_Tmpl extends Walker_Nav_Menu {
 			}
 
 		}
-
+		
 
 		if( $menu_item_icon || $menu_item_icon_img ){
 			if( isset($args->mfn_classes) && $args->mfn_classes ){
@@ -204,7 +204,7 @@ class Mfn_Vb_Header_Tmpl extends Walker_Nav_Menu {
 		}else{
 			$item_output .= '<span class="label-wrapper"><span class="menu-label">';
 		}
-
+		
 		if( isset($args->link_before) ) $item_output .= $args->link_before;
 
 		$item_output .= $title;
@@ -228,7 +228,7 @@ class Mfn_Vb_Header_Tmpl extends Walker_Nav_Menu {
 			}else{
 				$item_output .= '<span class="menu-sub">'.$args->custom_icon.'</span>';
 			}
-
+			
 		}
 
 		if( $depth > 0 && !empty( $args->custom_subicon ) ){

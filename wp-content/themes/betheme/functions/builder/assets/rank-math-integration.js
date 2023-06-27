@@ -60,9 +60,19 @@ class RankMathCustomFields {
 		const fields = []
     const $builder = jQuery('#mfn-builder');
 
-		jQuery( '.mfn-form-control.preview-title, .mfn-form-control.preview-subtitle, .mfn-form-control.preview-content', $builder ).each( function() {
-			fields.push( jQuery(this) )
-		} )
+		if( $builder.length ){
+
+			jQuery( '.mfn-form-control.preview-title, .mfn-form-control.preview-subtitle, .mfn-form-control.preview-content', $builder ).each( function() {
+				fields.push( jQuery(this) )
+			} );
+
+		} else {
+
+			if( jQuery( '#mfn-rankmath-content' ).val() ){
+				fields.push( jQuery( '#mfn-rankmath-content' ) );
+			}
+
+		}
 
 		return fields
 	}
@@ -79,6 +89,7 @@ class RankMathCustomFields {
 		// this.fields = this.getFields()
 
 		jQuery( this.fields ).each( function( key, value ) {
+
       if( value ){
         content += ' '+ jQuery( value ).val()
       }

@@ -49,7 +49,7 @@
 
           var it = 'mcb-item-'+edited_item.uid;
           var val = __editor.instance.codemirror.getValue();
-          edited_item.fields.content = val;
+          edited_item.attr.content = val;
           updateView(val, it);
 
         },
@@ -354,7 +354,7 @@
 
                   var it = 'mcb-item-'+edited_item.uid;
                   var val = __editor.instance.codemirror.getValue();
-                  edited_item.fields.content = val;
+                  edited_item.attr.content = val;
                   updateView(val, it);
                   setTimeout(function() {$content.find('.'+it).removeClass('loading disabled');}, 100);
                   break;
@@ -398,7 +398,7 @@
                     )
 
                     var val = __editor.instance.codemirror.getValue();
-                    edited_item.fields.content = val;
+                    edited_item.attr.content = val;
 
                     updateView(val, it);
                   }
@@ -847,25 +847,21 @@
         if( !$(__cpTooltip.domLocation).hasClass('mfn-initialized') ){
 
           $(__cpTooltip.domLocation).addClass('mfn-initialized');
-          let $colorbox = $(__cpTooltip.domLocation).find('.mfn-form-row');
 
-          /*if($colorbox.find('.wp-picker-holder').length){
-              $(this).html('<div class="color-picker-group"><div class="form-addon-prepend"><a href="#" class="color-picker-open"><span class="label"style="background-color:'+$($colorbox).find('.mfn-form-control').val()+';border-color:'+$($colorbox).find('.mfn-form-control').val()+'"><i class="icon-bucket"></i></span></a></div><div class="form-control has-icon has-icon-right"><input class="mfn-form-control mfn-form-input" type="text" value="'+$($colorbox).find('.mfn-form-control').val()+'" name="'+$($colorbox).find('.mfn-form-control').attr('name')+'" autocomplete="off" /><a class="mfn-option-btn mfn-option-text color-picker-clear" href="#"><span class="text">Clear</span></a></div><input class="has-colorpicker" data-alpha="true" type="text" value="'+$($colorbox).find('.mfn-form-control').val()+'" autocomplete="off" /></div>');
-          }*/
 
-          let $color_input = $colorbox.find('.has-colorpicker');
+          let $color_input = $(__cpTooltip.domLocation).find('.has-colorpicker');
 
           $color_input.wpColorPicker({
               mode : 'hsl',
               width : 283,
               change : function(event, ui) {
-                  $('.form-control .mfn-form-input', $colorbox).val(ui.color.toString());
-                  $('.form-addon-prepend .label', $colorbox).css({'background-color': ui.color.toString(), 'border-color': ui.color.toString()});
-                  $('.form-addon-prepend .label', $colorbox).removeClass('light dark').addClass(getContrastYIQ(ui.color.toString()));
+                  $('.form-control .mfn-form-input', $(__cpTooltip.domLocation)).val(ui.color.toString());
+                  $('.form-addon-prepend .label', $(__cpTooltip.domLocation)).css({'background-color': ui.color.toString(), 'border-color': ui.color.toString()});
+                  $('.form-addon-prepend .label', $(__cpTooltip.domLocation)).removeClass('light dark').addClass(getContrastYIQ(ui.color.toString()));
               },
               clear : function() {
-                  $('.form-control .mfn-form-input', $colorbox).val('');
-                  $('.form-addon-prepend .label', $colorbox).removeAttr('style').removeClass('dark').addClass('light');
+                  $('.form-control .mfn-form-input', $(__cpTooltip.domLocation)).val('');
+                  $('.form-addon-prepend .label', $(__cpTooltip.domLocation)).removeAttr('style').removeClass('dark').addClass('light');
               }
           });
 
@@ -912,7 +908,7 @@
 
         __editor.methods.wrapTextIntoShortcode(`<span style="color:${color}">`, `</span>`);
  
-          edited_item.fields.content = __editor.instance.codemirror.getValue();
+          edited_item.attr.content = __editor.instance.codemirror.getValue();
           updateView(__editor.instance.codemirror.getValue(), 'mcb-item-'+edited_item.uid);
 
         
@@ -1074,7 +1070,7 @@
           console.error('CodeMirror textarea action not recognized');
       }
       __editor.instance.codemirror.focus();
-      edited_item.fields.content = __editor.instance.codemirror.getValue();
+      edited_item.attr.content = __editor.instance.codemirror.getValue();
       setTimeout(updateView, 10);
 
     }
@@ -1133,25 +1129,27 @@
       var inlineIndex = $iframeCont.attr('data-mfnindex');
 
       // focus: update content
-      if( !$iframeCont.hasClass('mfn-focused') && edited_item && edited_item.fields && edited_item.fields.content ){
+      if( !$iframeCont.hasClass('mfn-focused') && edited_item && edited_item.attr && edited_item.attr.content ){
         $iframeCont.addClass('mfn-focused');
-        inlineEditors[inlineIndex].setContent( edited_item.fields.content );
+        if( _.has(inlineEditors, inlineIndex) ) inlineEditors[inlineIndex].setContent( edited_item.attr.content );
       }
 
       /*$iframeCont.on('click', function() {
-        if( !$iframeCont.hasClass('mfn-focused') && edited_item && edited_item.fields && edited_item.fields.content){
+        if( !$iframeCont.hasClass('mfn-focused') && edited_item && edited_item.attr && edited_item.attr.content){
           $iframeCont.addClass('mfn-focused');
-          inlineEditors[inlineIndex].setContent( edited_item.fields.content );
+          inlineEditors[inlineIndex].setContent( edited_item.attr.content );
         }
       });*/
       
       // writing
       if( !$iframeCont.hasClass('mfn-watchChanges') ){
         $iframeCont.addClass('mfn-watchChanges');
-        inlineEditors[inlineIndex].subscribe('editableInput', function(e, t){
-            edited_item.fields.content = $(t).html().replaceAll('&quot;', '');
-            __editor.instance.codemirror.setValue( $(t).html().replaceAll('&quot;', '') );
-        });
+        if( _.has(inlineEditors, inlineIndex) ) {
+          inlineEditors[inlineIndex].subscribe('editableInput', function(e, t){
+              edited_item.attr.content = $(t).html().replaceAll('&quot;', '');
+              __editor.instance.codemirror.setValue( $(t).html().replaceAll('&quot;', '') );
+          });
+        }
       }
 
       $('.mfn-visualbuilder .sidebar-panel-content .panel-edit-item .mfn-form').on('click', '.html-editor .editor-header .mfn-option-dropdown .mfn-dropdown-item', function(e) {
@@ -1217,8 +1215,8 @@
       });
 
       __editor.instance.codemirror.on('paste', function(cMirror) {
-          edited_item.fields.content = cMirror.getValue();
-          updateView(edited_item.fields.content, 'mcb-item-'+edited_item.uid);
+          edited_item.attr.content = cMirror.getValue();
+          updateView(edited_item.attr.content, 'mcb-item-'+edited_item.uid);
       });
 
       __editor.instance.codemirror.on('focus', function() {
@@ -1227,46 +1225,13 @@
 
 
       __editor.instance.codemirror.on('keyup',function(cMirror) {
-        edited_item.fields.content = cMirror.getValue();
-        updateView(edited_item.fields.content, 'mcb-item-'+edited_item.uid);
+        edited_item.attr.content = cMirror.getValue();
+        updateView(edited_item.attr.content, 'mcb-item-'+edited_item.uid);
       });
 
       preventEdit = false;
 
     }
-
-    /*function re_render_content(val, it) {
-
-        edited_item.fields.content = val;
-
-        if( $content.find('.'+it).closest('.mfn-queryloop-item-wrapper').length ){
-            MfnVbApp.re_render2( $content.find('.'+it).closest('.mcb-section.vb-item').attr('data-uid') );
-        }else{
-
-          $.ajax({
-              url: MfnVbApp.ajaxurl,
-              data: {
-                  action: 'rendercontent',
-                  'mfn-builder-nonce': MfnVbApp.wpnonce,
-                  val: val,
-                  'vb_postid': mfnvbvars.pageid,
-                  uid: edited_item.uid
-              },
-              type: 'POST',
-              success: function(response){
-                  
-                  updateView(response['html'], it);
-                  $iframeCont.removeClass('mfn-focused');
-                  $('.sidebar-wrapper').removeClass('mfn-vb-sidebar-overlay');
-                  setTimeout(function() {
-                    MfnVbApp.addHistory();
-                  }, 100);
-              }
-          });
-
-        }
-
-    }*/
 
     function updateView(val, it){
 
@@ -1310,7 +1275,7 @@
         __editor.instance.codemirror.focus();
 
         if( $(this).closest('.modalbox-footer').length ){
-          edited_item.fields.content = __editor.instance.codemirror.getValue();
+          edited_item.attr.content = __editor.instance.codemirror.getValue();
           updateView(__editor.instance.codemirror.getValue(), 'mcb-item-'+edited_item.uid);
         }
 
@@ -1318,7 +1283,7 @@
 
         /*if( $(this).closest('.modalbox-footer').length ){
           var val = __editor.instance.codemirror.getValue();
-          edited_item.fields.content = val;
+          edited_item.attr.content = val;
           updateView(val, it);
         }
         
@@ -1342,7 +1307,7 @@
 
           var it = 'mcb-item-'+edited_item.uid;
           var val = __editor.instance.codemirror.getValue();
-          edited_item.fields.content = val;
+          edited_item.attr.content = val;
           updateView(val, it);
 
       });
@@ -1406,8 +1371,11 @@
         $codeEditor.codemirror.refresh();
 
         $codeEditor.codemirror.on('change', function(cm, change){
-          $editor.val( cm.getValue() );
+          $editor.val( cm.getValue() ).trigger('change');
+          edited_item[$editor.attr('name')] = cm.getValue();
         });
+
+
 
       });
 
@@ -1426,15 +1394,6 @@
 
       __editor = __editor;
 
-      $(document).on('mfn:vb:edit', function() {
-        //destroy();
-        create();
-      });
-
-      $(document).on('mfn:vb:close', function() {
-        destroy();
-      });
-
     }
 
     /**
@@ -1444,6 +1403,7 @@
 
     return {
       init: init,
+      initForCSSandJS:initForCSSandJS,
       destroy: destroy,
       create: create,
     };
@@ -1451,7 +1411,7 @@
   })(jQuery);
 
 
-  MfnFieldTextarea.init();
+  //MfnFieldTextarea.init();
 
 
   /**

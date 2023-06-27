@@ -58,7 +58,7 @@
           $('.modal-dynamic-data').removeClass('show');
 
           let val = tinyMCE.activeEditor.getContent();
-          edited_item.fields.content = val;
+          edited_item.attr.content = val;
           updateContent(val, 'mcb-item-'+edited_item.uid);
 
           tinyMCE.activeEditor.focus();
@@ -78,7 +78,7 @@
 
         if( !$iframeCont.hasClass('mfn-focused') ){
           $iframeCont.addClass('mfn-focused');
-          if( edited_item.fields.content ) inlineEditors[inlineIndex].setContent( edited_item.fields.content );
+          if( edited_item.attr.content && _.has(inlineEditors, inlineIndex) ) inlineEditors[inlineIndex].setContent( edited_item.attr.content );
         }
 
         var $editorWrapper = $('.panel-edit-item .mfn-form .mfn-element-fields-wrapper .visual-editor');
@@ -91,8 +91,7 @@
           //$editorWrapper.find('.wp-editor-tabs .wp-switch-editor').attr('data-wp-editor-id', visuid);
           //$editor.attr('id', visuid);
 
-          //var toolbar1widgets = "formatselect,bold,italic,underline,bullist,numlist,blockquote,alignleft,aligncenter,alignright,alignjustify,link,wp_more,spellchecker,dfw,wp_adv,mfnsc";
-          var toolbar1widgets = "formatselect,bold,italic,underline,bullist,numlist,blockquote,alignleft,aligncenter,alignright,alignjustify,link,spellchecker,dfw,mfnsc";
+          var toolbar1widgets = "formatselect,bold,italic,underline,bullist,numlist,blockquote,alignleft,aligncenter,alignright,alignjustify,link,wp_more,spellchecker,dfw,wp_adv,mfnsc";
 
           if( edited_item.type == 'column' || edited_item.type == 'visual' ){
             toolbar1widgets += ",mfnddbutton";
@@ -101,10 +100,9 @@
           var vis_settings = {
             tinymce: {
                 toolbar1: toolbar1widgets,
-                //toolbar2: "strikethrough,hr,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo,wp_help",
-                toolbar2: "strikethrough,hr,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo",
+                toolbar2: "strikethrough,hr,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo,wp_help",
                 menubar: false,
-                statusbar: true,
+                statusbar: false,
                 elementpath: true,
                 height : editorHeight,
                 external_plugins: {
@@ -121,6 +119,12 @@
                       MfnVbApp.dynamicData.open(this.$el);
                     }
                 });
+
+                editor.on('keyup change', function(e) {
+                    let val = editor.getContent();
+                    edited_item.attr.content = val;
+                    updateContent(val, itemEl);
+                  });
 
                 },
                 init_instance_callback: function(editor){
@@ -141,36 +145,12 @@
                   //tooltip have to be hidden when typing!
                   editor.on('keydown', removeTooltip);
 
-                  /*if( !$iframeCont.hasClass('mfn-focused') ){
-                    $iframeCont.addClass('mfn-focused');
-                    inlineEditors[inlineIndex].setContent( edited_item.fields.content );
-                  }*/
-
-                  /*$iframeCont.on('click', function() {
-                    if( !$iframeCont.hasClass('mfn-focused') ){
-                      $iframeCont.addClass('mfn-focused');
-                      inlineEditors[inlineIndex].setContent( edited_item.fields.content );
-                    }
-                  });*/
-
-                  editor.on('blur', function(e) {
-                    // blurTiny( editor.getContent() );
-                    updateContent(editor.getContent(), itemEl);
-                    //inlineEditors[inlineIndex].setContent( editor.getContent() );
-                  });
-
-                  editor.on('keyup change paste', function(e) {
-                    let val = this.getContent();
-                    edited_item.fields.content = val;
-                    updateContent(val, itemEl);
-                    //inlineEditors[inlineIndex].setContent( editor.getContent() );
-                  });
+                  
 
                   $editorWrapper.find('textarea.preview-contentinput').on('keyup change paste', function(e) {
                     let val = $(this).val();
-                    edited_item.fields.content = val;
+                    edited_item.attr.content = val;
                     updateContent(val, itemEl);
-                    //inlineEditors[inlineIndex].setContent( editor.getContent() );
                   });
 
                 }
@@ -184,60 +164,27 @@
             $('.sidebar-wrapper').addClass('mfn-vb-sidebar-overlay');
             $(document).bind('click', hideSidebarOverlay);
           });
+
+          $('textarea#mfn-editor').on('keyup', function(e) {
+                    let val = $(this).val();
+                    edited_item.attr.content = val;
+                    updateContent(val, itemEl);
+                    //inlineEditors[inlineIndex].setContent( editor.getContent() );
+                  });
+
+          if( _.has(inlineEditors, inlineIndex) ){
           
-          inlineEditors[inlineIndex].subscribe('editableInput', function(e, t){
-            if( tinymce.get( 'mfn-editor' ) ) {
-              edited_item.fields.content = $(t).html().replaceAll('&quot;', '');
-              tinymce.get( 'mfn-editor' ).setContent( $(t).html().replaceAll('&quot;', '') );
-            }
-          });
+            inlineEditors[inlineIndex].subscribe('editableInput', function(e, t){
+              if( tinymce.get( 'mfn-editor' ) ) {
+                edited_item.attr.content = $(t).html().replaceAll('&quot;', '');
+                tinymce.get( 'mfn-editor' ).setContent( $(t).html().replaceAll('&quot;', '') );
+              }
+            });
+          }
 
           preventEdit = false;
 
       }
-
-      /*function blurTiny(val){
-        
-            //let val = this.getContent();
-
-            if( $content.find('.'+itemEl).closest('.mfn-queryloop-item-wrapper').length ){
-                MfnVbApp.re_render2( $content.find('.'+itemEl).closest('.mcb-section.vb-item').attr('data-uid') );
-            }else{
-
-              $content.find('.'+itemEl).addClass('loading disabled');
-
-              $.ajax({
-                  url: MfnVbApp.ajaxurl,
-                  data: {
-                      action: 'rendercontent',
-                      'mfn-builder-nonce': wpnonce,
-                      val: val,
-                      'vb_postid': mfnvbvars.pageid,
-                      uid: edited_item.uid
-                  },
-                  type: 'POST',
-                  success: function(response){
-                    updateContent(response['html'], itemEl);
-
-                    $iframeCont.removeClass('mfn-focused');
-
-                    $content.find('.'+itemEl).removeClass('loading disabled');
-                    $('.sidebar-wrapper').removeClass('mfn-vb-sidebar-overlay');
-
-                    $(document).unbind('click', hideSidebarOverlay);
-
-                    setTimeout(function() {
-                      MfnVbApp.addHistory();
-                    }, 50);
-
-                  }
-              });
-
-            }
-
-            MfnVbApp.enableBeforeUnload();
-      
-      }*/
 
     }
 
@@ -569,6 +516,7 @@
                   $(modalAttr).closest('.color-picker-group').find('input.has-colorpicker').val(attr.value); //alpha, not visible input
                   $(modalAttr).closest('.color-picker-group').find('input[data-name]').val(attr.value); // just in case fill the visible input too
                   $(modalAttr).closest('.color-picker-group').find('.color-picker-open span').css('background-color', attr.value); //for not-alpha colors
+
                   break;
 
                 case _.contains(['image', 'link_image', 'src'], $(modalAttr).attr('data-name')):
@@ -615,6 +563,11 @@
             $(document).trigger('mfn:builder:edit', $(modal).closest('.mfn-modal'));
 
             __scEditor.methods.tooltip.acceptButtonWatcher();
+
+            var val = tinyMCE.activeEditor.getContent();
+            var it = 'mcb-item-'+edited_item.uid;
+
+            setTimeout(function(){ updateContent(val, it); }, 100);
 
           },
 
@@ -883,6 +836,8 @@
             $content.find('.'+it+' .mfn-visualeditor-content').html(val);
         }
 
+        edited_item.attr.content = val;
+
         MfnVbApp.enableBeforeUnload();
       }
 
@@ -897,16 +852,3 @@
 
   })(jQuery);
 
-  /**
-   * $(document).ready
-   * Specify a function to execute when the DOM is fully loaded.
-   */
-
-  /*$(function() {
-    $('iframe#mfn-vb-ifr').on('load', function() {
-        //$content = $("iframe#mfn-vb-ifr").contents();
-        MfnFieldVisual.init();
-    });
-  });*/
-
-// })(jQuery);

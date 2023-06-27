@@ -57,6 +57,7 @@ if (! class_exists('Mfn_Post_Type_Product')) {
 				'fields' => array(
 
 					array(
+	  					'type' => 'header',
 	  					'title' => __('Header & Footer', 'mfn-opts'),
 	  				),
 
@@ -65,7 +66,7 @@ if (! class_exists('Mfn_Post_Type_Product')) {
 	  					'type' => 'select',
 	  					'title' => __('Custom Header Template', 'mfn-opts'),
 	  					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=header">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
-	  					'options' => mfna_templates('header'),
+	  					'php_options' => mfna_templates('header'),
 	  					'js_options' => 'headers',
 	  				),
 
@@ -74,7 +75,7 @@ if (! class_exists('Mfn_Post_Type_Product')) {
 	  					'type' => 'select',
 	  					'title' => __('Custom Footer Template', 'mfn-opts'),
 	  					'desc' => __('To overwrite template set with conditions in <a target="_blank" href="edit.php?post_type=template&tab=footer">Templates</a> section, please select appropriate template from dropdown select. Afterwards, please reload the page to refresh the options.', 'mfn-opts'),
-	  					'options' => mfna_templates('footer'),
+	  					'php_options' => mfna_templates('footer'),
 	  					'js_options' => 'footers',
 	  				),
 
@@ -82,7 +83,7 @@ if (! class_exists('Mfn_Post_Type_Product')) {
 	  					'id' => 'mfn_single_product_template',
 	  					'type' => 'select',
 	  					'title' => __('Custom Single Product Template', 'mfn-opts'),
-	  					'options' => mfna_templates('single-product'),
+	  					'php_options' => mfna_templates('single-product'),
 	  					'js_options' => 'singleproducts',
 	  				),
 

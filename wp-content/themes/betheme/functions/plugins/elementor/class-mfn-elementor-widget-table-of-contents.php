@@ -129,6 +129,33 @@ class Mfn_Elementor_Widget_Table_Of_Contents extends \Elementor\Widget_Base {
  			]
  		);
 
+		$this->add_control(
+			'url_format',
+			[
+        'label' => __( 'Link format', 'mfn-opts' ),
+				'type' => \Elementor\Controls_Manager::SELECT,
+				'options'	=> array(
+					'' => __('SEO friendly', 'mfn-opts'),
+					'simple' => __('Simple', 'mfn-opts'),
+				),
+				'default' => '',
+			]
+		);
+
+		$this->add_control(
+			'allow_hide',
+			[
+				'label' => __( 'Toggle the Visibility', 'mfn-opts' ),
+				'type' => \Elementor\Controls_Manager::SELECT,
+				'options'	=> array(
+					'' => __('Disable', 'mfn-opts'),
+					'enable' => __('Enable', 'mfn-opts'),
+					'hide' => __('Enable and hide initially', 'mfn-opts'),
+				),
+				'default' => '',
+			]
+		);
+
 		$this->end_controls_section();
 
 	}

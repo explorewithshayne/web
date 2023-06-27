@@ -5,7 +5,7 @@
 <div class="new-license">
   <div class="toggle-header">
     <img src="<?php echo get_theme_file_uri('/muffin-options/svg/logo-envato-light.svg'); ?>" alt="Envato" />
-    <h5>Get the new license<br /> to create your next project</h5>
+    <h5>Working on a new project soon?<br />Get another license here</h5>
     <span class="new-license-arrow"><i class="icon-down-open-big"></i></span>
   </div>
   <div class="toggle-content" style="display: none;">

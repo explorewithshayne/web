@@ -69,7 +69,7 @@ if (! class_exists('Mfn_Widget_Posts')) {
 				echo '<div class="Recent_posts '. esc_attr($instance['style']) .'">';
 					echo '<ul>';
 
-						$thumbnail_size = 'blog-navi';
+						$thumbnail_size = 'be_thumbnail';
 						if ($instance['style'] == 'blog_news') {
 							$thumbnail_size = 'blog-portfolio';
 						}

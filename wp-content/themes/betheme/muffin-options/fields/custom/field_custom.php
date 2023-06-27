@@ -33,6 +33,18 @@ class MFN_Options_custom extends Mfn_Options_field
 
 				echo wp_kses( $this->field['desc'], mfn_allowed_html('desc') );
 
+			} elseif ( 'performance' == $action ) {
+
+				echo '<span class="description">';
+					echo '<p><b>One click settings are recommended for most users.</b></p>';
+					echo '<p>Plese check your site after enabling this option and adjust settings below if necessery. Please remember that there are many server settings and plugins that may be incompatible with some options.</p>';
+				echo '</span>';
+
+				echo '<span class="description">';
+					echo '<a class="mfn-btn mfn-btn-blue performance-apply-enable" href=""><span class="btn-wrapper">'. __('Apply recommended settings', 'mfn-opts') .'</span></a>';
+					echo '<a class="mfn-btn performance-apply-disable" href=""><span class="btn-wrapper">'. __('Disable all', 'mfn-opts') .'</span></a>';
+				echo '</span>';
+
 			} else {
 
 				// default

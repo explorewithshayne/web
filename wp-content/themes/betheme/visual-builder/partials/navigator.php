@@ -9,13 +9,11 @@
 			</div>
 		</div>
 		<div class="options-group">
-			<a class="mfn-option-btn mfn-option-blank btn-large btn-modal-close btn-navigator-switcher" title="Close" href="#"><span class="mfn-icon mfn-icon-close"></span></a>
+			<a class="mfn-option-btn mfn-option-blank btn-large btn-modal-close btn-navigator-hide" title="Close" href="#"><span class="mfn-icon mfn-icon-close"></span></a>
 		</div>
 	</div>
 	<div class="modalbox-content" id="mfn-navigator-items">
-		<ul class="navigator-tree">
-			<?php $navigator = self::getNavigatorTree($this->post_id); if(!empty($navigator)) echo $navigator; ?>
-		</ul>
+		<ul class="navigator-tree"></ul>
         <div class="navigator-search mfn-form">
             <input class="mfn-form-control mfn-form-input mfn-navigator-search-input" type="text" placeholder="Search">
         </div>

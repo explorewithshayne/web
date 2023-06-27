@@ -218,6 +218,7 @@ body.content-brightness-dark {
 .woocommerce .mfn-product-gallery { display: flex; position: relative; }
 .woocommerce .mfn-product-gallery .flex-control-thumbs{display: none;}
 .woocommerce .mfn-product-gallery .mfn-flex-control-thumbs-wrapper .flex-control-thumbs  { display: flex; }
+.woocommerce .mfn-product-gallery .mfn-flex-control-thumbs-wrapper .flex-control-thumbs li{list-style:none}
 .woocommerce .mfn-product-gallery :not(.mfn-scroller-active) .flex-control-thumbs { transform: translate3d(0,0,0) !important; }
 
 .product-gallery-zoom .woocommerce-product-gallery__image[style]:hover a img {opacity:0}
@@ -864,6 +865,8 @@ body.content-brightness-dark {
 .input-brightness-dark .quantity a.quantity-change { color: rgba(255,255,255,.8); }
 .input-brightness-dark .quantity a:hover.quantity-change { background-color: rgba(255,255,255,.06); }
 
+.woocommerce .product.sold-individually .quantity{display:none}
+
 #wcpay-payment-request-wrapper{width:300px;margin:0 auto;margin-right:5px;padding-top:0!important}
 #wcpay-payment-request-button-separator{display:none}
 
@@ -912,6 +915,7 @@ body.content-brightness-dark {
 /* Cart button */
 .woocommerce .column_product_cart_button .cart { display: flex; margin-bottom: 0 !important; }
 .woocommerce .column_product_cart_button .cart .button { width: 100%; }
+.woocommerce .column_product_cart_button .cart .quantity{margin-right:10px}
 .woocommerce .column_product_cart_button .cart .quantity .input-text,
 .woocommerce #Content .column_product_cart_button .cart .button { font-size: 16px; line-height: 20px; padding: 15px 20px; }
 .mfn-cart-button-wrap .column_product_cart_button .cart{flex-wrap:wrap}
@@ -1734,3 +1738,8 @@ a:hover.mfn-woo-cart-link { display: block; text-align: center; margin-top: 15px
 #add_payment_method .checkout .col-2 h3#ship-to-different-address label input[type="checkbox"], .mfn-cart-step-2 .woocommerce .create-account label input[type="checkbox"], .woocommerce-cart .checkout .col-2 h3#ship-to-different-address label input[type="checkbox"], .woocommerce-checkout .checkout .col-2 h3#ship-to-different-address label input[type="checkbox"] {
   margin: -2px 8px 0 0 !important;
 }
+
+/* secondary image on hover fix */
+
+.image_frame .hover-secondary-image a{ display: flex; }
+.woocommerce ul.products .image_frame .hover-secondary-image a .image-secondary{ object-fit: cover; height: 100%; width: 100%; }

@@ -162,7 +162,7 @@ if ( ! class_exists( 'Mfn_Post_Type_Offer' ) ) {
 			switch ($column) {
 				case "offer_thumbnail":
 					if (has_post_thumbnail()) {
-						the_post_thumbnail('50x50');
+						the_post_thumbnail('thumbnail');
 					}
 					break;
 				case "offer_types":

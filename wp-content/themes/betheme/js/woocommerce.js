@@ -494,22 +494,23 @@ $( document.body ).on( 'added_to_cart', function( e ) {
         }
       });
 
+      if( window.location.search ){
+        if( $('.mfn-variations-wrapper ul.mfn-vr-options').length ){
+          const urlParams = new URLSearchParams(window.location.search);
+          $('.mfn-variations-wrapper ul.mfn-vr-options').each(function() {
+            let attr = $(this).attr('data-atr');
+            if( urlParams.get(attr) && typeof attr !== 'undefined' ){
+              if( $(this).find('li a[data-id="'+urlParams.get(attr)+'"]').length ) $(this).find('li a[data-id="'+urlParams.get(attr)+'"]').trigger('click');
+            }
+          });
+        }
+      }
+
       //$('.variations').hide();
 
     },
 
     triggerChange: function(atr, nval) {
-
-        //var cont = true;
-
-        if( !$('form.variations_form').length ) return;
-        //var attrData = JSON.parse($('form.variations_form').attr('data-product_variations'));
-
-        /*$('.woocommerce div.product form.cart .variations select').each(function() {
-            if( !$(this).val().length ) cont = false;
-        });*/
-
-        //if( !cont ) return;
 
         if( $('.mfn-vr-options li').length )
             $('.mfn-vr-options li a').css('opacity', '0.3');
@@ -518,7 +519,7 @@ $( document.body ).on( 'added_to_cart', function( e ) {
             $('.mfn-vr-select option').attr('disabled', 'true');
 
 
-        $('.woocommerce div.product form.cart .variations select option').each(function() {
+        $('.woocommerce form.variations_form.cart table.variations select option').each(function() {
             var val = $(this).attr('value');
             var attr_name = $(this).closest('select').attr('name');
 

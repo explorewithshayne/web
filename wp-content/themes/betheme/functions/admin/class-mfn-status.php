@@ -31,7 +31,7 @@ class Mfn_Status extends Mfn_API {
 
 		$title = __( 'System Status','mfn-opts' );
 
-		$this->page = add_submenu_page(
+		$page = add_submenu_page(
 			apply_filters('betheme_dynamic_slug', 'betheme'),
 			$title,
 			$title,
@@ -41,7 +41,7 @@ class Mfn_Status extends Mfn_API {
 		);
 
 		// Fires when styles are printed for a specific admin page based on $hook_suffix.
-		add_action( 'admin_print_styles-'. $this->page, array( $this, 'enqueue' ) );
+		add_action( 'admin_print_styles-'. $page, array( $this, 'enqueue' ) );
 
 	}
 
@@ -90,6 +90,8 @@ class Mfn_Status extends Mfn_API {
 			'language'				=> get_locale(),
 			'rtl'							=> is_rtl() ? 'RTL' : 'LTR',
 			'suhosin'					=> extension_loaded( 'suhosin' ),
+
+			'version_history' => get_site_option( 'betheme_updates_history' ),
 		);
 
 		$status = array(
@@ -107,6 +109,8 @@ class Mfn_Status extends Mfn_API {
 			'htaccess'				=> $this->wp_filesystem->is_writable($htaccess_path) && $this->wp_filesystem->is_readable($htaccess_path),
 
 			'siteurl'					=> false,
+			'https_home'			=> true,
+			'https_site'			=> true,
 			'wp_version'			=> version_compare( get_bloginfo( 'version' ), '5.0' ) >= 0,
 		);
 
@@ -123,6 +127,15 @@ class Mfn_Status extends Mfn_API {
 			if( $parse['home']['path'] == $parse['siteurl']['path'] ){
 				$status['siteurl'] = true;
 			}
+		}
+
+		// HTTPS
+
+		if( isset( $parse['home']['scheme'] ) && 'https' != $parse['home']['scheme'] ){
+			$status['https_home'] = false;
+		}
+		if( isset( $parse['siteurl']['scheme'] ) && 'https' != $parse['siteurl']['scheme'] ){
+			$status['https_site'] = false;
 		}
 
 		$this->data		= $data;

@@ -28,11 +28,6 @@
 
 		<custom-field action="translate">mfn-page-items</custom-field>
 
-		<custom-field action="copy-once">mfn-page-local-style</custom-field>
-		<custom-field action="copy-once">mfn-page-fonts</custom-field>
-		<custom-field action="copy">mfn_template_type</custom-field>
-		<custom-field action="copy">mfn_template_conditions</custom-field>
-
 		<custom-field action="copy-once">mfn-post-hide-content</custom-field>
 		<custom-field action="copy-once">mfn-post-layout</custom-field>
 
@@ -69,6 +64,90 @@
     <custom-field action="copy">mfn-post-author</custom-field>
     <custom-field action="copy">mfn-post-company</custom-field>
 
+		<custom-field action="copy-once">mfn-page-local-style</custom-field>
+		<custom-field action="copy-once">mfn-page-fonts</custom-field>
+
+		<custom-field action="copy">mfn_template_type</custom-field>
+		<custom-field action="copy-once">mfn_template_conditions</custom-field>
+
+		<custom-field action="copy-once">body_offset_header</custom-field>
+		<custom-field action="copy-once">header_width</custom-field>
+		<custom-field action="copy-once">header_content_on_submenu</custom-field>
+		<custom-field action="copy-once">header_content_on_submenu_color</custom-field>
+		<custom-field action="copy-once">header_content_on_submenu_blur</custom-field>
+		<custom-field action="copy-once">header_sticky</custom-field>
+		<custom-field action="copy-once">header_sticky_width</custom-field>
+		<custom-field action="copy-once">header_mobile</custom-field>
+		<custom-field action="copy-once">mobile_header_position</custom-field>
+		<custom-field action="copy-once">mobile_body_offset_header</custom-field>
+
+		<custom-field action="copy-once">footer_type</custom-field>
+
+		<custom-field action="copy-once">popup_position</custom-field>
+		<custom-field action="copy-once">popup_display</custom-field>
+		<custom-field action="copy-once">popup_display_delay</custom-field>
+		<custom-field action="copy-once">popup_display_scroll</custom-field>
+		<custom-field action="copy-once">popup_display_scroll_element</custom-field>
+		<custom-field action="copy-once">popup_entrance_animation</custom-field>
+		<custom-field action="copy-once">popup_display_visibility</custom-field>
+		<custom-field action="copy-once">popup_display_visibility_cookie_days</custom-field>
+		<custom-field action="copy-once">popup_display_referer</custom-field>
+		<custom-field action="copy-once">popup_hide</custom-field>
+		<custom-field action="copy-once">popup_hide_delay</custom-field>
+		<custom-field action="copy-once">popup_close_button_active</custom-field>
+		<custom-field action="copy-once">popup_close_button_display</custom-field>
+		<custom-field action="copy-once">popup_close_button_display_delay</custom-field>
+		<custom-field action="copy-once">popup_close_on_overlay_click</custom-field>
+		<custom-field action="copy-once">popup_width</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid.mfn-popup-tmpl-custom-width .mfn-popup-tmpl-content:width</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:height</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:height_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:height_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-popup-tmpl-offset</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-popup-tmpl-offset_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-popup-tmpl-offset_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content .mfn-popup-tmpl-content-wrapper:padding</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content .mfn-popup-tmpl-content-wrapper:padding_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content .mfn-popup-tmpl-content-wrapper:padding_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:border-radius</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:border-radius_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:border-radius_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:background-color</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:box-shadow</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid:z-index</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid|before:background-color</custom-field>
+		<custom-field action="copy-once">popup_overlay_blur</custom-field>
+		<custom-field action="copy-once">popup_close_button_align</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-exitbutton-size</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-exitbutton-size_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-exitbutton-size_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-exitbutton-font-size</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-exitbutton-font-size_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .mfn-popup-tmpl-content:--mfn-exitbutton-font-size_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:top</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:top_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:top_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:--mfn-exitbutton-offset-horizontal</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:--mfn-exitbutton-offset-horizontal_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:--mfn-exitbutton-offset-horizontal_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:border-radius</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:border-radius_tablet</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:border-radius_mobile</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:color</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs:background-color</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs|hover:color</custom-field>
+		<custom-field action="copy-once">style:#mfn-popup-template-postid .exit-mfn-popup-abs|hover:background-color</custom-field>
+
+		<custom-field action="copy-once">megamenu_width</custom-field>
+		<custom-field action="copy-once">megamenu_custom_width</custom-field>
+		<custom-field action="copy-once">megamenu_custom_position</custom-field>
+		<custom-field action="copy-once">style:#mfn-megamenu-postid:padding</custom-field>
+		<custom-field action="copy-once">style:#mfn-megamenu-postid:border-style</custom-field>
+		<custom-field action="copy-once">style:#mfn-megamenu-postid:border-color</custom-field>
+		<custom-field action="copy-once">style:#mfn-megamenu-postid:border-width</custom-field>
+		<custom-field action="copy-once">style:#mfn-megamenu-postid:border-radius</custom-field>
+		<custom-field action="copy-once">style:#mfn-megamenu-postid:background-color</custom-field>
+
 	</custom-fields>
 
 	<custom-fields-texts>
@@ -82,7 +161,7 @@
 					<key name="*">
 						<key name="items">
 							<key name="*">
-								<key name="fields">
+								<key name="attr">
 									<key name="address"/>
 									<key name="alt"/>
 									<key name="author"/>
@@ -454,6 +533,7 @@
 			<key name="construction-date"/>
 			<key name="construction-offset"/>
 			<key name="construction-contact"/>
+			<key name="construction-page"/>
 
 			<key name="footer-call-to-action"/>
 			<key name="footer-copy"/>
@@ -472,22 +552,25 @@
 			<key name="hook-content-after"/>
 			<key name="hook-bottom"/>
 
-			<key name="social-skype"/>
-			<key name="social-facebook"/>
-			<key name="social-googleplus"/>
-			<key name="social-twitter"/>
-			<key name="social-vimeo"/>
-			<key name="social-youtube"/>
-			<key name="social-flickr"/>
-			<key name="social-linkedin"/>
-			<key name="social-pinterest"/>
-			<key name="social-dribbble"/>
-			<key name="social-instagram"/>
-			<key name="social-behance"/>
-			<key name="social-tumblr"/>
-			<key name="social-vkontakte"/>
-			<key name="social-viadeo"/>
-			<key name="social-xing"/>
+			<key name="social-link">
+				<key name="skype"/>
+				<key name="facebook"/>
+				<key name="googleplus"/>
+				<key name="twitter"/>
+				<key name="vimeo"/>
+				<key name="youtube"/>
+				<key name="flickr"/>
+				<key name="linkedin"/>
+				<key name="pinterest"/>
+				<key name="dribbble"/>
+				<key name="instagram"/>
+				<key name="behance"/>
+				<key name="tumblr"/>
+				<key name="vkontakte"/>
+				<key name="viadeo"/>
+				<key name="xing"/>
+			</key>
+
 			<key name="social-custom-icon"/>
 			<key name="social-custom-link"/>
 

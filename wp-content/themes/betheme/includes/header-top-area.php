@@ -71,8 +71,8 @@ $translate['wpml-no'] = mfn_opts_get('translate') ? mfn_opts_get('translate-wpml
 							}
 
 							echo '<a class="responsive-menu-toggle '. esc_attr($mb_class) .'" href="#" aria-label="'. __('mobile menu', 'betheme') .'">';
-							if ($menu_text = trim(mfn_opts_get('header-menu-text'))) {
-								echo '<span>'. wp_kses($menu_text, mfn_allowed_html()) .'</span>';
+							if ( $menu_text = mfn_opts_get('header-menu-text') ) {
+								echo '<span>'. wp_kses( trim($menu_text), mfn_allowed_html()) .'</span>';
 							} else {
 								echo '<i class="icon-menu-fine" aria-hidden="true"></i>';
 							}
@@ -89,9 +89,11 @@ $translate['wpml-no'] = mfn_opts_get('translate') ? mfn_opts_get('translate-wpml
 					<?php mfn_wp_secondary_menu(); ?>
 				</div>
 
+				<?php if( !empty(mfn_opts_get('header-banner')) ): ?>
 				<div class="banner_wrapper">
 					<?php echo wp_kses_post(mfn_opts_get('header-banner')); ?>
 				</div>
+				<?php endif; ?>
 
 			</div>
 

@@ -202,10 +202,13 @@
 
     /* JUST FOR SHORTCODE EDITOR -- WHEN MOVING DOM, IT HAS TO BE RESTARTED */
 
-    $(document).on('mouseenter', '.form-group.mfn-pills-field .mfn-pills-input', function() {
-      if( !$(this).hasClass('mfn-initialized') ){
-        $(this).addClass('mfn-initialized');
-        init($(this).closest('.mfn-pills-field'));
+    $(document).on('be:edit', function() {
+      if( !$('.mfn-element-fields-wrapper .mfn-pills-field').hasClass('mfn-initialized') ){
+        $('.mfn-element-fields-wrapper .mfn-pills-field:not(.mfn-initialized)').each(function() {
+          $(this).addClass('mfn-initialized');
+          init($(this));
+        });
+        
       }
     })
 

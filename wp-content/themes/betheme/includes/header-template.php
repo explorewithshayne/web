@@ -9,6 +9,8 @@ $mfn_header_tmpl_mobile_pos = false;
 $mfn_header_offset_top_mobile = false;
 $mfn_header_tmpl_pos = get_post_meta($args['id'], 'header_position', true);
 $mfn_hasStickyHeader = get_post_meta($args['id'], 'header_sticky', true);
+$mfn_StickyHeaderWidth = get_post_meta($args['id'], 'header_sticky_width', true);
+$mfn_HeaderWidth = get_post_meta($args['id'], 'header_width', true);
 $mfn_hasMobileHeader = get_post_meta($args['id'], 'header_mobile', true);
 
 if($mfn_header_tmpl_pos) {
@@ -19,6 +21,10 @@ if($mfn_header_tmpl_pos) {
 
 if( !empty( $mfn_header_offset_top ) ) {
 	$mfn_header_tmpl_class[] = 'mfn-header-body-offset';
+}
+
+if( !empty( $mfn_HeaderWidth ) && $mfn_HeaderWidth == 'inherited' ){
+	$mfn_header_tmpl_class[] = 'mfn-header-layout-width';
 }
 
 if( !empty($mfn_header_content_anim) ) {
@@ -44,7 +50,10 @@ if( !empty($mfn_header_content_anim) ) {
 }
 
 // sticky
-if( !empty($mfn_hasStickyHeader) && $mfn_hasStickyHeader == 'enabled' ) $mfn_header_tmpl_class[] = 'mfn-hasSticky';
+if( !empty($mfn_hasStickyHeader) && $mfn_hasStickyHeader == 'enabled' ) {
+	$mfn_header_tmpl_class[] = 'mfn-hasSticky';
+	if( !empty($mfn_StickyHeaderWidth) && $mfn_StickyHeaderWidth == 'inherited' ) $mfn_header_tmpl_class[] = 'mfn-sticky-layout-width';
+}
 
 // mobile
 if( !empty($mfn_hasMobileHeader) && $mfn_hasMobileHeader == 'enabled' ) {

@@ -8,7 +8,7 @@
  * @link https://muffingroup.com
  */
 
-define('MFN_THEME_VERSION', '26.8.2');
+define('MFN_THEME_VERSION', '27.0.9');
 
 // theme related filters
 
@@ -28,18 +28,11 @@ defined('WHITE_LABEL') or define('WHITE_LABEL', false);
  * textdomain
  */
 
-load_theme_textdomain('betheme', get_template_directory() .'/languages'); // frontend
-load_theme_textdomain('mfn-opts', get_template_directory() .'/languages'); // admin panel
+add_action('after_setup_theme', 'mfn_load_theme_textdomain');
 
-/**
- * dynamic data
- */
-
-require_once(get_theme_file_path('/functions/modules/class-mfn-dynamic-data.php'));
-
-function be_dynamic_data($string, $post_id = false){
-	$mfndd = new MfnDynamicData();
-	return $mfndd->render($string, $post_id);
+function mfn_load_theme_textdomain(){
+	load_theme_textdomain('betheme', get_template_directory() .'/languages'); // frontend
+	load_theme_textdomain('mfn-opts', get_template_directory() .'/languages'); // admin panel
 }
 
 /**
@@ -53,6 +46,8 @@ require_once(get_theme_file_path('/muffin-options/theme-options.php'));
  */
 
 $theme_disable = mfn_opts_get('theme-disable');
+
+require_once(get_theme_file_path('/functions/modules/class-mfn-dynamic-data.php'));
 
 require_once(get_theme_file_path('/functions/theme-functions.php'));
 require_once(get_theme_file_path('/functions/theme-head.php'));

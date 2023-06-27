@@ -159,7 +159,7 @@ if ( ! class_exists( 'Mfn_Post_Type' ) ) {
 
 		  			foreach ( $this->fields['fields'] as $field ) {
 
-							if( empty( $field['type'] ) ){
+							if( empty( $field['type'] ) || $field['type'] == 'header' ) {
 
 								// row header
 
@@ -251,6 +251,13 @@ if ( ! class_exists( 'Mfn_Post_Type' ) ) {
  			if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
  				return $post_id;
  			}
+
+ 			// regenerate builder file
+
+			$builder_visibility = mfn_opts_get('builder-visibility');
+			if( empty( $builder_visibility ) || 'hide' !== $builder_visibility ){
+				MfnVisualBuilder::removeBeDataFile();
+			}
 
  			// check permissions
 

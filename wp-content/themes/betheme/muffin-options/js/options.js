@@ -460,6 +460,138 @@
     };
 
     /**
+     * Performance
+     * Uses 'perf' name because 'preformance' is reserved in JS
+     */
+
+    var perf = {
+
+      // perf.enable()
+
+      enable: function( $el ){
+
+        if ( confirm( "Apply recommended settings?" ) ) {
+
+          enableBeforeUnload();
+
+          var button_text = $el.text();
+
+          $el.addClass('loading');
+
+          // change options
+
+          $('#google-font-mode .form-control li:eq(1) a').trigger('click');
+
+          $('#lazy-load .form-control li:eq(1) a').trigger('click');
+          $('#srcset-limit .form-control li:eq(1) a').trigger('click');
+
+          $('#performance-assets-disable .form-control li:eq(0).active').trigger('click');
+          $('#performance-assets-disable .form-control li:eq(1).active').trigger('click');
+          $('#performance-assets-disable .form-control li:eq(2):not(.active)').trigger('click');
+          $('#performance-wp-disable .form-control li:not(.active)').trigger('click');
+
+          $('#jquery-location .form-control li:eq(1) a').trigger('click');
+          $('#css-location .form-control li:eq(0) a').trigger('click');
+          $('#local-styles-location .form-control li:eq(1) a').trigger('click');
+
+          $('#minify-css .form-control li:eq(1) a').trigger('click');
+          $('#minify-js .form-control li:eq(1) a').trigger('click');
+
+          $('#static-css .form-control li:eq(1) a').trigger('click');
+          $('#hold-cache .form-control li:eq(0) a').trigger('click');
+
+          // trigger ajax actions
+
+          setTimeout(function(){
+
+            $('#google-font-mode-regenerate .mfn-btn').attr('data-confirm',1).trigger('click');
+
+          },100);
+
+          // button
+
+          setTimeout(function(){
+
+            $el.removeClass('loading');
+            $('.btn-wrapper', $el).text('Downloading Google Fonts...');
+
+            setTimeout(function(){
+              $el.addClass('loading');
+
+              setTimeout(function(){
+                $el.removeClass('loading');
+                $('.btn-wrapper', $el).text('All done');
+
+                setTimeout(function(){
+                  $('.btn-wrapper', $el).text(button_text);
+                },2000);
+
+              },2000);
+
+            },2000);
+
+          },2000);
+
+        } else {
+          return false;
+        }
+
+      },
+
+      // perf.disable()
+
+      disable: function( $el ){
+
+        if ( confirm( "Disable all performance settings?" ) ) {
+
+          enableBeforeUnload();
+
+          var button_text = $el.text();
+
+          $el.addClass('loading');
+
+          // change options
+
+          $('#google-font-mode .form-control li:eq(0) a').trigger('click');
+
+          $('#lazy-load .form-control li:eq(0) a').trigger('click');
+          $('#srcset-limit .form-control li:eq(0) a').trigger('click');
+
+          $('#performance-assets-disable .form-control li.active').trigger('click');
+          $('#performance-wp-disable .form-control li.active').trigger('click');
+
+          $('#jquery-location .form-control li:eq(0) a').trigger('click');
+          $('#css-location .form-control li:eq(0) a').trigger('click');
+          $('#local-styles-location .form-control li:eq(0) a').trigger('click');
+
+          $('#minify-css .form-control li:eq(0) a').trigger('click');
+          $('#minify-js .form-control li:eq(0) a').trigger('click');
+
+          $('#static-css .form-control li:eq(0) a').trigger('click');
+          $('#hold-cache .form-control li:eq(0) a').trigger('click');
+
+          // button
+
+          setTimeout(function(){
+
+            $el.removeClass('loading');
+            $('.btn-wrapper', $el).text('All done');
+
+            setTimeout(function(){
+              $('.btn-wrapper', $el).text(button_text);
+            },2000);
+
+          },1000);
+
+        } else {
+          return false;
+        }
+
+      }
+
+    };
+
+    /**
      * Custom icons
      */
 
@@ -626,6 +758,17 @@
     };
 
     /**
+     * window.onbeforeunload
+     * Warn user before leaving web page with unsaved changes
+     */
+
+    var enableBeforeUnload = function() {
+      window.onbeforeunload = function(e) {
+        return 'The changes you made will be lost if you navigate away from this page';
+      };
+    };
+
+    /**
      * Survey
      * WordPress dashboard and Betheme dashboard
      */
@@ -651,6 +794,22 @@
         });
 
       });
+
+    };
+
+    /**
+     * Bind on load
+     */
+
+    var bindOnLoad = function() {
+
+      // onbeforeunload
+
+      setTimeout(function(){
+        $options.on( 'change', '.form-control input, .form-control select, .form-control textarea', function(){
+          enableBeforeUnload();
+        });
+      },100);
 
     };
 
@@ -729,6 +888,18 @@
         return backup.reset( $(this) );
       });
 
+      // performance
+
+      $( '.performance-apply-enable', $content ).on( 'click', function(e){
+        e.preventDefault();
+        perf.enable( $(this) ); // performance name is reverved
+      });
+
+      $( '.performance-apply-disable', $content ).on( 'click', function(e){
+        e.preventDefault();
+        perf.disable( $(this) ); // performance name is reverved
+      });
+
       // custom icons
 
       $( '.custom-icon-add', $content ).on( 'click', function(e){
@@ -763,6 +934,12 @@
 
       $(document).on('mfn:modal:close', function(){
         modal.close();
+      });
+
+      // disable onbeforeunload
+
+      $('form').on('submit', function() {
+        window.onbeforeunload = null;
       });
 
       // window.scroll
@@ -1012,7 +1189,7 @@
           $('.mfn-regenerate-thumbnails').text( 'Processing '+ Math.round(percent)+'%' );
         }
       });
-      
+
     }
 
     /**
@@ -1057,6 +1234,8 @@
 
       $(window).trigger('resize');
 
+      bindOnLoad();
+
     };
 
     /**
@@ -1093,6 +1272,7 @@
           var $btn = $(this),
               $tmpl = $('.mfn-modal.modal-template-type .select-template-type'),
               $name = $('.mfn-modal.modal-template-type .input-template-type-name'),
+              slug = $(this).attr('data-builder'),
               id = $('input#post_ID').val();
 
           $tmpl.removeClass('error');
@@ -1112,7 +1292,7 @@
               type: 'POST',
               success: function(response){
                 window.history.pushState("data", "Templates", 'edit.php?post_type=template');
-                window.location.href = 'post.php?post='+id+'&action=mfn-live-builder';
+                window.location.href = 'post.php?post='+id+'&action='+slug+'-live-builder';
               }
             });
           }else{

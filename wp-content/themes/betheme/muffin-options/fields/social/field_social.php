@@ -91,18 +91,20 @@ class MFN_Options_social extends Mfn_Options_field
 
     // order
 
-    if( ! empty( $this->value['order'] ) ){
+      if( ! empty( $this->value['order'] ) ){
 
-      $order = $this->value['order'];
-      $order = explode( ',', $order );
+        $order = $this->value['order'];
+        $order = explode( ',', $order );
 
-      $order = array_unique( array_merge( $order, array_keys( $socials ) ) );
+        $order = array_unique( array_merge( $order, array_keys( $socials ) ) );
 
-    } else {
+      } else {
 
-      $order = array_keys( $socials );
+        $order = array_keys( $socials );
 
-    }
+      }
+
+  
 
 		// output -----
 
@@ -167,7 +169,7 @@ class MFN_Options_social extends Mfn_Options_field
                 echo '<div class="drag"><i class="icon-arrow-combo"></i></div>';
                 echo '<div class="label" data-tooltip="'. esc_attr($desc) .'"><i class="'. esc_attr( $social['icon'] ) .'"></i> '. esc_html( $social['title'] ) .'</div>';
                 echo '<div class="form-control">';
-                  echo '<input class="mfn-form-control mfn-form-input" type="text" '. $this->get_name( $meta, $key ) .' value="\'+('.$js.' && typeof '.$js.'[\''.$key.'\'] !== \'undefined\' && '.$js.'[\''.$key.'\'].length ? '.$js.'[\''.$key.'\'] : "")+\'"/>';
+                  echo '<input class="mfn-form-control mfn-field-value mfn-form-input" type="text" '. $this->get_name( $meta, $key ) .' value="\'+('.$js.' && typeof '.$js.'[\''.$key.'\'] !== \'undefined\' && '.$js.'[\''.$key.'\'].length ? '.$js.'[\''.$key.'\'] : "")+\'"/>';
                 echo '</div>';
               echo '</li>';
 
@@ -177,7 +179,7 @@ class MFN_Options_social extends Mfn_Options_field
   	            echo '<div class="drag"><i class="icon-arrow-combo"></i></div>';
   	            echo '<div class="label" data-tooltip="'. esc_attr($desc) .'"><i class="'. esc_attr( $social['icon'] ) .'"></i> '. esc_html( $social['title'] ) .'</div>';
   	            echo '<div class="form-control">';
-  	              echo '<input class="mfn-form-control mfn-form-input" type="text" '. $this->get_name( $meta, $key ) .' value="'. esc_attr( $value ) .'"/>';
+  	              echo '<input class="mfn-form-control mfn-field-value mfn-form-input" type="text" '. $this->get_name( $meta, $key ) .' value="'. esc_attr( $value ) .'"/>';
   	            echo '</div>';
   	          echo '</li>';
 
@@ -189,7 +191,11 @@ class MFN_Options_social extends Mfn_Options_field
 
       echo '</ul>';
 
-      echo '<input type="hidden" class="social-order" '. $this->get_name( $meta, 'order' ) .' value="'. esc_attr( implode( ',', $order ) ) .'" />';
+      if( $js ){
+        echo '<input type="hidden" data-obj="order" class="social-order mfn-field-value" '. $this->get_name( $meta, 'order' ) .' value="\'+('.$js.' && typeof '.$js.'[\'order\'] !== \'undefined\' && '.$js.'[\'order\'].length ? '.$js.'[\'order\'] : "")+\'" />';
+      }else{
+        echo '<input type="hidden" data-obj="order" class="social-order mfn-field-value" '. $this->get_name( $meta, 'order' ) .' value="'. esc_attr( implode( ',', $order ) ) .'" />';
+      }
 
 		echo '</div>';
 

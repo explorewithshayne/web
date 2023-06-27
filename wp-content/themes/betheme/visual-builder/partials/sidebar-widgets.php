@@ -32,7 +32,7 @@ echo '<div class="panel panel-items" id="mfn-widgets-list">
     foreach($widgets as $w=>$widget){
     	if( isset($this->template_type) && $this->template_type == 'header' ){
     		// if header
-    		if($widget['cat'] == 'header' || in_array($w, array('column', 'button', 'heading', 'payment_methods', 'image', 'plain_text'))){
+    		if($widget['cat'] == 'header' || in_array($w, array('column', 'button', 'heading', 'payment_methods', 'image', 'plain_text', 'header_language_switcher'))){
 		    	echo '<li class="mfn-item-'.$w.' category-'.$widget['cat'].'" data-title="'.$widget['title'].'" data-type="'.$w.'"><a href="#"><div class="mfn-icon card-icon"></div><span class="title">'.$widget['title'].'</span></a></li>';
 		    }
     	}elseif( isset($this->template_type) && $this->template_type == 'megamenu' ){

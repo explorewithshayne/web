@@ -145,7 +145,7 @@
           return;
         }
 
-        if( $(e.target).is('.preview') ){
+        if( $(e.target).is('.preview') || $(e.target).is('.far') ){
           // just preview do nothing;
           return;
         }

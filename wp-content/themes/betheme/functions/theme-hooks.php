@@ -16,7 +16,7 @@ if( ! function_exists( 'mfn_hook_top' ) )
 	function mfn_hook_top()
 	{
 		echo '<!-- mfn_hook_top -->';
-			echo do_shortcode( mfn_opts_get( 'hook-top' ) );
+			echo do_shortcode( mfn_opts_get( 'hook-top' ) ?? '' );
 		echo '<!-- mfn_hook_top -->';
 	}
 }
@@ -31,7 +31,7 @@ if( ! function_exists( 'mfn_hook_content_before' ) )
 	function mfn_hook_content_before()
 	{
 		echo '<!-- mfn_hook_content_before -->';
-			echo do_shortcode( mfn_opts_get( 'hook-content-before' ) );
+			echo do_shortcode( mfn_opts_get( 'hook-content-before' ) ?? '' );
 		echo '<!-- mfn_hook_content_before -->';
 	}
 }
@@ -46,7 +46,7 @@ if( ! function_exists( 'mfn_hook_content_after' ) )
 	function mfn_hook_content_after()
 	{
 		echo '<!-- mfn_hook_content_after -->';
-			echo do_shortcode( mfn_opts_get( 'hook-content-after' ) );
+			echo do_shortcode( mfn_opts_get( 'hook-content-after' ) ?? '' );
 		echo '<!-- mfn_hook_content_after -->';
 	}
 }
@@ -61,7 +61,7 @@ if( ! function_exists( 'mfn_hook_bottom' ) )
 	function mfn_hook_bottom()
 	{
 		echo '<!-- mfn_hook_bottom -->';
-		echo do_shortcode( mfn_opts_get( 'hook-bottom' ) );
+		echo do_shortcode( mfn_opts_get( 'hook-bottom' ) ?? '' );
 		echo '<!-- mfn_hook_bottom -->';
 	}
 }

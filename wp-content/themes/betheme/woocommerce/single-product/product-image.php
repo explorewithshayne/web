@@ -13,7 +13,7 @@
  * @see 	    https://docs.woocommerce.com/document/template-structure/
  * @author 		WooThemes
  * @package 	WooCommerce/Templates
- * @version		3.5.1
+ * @version		7.8.0
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -119,6 +119,7 @@ $wrapper_classes   = apply_filters( 'woocommerce_single_product_image_gallery_cl
 	'woocommerce-product-gallery--' . ( $product->get_image_id() ? 'with-images' : 'without-images' ),
 	'woocommerce-product-gallery--columns-' . absint( $columns ),
 	'images',
+	'mfn-product-' . ( !empty( $product->get_gallery_image_ids() ) ? 'has-gallery' : 'hasnt-gallery' ),
 ) );
 $html = '';
 ?>

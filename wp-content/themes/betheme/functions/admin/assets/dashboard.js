@@ -218,7 +218,8 @@
 
         var nonce = $('input[name="mfn-tgmpa-nonce-update"]', $dashboard).val(),
           page = $el.data('page') || '',
-          plugin = $el.data('plugin') || '';
+          plugin = $el.data('plugin') || '',
+          path = $el.data('path') || '';
 
         if( ! plugin ){
           return;
@@ -232,6 +233,7 @@
             'action': 'mfn_setup_plugin_install',
             'page': page,
             'plugin': plugin,
+            'path': path,
             'tgmpa-update': 'update-plugin',
             'tgmpa-nonce': nonce,
           },

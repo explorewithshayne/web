@@ -47,7 +47,7 @@ if( ! function_exists( 'mfn_content_post' ) ){
 
 				// classes
 
-				$post_class = array('post-item','isotope-item','clearfix');
+				$post_class = array('post', 'post-item','isotope-item','clearfix');
 
 				if( ! mfn_post_thumbnail( get_the_ID() ) ){
 					$post_class[] = 'no-img';
