@@ -4,7 +4,7 @@ Donate link: https://ko-fi.com/iworks?utm_source=og&utm_medium=readme-donate
 Tags: OpenGraph, Open Graph, social, share, Facebook, meta, graph API, Twitter, social share, share links, meta headers, Pinterest
 Requires at least: 5.0
 Tested up to: 6.2
-Stable tag: 3.2.1
+Stable tag: 3.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -121,12 +121,26 @@ You can use the [Simple SEO Improvements](https://wordpress.org/plugins/simple-s
 - set facebook app_id
 - set twitter id
 
+***Experimental***
+
+You can use not supported meta tags:
+
+- `og:logo` - to turn on use `add_filter( 'allow_og_logo', '__return_true' )`.
+
 ***I need more!***
 
 Rich filter implementation allows you to change almost every output of this plugin, but this is for technicians: Learn more on the [OG Plugin Documentation Site](http://og.iworks.pl/).
 
 == Changelog ==
 
+= 3.2.3 (2023-06-09) =
+* Schema "tagline" has been set as the site slogan.
+
+= 3.2.2 (2023-05-30) =
+* The `og:logo` has been removed; it can be used with the filter `allow_og_logo`. See the FAQ for more details.
+* The `og_logo_size` filter has been added; it allows you to change the logo size; the default is "full".
+* The `get_site_logo()` function has been refactored.
+* Unnecessary trailing slashes have been removed. Props for [Oliver](https://wordpress.org/support/users/oliverraduner/)
 
 = 3.2.1 (2023-04-18) =
 * Added `og_image_size` filter to allow changing default image size in OpenGraph data. Props for [uk03](https://wordpress.org/support/users/uk03/).

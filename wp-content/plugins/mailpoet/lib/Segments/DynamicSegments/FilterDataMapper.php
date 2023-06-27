@@ -15,7 +15,10 @@ use MailPoet\Segments\DynamicSegments\Filters\MailPoetCustomFields;
 use MailPoet\Segments\DynamicSegments\Filters\SubscriberScore;
 use MailPoet\Segments\DynamicSegments\Filters\SubscriberSegment;
 use MailPoet\Segments\DynamicSegments\Filters\SubscriberSubscribedDate;
+use MailPoet\Segments\DynamicSegments\Filters\SubscriberSubscribedViaForm;
 use MailPoet\Segments\DynamicSegments\Filters\SubscriberTag;
+use MailPoet\Segments\DynamicSegments\Filters\SubscriberTextField;
+use MailPoet\Segments\DynamicSegments\Filters\WooCommerceAverageSpent;
 use MailPoet\Segments\DynamicSegments\Filters\WooCommerceCategory;
 use MailPoet\Segments\DynamicSegments\Filters\WooCommerceCountry;
 use MailPoet\Segments\DynamicSegments\Filters\WooCommerceMembership;
@@ -25,6 +28,7 @@ use MailPoet\Segments\DynamicSegments\Filters\WooCommercePurchaseDate;
 use MailPoet\Segments\DynamicSegments\Filters\WooCommerceSingleOrderValue;
 use MailPoet\Segments\DynamicSegments\Filters\WooCommerceSubscription;
 use MailPoet\Segments\DynamicSegments\Filters\WooCommerceTotalSpent;
+use MailPoet\Segments\DynamicSegments\Filters\WooCommerceUsedPaymentMethod;
 use MailPoet\WP\Functions as WPFunctions;
 
 class FilterDataMapper {
@@ -139,6 +143,34 @@ class FilterDataMapper {
           return intval($tagId);
         }, $data['tags']),
         'operator' => $data['operator'] ?? DynamicSegmentFilterData::OPERATOR_ANY,
+        'connect' => $data['connect'],
+      ]);
+    }
+    if ($data['action'] === SubscriberSubscribedViaForm::TYPE) {
+      if (!isset($data['form_ids']) || empty($data['form_ids'])) {
+        throw new InvalidFilterException('Missing at least one form ID', InvalidFilterException::MISSING_VALUE);
+      }
+      if (!isset($data['operator']) || !in_array($data['operator'], [DynamicSegmentFilterData::OPERATOR_ANY, DynamicSegmentFilterData::OPERATOR_NONE])) {
+        throw new InvalidFilterException('Missing valid operator', InvalidFilterException::MISSING_VALUE);
+      }
+      return new DynamicSegmentFilterData(DynamicSegmentFilterData::TYPE_USER_ROLE, $data['action'], [
+        'form_ids' => array_map(function($formId) {
+          return intval($formId);
+        }, $data['form_ids']),
+        'operator' => $data['operator'],
+        'connect' => $data['connect'],
+      ]);
+    }
+    if (in_array($data['action'], SubscriberTextField::TYPES)) {
+      if (empty($data['value'])) throw new InvalidFilterException('Missing value', InvalidFilterException::MISSING_VALUE);
+      if (empty($data['operator'])) throw new InvalidFilterException('Missing operator', InvalidFilterException::MISSING_VALUE);
+      if (!in_array($data['operator'], SubscriberTextField::OPERATORS)) {
+        throw new InvalidFilterException('Invalid operator', InvalidFilterException::MISSING_VALUE);
+      }
+      return new DynamicSegmentFilterData(DynamicSegmentFilterData::TYPE_USER_ROLE, $data['action'], [
+        'value' => $data['value'],
+        'operator' => $data['operator'],
+        'action' => $data['action'],
         'connect' => $data['connect'],
       ]);
     }
@@ -270,6 +302,30 @@ class FilterDataMapper {
     } elseif ($data['action'] === WooCommercePurchaseDate::ACTION) {
       $filterData['operator'] = $data['operator'];
       $filterData['value'] = $data['value'];
+    } elseif ($data['action'] === WooCommerceAverageSpent::ACTION) {
+      if (
+        !isset($data['average_spent_type'])
+        || !isset($data['average_spent_amount']) || $data['average_spent_amount'] < 0
+        || !isset($data['average_spent_days']) || $data['average_spent_days'] < 1
+      ) {
+        throw new InvalidFilterException('Missing required fields', InvalidFilterException::MISSING_AVERAGE_SPENT_FIELDS);
+      }
+      $filterData['average_spent_days'] = $data['average_spent_days'];
+      $filterData['average_spent_amount'] = $data['average_spent_amount'];
+      $filterData['average_spent_type'] = $data['average_spent_type'];
+    } elseif ($data['action'] === WooCommerceUsedPaymentMethod::ACTION) {
+      if (!isset($data['operator']) || !in_array($data['operator'], WooCommerceUsedPaymentMethod::VALID_OPERATORS, true)) {
+        throw new InvalidFilterException('Missing operator', InvalidFilterException::MISSING_OPERATOR);
+      }
+      if (!isset($data['payment_methods']) || !is_array($data['payment_methods']) || empty($data['payment_methods'])) {
+        throw new InvalidFilterException('Missing payment gateways', InvalidFilterException::MISSING_VALUE);
+      }
+      if (!isset($data['used_payment_method_days']) || intval($data['used_payment_method_days']) < 1) {
+        throw new InvalidFilterException('Missing days', InvalidFilterException::MISSING_VALUE);
+      }
+      $filterData['operator'] = $data['operator'];
+      $filterData['payment_methods'] = $data['payment_methods'];
+      $filterData['used_payment_method_days'] = intval($data['used_payment_method_days']);
     } else {
       throw new InvalidFilterException("Unknown action " . $data['action'], InvalidFilterException::MISSING_ACTION);
     }

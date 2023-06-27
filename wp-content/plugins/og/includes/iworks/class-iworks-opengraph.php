@@ -1,7 +1,7 @@
 <?php
 class iWorks_OpenGraph {
 	private $youtube_meta_name = 'iworks_yt_thumbnails';
-	private $version           = '3.2.1';
+	private $version           = '3.2.3';
 	private $debug             = false;
 	private $locale            = null;
 
@@ -19,7 +19,7 @@ class iWorks_OpenGraph {
 	 */
 	private $schema_org_mapping = array(
 		'name'          => array( 'og', 'title' ),
-		'headline'      => array( 'og', 'title' ),
+		'headline'      => array( 'og', 'blogdescription' ),
 		'description'   => array( 'og', 'description' ),
 		'datePublished' => array( 'article', 'published_time' ),
 		'dateModified'  => array( 'article', 'modified_time' ),
@@ -903,6 +903,15 @@ class iWorks_OpenGraph {
 					}
 				}
 			}
+			/**
+			 * site slogan
+			 *
+			 * @since 3.2.3
+			 */
+			$og['schema']['tagline'] = apply_filters(
+				'og_schema_tagline',
+				get_option( 'blogdescription' )
+			);
 		}
 		/**
 		 * Produce image extra tags
@@ -922,7 +931,7 @@ class iWorks_OpenGraph {
 				 */
 				if ( apply_filters( 'og_head_link_rel_image_src_enabled', true ) ) {
 					printf(
-						'<link rel="image_src" href="%s" />%s',
+						'<link rel="image_src" href="%s">%s',
 						esc_url( $tmp_src ),
 						$this->debug ? PHP_EOL : ''
 					);
@@ -936,7 +945,7 @@ class iWorks_OpenGraph {
 				 */
 				if ( apply_filters( 'og_head_meta_title_image_enabled', true ) ) {
 					printf(
-						'<meta name="msapplication-TileImage" content="%s" />%s',
+						'<meta name="msapplication-TileImage" content="%s">%s',
 						esc_url( $tmp_src ),
 						$this->debug ? PHP_EOL : ''
 					);
@@ -1023,14 +1032,12 @@ class iWorks_OpenGraph {
 				/**
 				 * og:logo exception
 				 *
-				 * @since 3.2.0
+				 * @since 3.2.2
 				 */
-				if (
-					2 === count( $parent )
-					&& 'og' === $parent[0]
-					&& 'logo' === $parent[1]
-				) {
-					$this->echo_one_with_array_of_params( $parent, $data );
+				if ( 'logo' === $tag ) {
+					if ( ! empty( $data['content'] ) ) {
+						$this->echo_one_with_array_of_params( array( 'og', $tag ), $data );
+					}
 				} else {
 					$this->echo_array( $data, $tags );
 				}
@@ -1085,7 +1092,7 @@ class iWorks_OpenGraph {
 		echo apply_filters(
 			$filter_name,
 			sprintf(
-				'<meta property="%s" %s />%s',
+				'<meta property="%s" %s>%s',
 				esc_attr( $meta_property ),
 				implode( ' ', $attrs ),
 				$this->debug ? PHP_EOL : ''
@@ -1134,7 +1141,7 @@ class iWorks_OpenGraph {
 		echo apply_filters(
 			$filter_name,
 			sprintf(
-				'<meta %s="%s" content="%s" />%s',
+				'<meta %s="%s" content="%s">%s',
 				esc_attr( $name ),
 				esc_attr( $meta_property ),
 				esc_attr( strip_tags( $value ) ),
@@ -1607,29 +1614,22 @@ class iWorks_OpenGraph {
 	 * @since 3.2.0
 	 */
 	public function get_site_logo() {
-		$logos = array();
-		$sizes = apply_filters(
-			'og_logo_sizes',
-			array(
-				128,
-				236,
-				512,
-				1024,
-			)
-		);
-		$last  = null;
-		foreach ( $sizes as $size ) {
-			$url = get_site_icon_url( $size );
-			if ( $last === $url ) {
-				continue;
-			}
-			$logos[] = array(
-				'content' => $url,
-				'size'    => sprintf( '%1$dx%1$d', $size ),
-			);
-			$last    = $url;
+		if ( ! apply_filters( 'allow_og_logo', false ) ) {
+			return;
 		}
-		return $logos;
+		$logo_id = get_theme_mod( 'custom_logo' );
+		if ( empty( $logo_id ) ) {
+			return;
+		}
+		$logo     = wp_get_attachment_metadata( $logo_id );
+		$logo_src = wp_get_attachment_image_src( $logo_id, apply_filters( 'og_logo_size', 'full' ) );
+		if ( empty( $logo_src ) ) {
+			return;
+		}
+		return array(
+			'content' => $logo_src[0],
+			'size'    => sprintf( '%dx%d', $logo['width'], $logo['height'] ),
+		);
 	}
 
 }

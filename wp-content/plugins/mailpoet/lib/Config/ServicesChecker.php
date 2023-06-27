@@ -136,6 +136,11 @@ class ServicesChecker {
     return false;
   }
 
+  public function isBundledSubscription(): bool {
+    $subscriptionType = $this->settings->get(Bridge::SUBSCRIPTION_TYPE_SETTING_NAME);
+    return $subscriptionType === Bridge::WPCOM_BUNDLE_SUBSCRIPTION_TYPE;
+  }
+
   public function isMailPoetAPIKeyPendingApproval(): bool {
     $mssActive = Bridge::isMPSendingServiceEnabled();
     $mssKeyValid = $this->isMailPoetAPIKeyValid();

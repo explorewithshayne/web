@@ -28,6 +28,8 @@ $rs_image_meta_todo		 = get_option('rs_image_meta_todo', array());
 $rs_slider_update_needed = $rsupd->slider_need_update_checks();
 $rs_global_settings		 = $rsaf->get_global_settings();
 $rs_notices				 = $rsaf->add_notices();
+$rs_tutorial			 = $rsaf->get_addition(array('templates', 'tutorials'));
+$rs_tutorial_bottom		 = $rsaf->get_addition(array('templates', 'bottom'));
 $rs_color_picker_presets = RSColorpicker::get_color_presets();
 $rs_compression			 = $rsaf->compression_settings();
 $rs_backend_fonts		 = $rsaf->get_font_familys();
@@ -66,6 +68,7 @@ $rs_show_deregister_popup = $rsaf->_truefalse(get_option('revslider-deregister-p
 	RVS.ENV.activated		= <?php echo ($rsaf->_truefalse($rs_valid) === true) ? 'true' : 'false'; ?>;
 	RVS.ENV.nonce			= '<?php echo wp_create_nonce('revslider_actions'); ?>';
 	RVS.ENV.plugin_dir		= 'revslider';
+	RVS.ENV.ajax_pre		= 'rs';
 	RVS.ENV.slug_path		= '<?php echo str_replace(array("\n", "\r"), '', RS_PLUGIN_SLUG_PATH); ?>';
 	RVS.ENV.slug			= '<?php echo str_replace(array("\n", "\r"), '', RS_PLUGIN_SLUG); ?>';
 	RVS.ENV.plugin_url		= '<?php echo str_replace(array("\n", "\r"), '', RS_PLUGIN_URL); ?>';
@@ -114,6 +117,10 @@ $rs_show_deregister_popup = $rsaf->_truefalse(get_option('revslider-deregister-p
 	RVS.ENV.newTemplatesAmount = '<?php echo $rs_new_temp_counter; ?>';
 	RVS.ENV.deregisterPopup	= <?php echo ($rs_show_deregister_popup) ? 'true' : 'false'; ?>;
 	RVS.ENV.tracking		= '<?php echo $rstrack->get_status(); ?>';
+	RVS.ENV.guide			= {
+		tutorial:		<?php echo (!empty($rs_tutorial)) ? 'JSON.parse('. $rsaf->json_encode_client_side($rs_tutorial) .')' : '[]'; ?>,
+		bottom:			<?php echo (!empty($rs_tutorial_bottom)) ? 'JSON.parse('. $rsaf->json_encode_client_side($rs_tutorial_bottom) .')' : '[]'; ?>
+	};
 	
 	<?php
 	if($rs_slider_update_needed == true){

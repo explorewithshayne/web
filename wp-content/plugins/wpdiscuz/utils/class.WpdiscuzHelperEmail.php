@@ -112,6 +112,9 @@ class WpdiscuzHelperEmail implements WpDiscuzConstants {
             $message = str_replace("[CANCEL_URL]", $unsubscribe_url, $message);
         }
 
+	    $subject = apply_filters("wpdiscuz_confirm_email_subject", $subject, $postId, $email);
+	    $message = apply_filters("wpdiscuz_confirm_email_content", $message, $postId, $email);
+
         $headers = [];
         $fromName = html_entity_decode($blogTitle, ENT_QUOTES);
         $parsedUrl = parse_url($siteUrl);
@@ -138,7 +141,6 @@ class WpdiscuzHelperEmail implements WpDiscuzConstants {
             return;
         }
         if ($sendMail) {
-            $message = apply_filters("wpdiscuz_email_content", $message, $comment, $emailData);
             $unsubscribeUrl = get_permalink($comment->comment_post_ID);
             $unsubscribeUrl = $unsubscribeUrl . (parse_url($unsubscribeUrl, PHP_URL_QUERY) ? "&" : "?");
             $unsubscribeUrl .= "wpdiscuzUrlAnchor&wpdiscuzSubscribeID=" . $emailData["id"] . "&key=" . $emailData["activation_key"] . "&#wc_unsubscribe_message";
@@ -160,11 +162,15 @@ class WpdiscuzHelperEmail implements WpDiscuzConstants {
 
             $subject = str_replace(["[BLOG_TITLE]", "[POST_TITLE]", "[COMMENT_AUTHOR]"], [$blogTitle, $postTitle, $commentAuthor], $subject);
 
+
             if (strpos($message, "[UNSUBSCRIBE_URL]") === false) {
                 $message .= "<br/><br/><a href='$unsubscribeUrl'>" . $this->options->getPhrase("wc_unsubscribe") . "</a>";
             } else {
                 $message = str_replace("[UNSUBSCRIBE_URL]", $unsubscribeUrl, $message);
             }
+
+	        $subject = apply_filters("wpdiscuz_email_subject", $subject, $comment, $emailData);
+	        $message = apply_filters("wpdiscuz_email_content", $message, $comment, $emailData);
 
             $headers = [];
             $fromName = html_entity_decode($blogTitle, ENT_QUOTES);

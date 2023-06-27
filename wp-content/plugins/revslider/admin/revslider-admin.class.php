@@ -532,7 +532,8 @@ class RevSliderAdmin extends RevSliderFunctionsAdmin {
 		add_action('save_post', array($this, 'on_save_post'));
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_styles'));
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-		add_action('wp_ajax_revslider_ajax_action', array($this, 'do_ajax_action')); //ajax response to save slider options.
+		add_action('wp_ajax_revslider_ajax_action', array($this, 'do_ajax_action')); //owasp rule may disallow this one, so please use rs_ajax_action instead
+		add_action('wp_ajax_rs_ajax_action', array($this, 'do_ajax_action')); //ajax response to save slider options.
 		add_action('wp_ajax_revslider_ajax_call_front', array($this, 'do_front_ajax_action'));
 		add_action('wp_ajax_nopriv_revslider_ajax_call_front', array($this, 'do_front_ajax_action')); //for not logged in users
 		
@@ -711,6 +712,7 @@ class RevSliderAdmin extends RevSliderFunctionsAdmin {
 			RVS.ENV.nonce			= '<?php echo wp_create_nonce('revslider_actions'); ?>';
 			RVS.ENV.slug			= '<?php echo RS_PLUGIN_SLUG; ?>';
 			RVS.ENV.plugin_dir		= 'revslider';
+			RVS.ENV.ajax_pre		= 'rs';
 		</script>
 		<!-- WAIT A MINUTE OVERLAY CONTAINER -->
 		<div id="waitaminute" class="_TPRB_">
@@ -1597,20 +1599,47 @@ class RevSliderAdmin extends RevSliderFunctionsAdmin {
 					}
 					
 					$obj = array(
-						'id' => $slider_id,
-						'alias' => $slider->get_alias(),
-						'title' => $slider->get_title(),
-						'slider_params' => $slider->get_params(),
-						'slider_settings' => $slider->get_settings(),
-						'slides' => $_slides,
-						'static_slide' => $_static_slide,
+						'id'				=> $slider_id,
+						'alias'				=> $slider->get_alias(),
+						'title'				=> $slider->get_title(),
+						'slider_params' 	=> $slider->get_params(),
+						'slider_settings'	=> $slider->get_settings(),
+						'slides'			=> $_slides,
+						'static_slide'		=> $_static_slide,
 					);
+
+					$uid = $this->get_val($obj, array('slider_params', 'uid'));
+					if(!empty($uid)){
+						$templates		= new RevSliderTemplate();
+						$rslb			= RevSliderGlobals::instance()->get('RevSliderLoadBalancer');
+						$temp_url		= $rslb->get_url('templates', 0, true).'/'.$templates->templates_server_path;
+						$defaults		= $this->get_addition(array('templates', 'guide'));
+						
+						$template_data	= $templates->get_tp_template_sliders($uid);
+						if(!empty($template_data)){
+							foreach($template_data as $data){
+								$title			= $this->get_val($data, 'guide_title');
+								$url			= $this->get_val($data, 'guide_url');
+								$img			= $this->get_val($data, 'guide_img');
+								$template_img	= $this->get_val($data, 'img');
+								$obj['guide'] = array(
+									'title'			=> (empty($title)) ? $this->get_val($defaults, 'title') : $title,
+									'url'			=> (empty($url)) ? $this->get_val($defaults, 'url') : $url,
+									'img'			=> (empty($img)) ? $this->get_val($defaults, 'img') : $temp_url.'/'.$img,
+									'template_img'	=> (empty($template_img)) ? $this->get_val($defaults, 'img') : $template_img,
+									'template_title'=> $this->get_val($data, 'title'),
+								);
+
+								break;
+							}
+						}
+					}
 
 					$this->ajax_response_data($obj);
 				break;
 				case 'load_builder':
 					ob_start();
-					require_once RS_PLUGIN_PATH . 'admin/views/builder.php';
+					require_once(RS_PLUGIN_PATH . 'admin/views/builder.php');
 					$builder = ob_get_contents();
 					ob_clean();
 					ob_end_clean();

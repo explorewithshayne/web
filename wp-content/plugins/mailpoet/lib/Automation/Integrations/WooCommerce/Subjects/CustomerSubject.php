@@ -5,9 +5,11 @@ namespace MailPoet\Automation\Integrations\WooCommerce\Subjects;
 if (!defined('ABSPATH')) exit;
 
 
+use MailPoet\Automation\Engine\Data\Field;
 use MailPoet\Automation\Engine\Data\Subject as SubjectData;
 use MailPoet\Automation\Engine\Integration\Payload;
 use MailPoet\Automation\Engine\Integration\Subject;
+use MailPoet\Automation\Integrations\WooCommerce\Fields\CustomerFieldsFactory;
 use MailPoet\Automation\Integrations\WooCommerce\Payloads\CustomerPayload;
 use MailPoet\NotFoundException;
 use MailPoet\Validator\Builder;
@@ -17,8 +19,16 @@ use MailPoet\Validator\Schema\ObjectSchema;
  * @implements Subject<CustomerPayload>
  */
 class CustomerSubject implements Subject {
-
   const KEY = 'woocommerce:customer';
+
+  /** @var CustomerFieldsFactory */
+  private $customerFieldsFactory;
+
+  public function __construct(
+    CustomerFieldsFactory $customerFieldsFactory
+  ) {
+    $this->customerFieldsFactory = $customerFieldsFactory;
+  }
 
   public function getName(): string {
     return __('WooCommerce customer', 'mailpoet');
@@ -36,6 +46,9 @@ class CustomerSubject implements Subject {
 
   public function getPayload(SubjectData $subjectData): Payload {
     $id = $subjectData->getArgs()['customer_id'];
+    if (!$id) {
+      return new CustomerPayload(null);
+    }
     $customer = new \WC_Customer($id);
     if (!$customer->get_id()) {
       // translators: %d is the ID of the customer.
@@ -44,7 +57,8 @@ class CustomerSubject implements Subject {
     return new CustomerPayload($customer);
   }
 
+  /** @return Field[] */
   public function getFields(): array {
-    return [];
+    return $this->customerFieldsFactory->getFields();
   }
 }

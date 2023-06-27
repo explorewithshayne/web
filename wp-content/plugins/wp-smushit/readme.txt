@@ -1,13 +1,13 @@
 === Smush - Lazy Load Images, Optimize & Compress Images ===
 Plugin Name: Smush - Lazy Load Images, Optimize & Compress Images
-Version: 3.12.6
+Version: 3.13.1
 Author: WPMU DEV
 Author URI: https://wpmudev.com/
 Contributors: WPMUDEV, alexdunae
 Tags: optimize images, convert webp, lazy load, resize images, compress images, webp, performance, optimization, photography, optimizer, image optimizer, image compress, image optimize, webp format
 Requires at least: 5.3
 Tested up to: 6.2
-Stable tag: 3.12.6
+Stable tag: 3.13.1
 Requires PHP: 5.6
 License: GPL v2 - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -195,11 +195,31 @@ It depends what side of the pond you live on...but whether you say optimize, opt
 
 == Changelog ==
 
-= 3.12.6 ( 2023-09-22 ) =
+= 3.13.1 ( 2023-06-13 ) =
+- Improvement: Better memory management during scans
+- Fix: Dot added to file path when year and month directories disabled
+- Fix: Compatibility issue with WP.com
+- Fix: Rename config functionality not working
+- Fix: Compatibility issue with WP Offload Media
+- Fix: PHP warnings
+- Fix: Duplicate query
+
+= 3.13.0 ( 2023-05-30 ) =
+- New: Scan for detecting changes in the media library
+- Improvement: Performance improvements on large sites
+- Improvement: Code refactoring
+- Fix: PHP warnings and notices
+- Fix: Missing comments for translation strings that have placeholders in them
+- Fix: Compatibility issues with WP Offload Media
+- Fix: Timeout on Smush pages when there are more than 200k images
+- Fix: Images incorrectly marked as requiring resmush
+- Fix: Ignore link stuck in Grid Layout mode in the media library
+
+= 3.12.6 ( 2023-03-09 ) =
 - Enhance: Compatibility with WordPress 6.2.
 - Fix: Upgrade modal reappears after closing
 
-= 3.12.5 ( 2023-02-22 ) =
+= 3.12.5 ( 2023-01-18 ) =
 - Fix: CDN notice issue
 - Fix: PHP 8.2 compatibility warnings
 - Fix: Smush acting as free on staging
@@ -219,17 +239,17 @@ It depends what side of the pond you live on...but whether you say optimize, opt
 
 = 3.12.0 ( 2022-10-11 )
 - New: Bulk smush images in the background!
-- New: 50 images limit removed for free users
+- New: Revised limits on bulk image optimization
 - New: Better GDPR compliance by replacing Google fonts with Bunny fonts
 - New: Filter on media library page to view media items with errors
 - New: Option to receive an email once bulk smush is complete
 - Fix: Some images incorrectly selected for resmush
 - Fix: Database error while converting PNG to JPG on WordPress 6.1 Beta
 
-= 3.11.1 ( 2022-08-22 ) =
+= 3.11.1 ( 2022-08-19 ) =
 - Fix: Fallback to sequential processing when parallel processing not possible
 
-= 3.11.0 ( 2022-08-22 ) =
+= 3.11.0 ( 2022-08-11 ) =
 - New: Smush all image sizes in parallel for improved performance
 - Improvement: Code improvements
 

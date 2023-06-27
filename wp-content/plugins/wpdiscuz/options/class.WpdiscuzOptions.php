@@ -1197,7 +1197,7 @@ class WpdiscuzOptions implements WpDiscuzConstants {
         $jsArgs["is_user_logged_in"] = is_user_logged_in();
         $jsArgs["commentListLoadType"] = $this->thread_display["commentListLoadType"];
         $jsArgs["commentListUpdateType"] = $this->live["commentListUpdateType"];
-        $jsArgs["commentListUpdateTimer"] = $this->live["commentListUpdateTimer"];
+        $jsArgs["commentListUpdateTimer"] = apply_filters('wpdiscuz_commentlist_liveupdate_timer', $this->live["commentListUpdateTimer"]);
         $jsArgs["liveUpdateGuests"] = $this->live["liveUpdateGuests"];
         $jsArgs["wordpressThreadCommentsDepth"] = $this->wp["threadCommentsDepth"];
         $jsArgs["wordpressIsPaginate"] = $this->wp["isPaginate"];

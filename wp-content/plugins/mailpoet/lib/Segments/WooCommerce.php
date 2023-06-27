@@ -9,13 +9,14 @@ use MailPoet\Config\Env;
 use MailPoet\Config\SubscriberChangesNotifier;
 use MailPoet\Entities\SubscriberEntity;
 use MailPoet\Entities\SubscriberSegmentEntity;
-use MailPoet\Models\ModelValidator;
+use MailPoet\Services\Validator;
 use MailPoet\Settings\SettingsController;
 use MailPoet\Subscribers\Source;
 use MailPoet\Subscribers\SubscriberSaveController;
 use MailPoet\Subscribers\SubscriberSegmentRepository;
 use MailPoet\Subscribers\SubscribersRepository;
 use MailPoet\WooCommerce\Helper as WCHelper;
+use MailPoet\WooCommerce\Subscription;
 use MailPoet\WP\Functions as WPFunctions;
 use MailPoetVendor\Carbon\Carbon;
 use MailPoetVendor\Doctrine\DBAL\Connection;
@@ -61,6 +62,9 @@ class WooCommerce {
   /** @var SubscriberChangesNotifier */
   private $subscriberChangesNotifier;
 
+  /** @var Validator */
+  private $validator;
+
   public function __construct(
     SettingsController $settings,
     WPFunctions $wp,
@@ -72,7 +76,8 @@ class WooCommerce {
     WP $wpSegment,
     EntityManager $entityManager,
     Connection $connection,
-    SubscriberChangesNotifier $subscriberChangesNotifier
+    SubscriberChangesNotifier $subscriberChangesNotifier,
+    Validator $validator
   ) {
     $this->settings = $settings;
     $this->wp = $wp;
@@ -85,6 +90,7 @@ class WooCommerce {
     $this->entityManager = $entityManager;
     $this->connection = $connection;
     $this->subscriberChangesNotifier = $subscriberChangesNotifier;
+    $this->validator = $validator;
   }
 
   public function shouldShowWooCommerceSegment(): bool {
@@ -135,7 +141,8 @@ class WooCommerce {
         $subscriber = $this->subscriberSaveController->createOrUpdate($data, $subscriber);
         // add subscriber to the WooCommerce Customers segment when relation doesn't exist
         $subscriberSegment = $this->subscriberSegmentRepository->findOneBy(['subscriber' => $subscriber, 'segment' => $wcSegment]);
-        if (!$subscriberSegment) {
+
+        if (!$subscriberSegment && $this->shouldSubscribeToWooSegment()) {
           $this->subscriberSegmentRepository->subscribeToSegments(
             $subscriber,
             [$wcSegment]
@@ -145,6 +152,17 @@ class WooCommerce {
     }
 
     return true;
+  }
+
+  /**
+   * Should subscribe to the Woo segment when creating a new woo customer and not on checkout
+   * or when on checkout and MailPoet subscribe optin is enabled and checked.
+   */
+  protected function shouldSubscribeToWooSegment(): bool {
+    $checkoutOptinEnabled = (bool)$this->settings->get(Subscription::OPTIN_ENABLED_SETTING_NAME);
+    $checkoutOptinChecked = !empty($_POST[Subscription::CHECKOUT_OPTIN_INPUT_NAME]);
+
+    return !$this->woocommerceHelper->isCheckoutRequest() || ($checkoutOptinEnabled && $checkoutOptinChecked);
   }
 
   public function synchronizeGuestCustomer(int $orderId): void {
@@ -250,11 +268,9 @@ class WooCommerce {
   }
 
   private function insertSubscriberFromOrder(\WC_Order $wcOrder, string $status): ?string {
-    $validator = new ModelValidator();
-
     $email = $wcOrder->get_billing_email();
 
-    if (!$email || !$validator->validateEmail($email)) {
+    if (!$email || !$this->validator->validateEmail($email)) {
       return null;
     }
 
@@ -267,7 +283,6 @@ class WooCommerce {
    */
   private function insertSubscribersFromOrders(int $lastProcessedOrderId, int $batchSize): array {
     global $wpdb;
-    $validator = new ModelValidator();
 
     $parameters = [
       'lowestOrderId' => $lastProcessedOrderId,
@@ -297,7 +312,7 @@ class WooCommerce {
 
     $processedOrders = [];
     foreach ($result as $item) {
-      if (!$validator->validateEmail($item['email'])) {
+      if (!$this->validator->validateEmail($item['email'])) {
         continue;
       }
       // because data in result are sorted by id, we can replace the previous order id

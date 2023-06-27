@@ -9,18 +9,17 @@ use MailPoet\Config\SubscriberChangesNotifier;
 use MailPoet\DI\ContainerWrapper;
 use MailPoet\Entities\SegmentEntity;
 use MailPoet\Entities\SubscriberEntity;
-use MailPoet\Models\ModelValidator;
 use MailPoet\Models\Segment;
 use MailPoet\Models\Subscriber;
 use MailPoet\Models\SubscriberSegment;
 use MailPoet\Newsletter\Scheduler\WelcomeScheduler;
+use MailPoet\Services\Validator;
 use MailPoet\Settings\SettingsController;
 use MailPoet\Subscribers\ConfirmationEmailMailer;
 use MailPoet\Subscribers\Source;
 use MailPoet\Subscribers\SubscriberSegmentRepository;
 use MailPoet\Subscribers\SubscribersRepository;
 use MailPoet\WooCommerce\Helper as WooCommerceHelper;
-use MailPoet\WooCommerce\Subscription as WooCommerceSubscription;
 use MailPoet\WP\Functions as WPFunctions;
 use MailPoetVendor\Carbon\Carbon;
 use MailPoetVendor\Idiorm\ORM;
@@ -44,13 +43,17 @@ class WP {
 
   private $subscriberSegmentRepository;
 
+  /** @var Validator */
+  private $validator;
+
   public function __construct(
     WPFunctions $wp,
     WelcomeScheduler $welcomeScheduler,
     WooCommerceHelper $wooHelper,
     SubscribersRepository $subscribersRepository,
     SubscriberSegmentRepository $subscriberSegmentRepository,
-    SubscriberChangesNotifier $subscriberChangesNotifier
+    SubscriberChangesNotifier $subscriberChangesNotifier,
+    Validator $validator
   ) {
     $this->wp = $wp;
     $this->welcomeScheduler = $welcomeScheduler;
@@ -58,6 +61,7 @@ class WP {
     $this->subscribersRepository = $subscribersRepository;
     $this->subscriberSegmentRepository = $subscriberSegmentRepository;
     $this->subscriberChangesNotifier = $subscriberChangesNotifier;
+    $this->validator = $validator;
   }
 
   /**
@@ -118,14 +122,6 @@ class WP {
     $status = $signupConfirmationEnabled ? Subscriber::STATUS_UNCONFIRMED : Subscriber::STATUS_SUBSCRIBED;
     // we want to mark a new subscriber as unsubscribe when the checkbox from registration is unchecked
     if (isset($_POST['mailpoet']['subscribe_on_register_active']) && (bool)$_POST['mailpoet']['subscribe_on_register_active'] === true) {
-      $status = SubscriberEntity::STATUS_UNSUBSCRIBED;
-    }
-
-    // we want to mark a new subscriber as unsubscribed when the checkbox on Woo checkout is unchecked
-    if (
-      isset($_POST[WooCommerceSubscription::CHECKOUT_OPTIN_PRESENCE_CHECK_INPUT_NAME])
-      && !isset($_POST[WooCommerceSubscription::CHECKOUT_OPTIN_INPUT_NAME])
-    ) {
       $status = SubscriberEntity::STATUS_UNSUBSCRIBED;
     }
 
@@ -239,12 +235,11 @@ class WP {
   }
 
   private function removeUpdatedSubscribersWithInvalidEmail(array $updatedEmails): void {
-    $validator = new ModelValidator();
     $invalidWpUserIds = array_map(function($item) {
       return $item['id'];
     },
-    array_filter($updatedEmails, function($updatedEmail) use($validator) {
-      return !$validator->validateEmail($updatedEmail['email']);
+    array_filter($updatedEmails, function($updatedEmail) {
+      return !$this->validator->validateEmail($updatedEmail['email']);
     }));
     if (!$invalidWpUserIds) {
       return;

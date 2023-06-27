@@ -29,14 +29,16 @@ class FilterHelper {
     return $this->entityManager
       ->getConnection()
       ->createQueryBuilder()
-      ->select('id')
+      ->select($this->getSubscribersTable() . '.id')
       ->from($this->getSubscribersTable());
   }
 
   public function getSubscribersTable(): string {
-    return $this->entityManager
-      ->getClassMetadata(SubscriberEntity::class)
-      ->getTableName();
+    return $this->getTableForEntity(SubscriberEntity::class);
+  }
+
+  public function getTableForEntity(string $entityClass): string {
+    return $this->entityManager->getClassMetadata($entityClass)->getTableName();
   }
 
   public function getInterpolatedSQL(QueryBuilder $query): string {

@@ -3,7 +3,7 @@ Contributors: gVectors Team
 Tags: comment, comments, ajax comments, comment form, comment fields
 Requires at least: 5.0
 Tested up to: 6.2
-Stable tag: 7.6.0
+Stable tag: 7.6.1
 Requires PHP: 5.6 and higher
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -185,16 +185,27 @@ Nothing will be lost!  **Comments - wpDiscuz** will show all old comments.
 
 == Changelog ==
 
+= Comments - wpDiscuz v7.6.1 - 03.06.2023 =
+
+* Added: An option to enable subscription bar for guests
+* Added: An option to enable subscription bar for roles
+* Added: A new hook "wpdiscuz_commentlist_liveupdate_timer" to control live update check frequency
+* Added: A new hook "wpdiscuz_email_subject" to allow to change the subject of subscription notification email
+* Added: A new hook "wpdiscuz_confirm_email_subject" to allow to change the subject of confirmation email
+* Added: A new hook "wpdiscuz_confirm_email_content" to allow to change the content of confirmation email
+* Added: Nofollow, noindex on internal anchors to prevent google crawling
+* Fixed: Comment reply text max length is issue on reply forms
+
+**IMPORTANT!**
+
+* Please don't forget delete all caches and purge CDN after the update.
+
 = Comments - wpDiscuz v7.6.0 - 26.04.2023 =
 
 * Added: Support of Telegram login
 * Added: Support of Gutenberg blocks
 * Added: New hook ('wpdiscuz_comment_form_args') on comment form attributes
 * Fixed: Line breaks in textarea custom field
-
-**IMPORTANT!**
-
-* Please don't forget delete all caches and purge CDN after the update.
 
 = Comments - wpDiscuz v7.5.4 - 28.03.2023 =
 

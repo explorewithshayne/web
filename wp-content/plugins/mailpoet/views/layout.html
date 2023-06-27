@@ -1,15 +1,3 @@
-<% if sub_menu %>
-<script type="text/javascript">
-jQuery('#adminmenu #toplevel_page_mailpoet-newsletters')
-  .addClass('wp-has-current-submenu')
-  .removeClass('wp-not-current-submenu')
-  .find('a[href$="<%= sub_menu %>"]')
-  .addClass('current')
-  .parent()
-  .addClass('current');
-</script>
-<% endif %>
-
 <!-- pre connect to 3d party to speed up page loading -->
 <link rel="preconnect" href="https://beacon-v2.helpscout.net/">
 <link rel="dns-prefetch" href="https://beacon-v2.helpscout.net/">
@@ -99,9 +87,11 @@ jQuery('#adminmenu #toplevel_page_mailpoet-newsletters')
   var mailpoet_has_premium_support = <%= json_encode(has_premium_support) %>;
   var has_mss_key_specified = <%= json_encode(has_mss_key_specified) %>;
   var mailpoet_mss_key_invalid = <%= json_encode(mss_key_invalid) %>;
+  var mailpoet_mss_key_valid = <%= json_encode(mss_key_valid) %>;
   var mailpoet_mss_key_pending_approval = '<%= mss_key_pending_approval %>';
   var mailpoet_mss_active = <%= json_encode(mss_active) %>;
   var mailpoet_plugin_partial_key = '<%= plugin_partial_key %>';
+  var mailpoet_hide_automations = <%= json_encode(mailpoet_hide_automations) %>;
   var mailpoet_subscribers_count = <%= subscriber_count %>;
   var mailpoet_subscribers_counts_cache_created_at = <%= json_encode(subscribers_counts_cache_created_at) %>;
   var mailpoet_subscribers_limit = <%= subscribers_limit ? subscribers_limit : 'false'  %>;
@@ -137,6 +127,7 @@ jQuery('#adminmenu #toplevel_page_mailpoet-newsletters')
   'confirmEdit': __('Sending is in progress. Do you want to pause sending and edit the newsletter?'),
   'confirmAutomaticNewsletterEdit': __('To edit this email, it needs to be deactivated. You can activate it again after you make the changes.'),
   'subscribersLimitNoticeTitle': __('Congratulations, you now have more than [subscribersLimit] subscribers!'),
+  'subscribersLimitNoticeTitleUnknownLimit': __('Congratulations, you now have more subscribers than the limit of your plan!'),
   'freeVersionLimit': __('Our free version is limited to [subscribersLimit] subscribers.'),
   'yourPlanLimit': __('Your plan is limited to [subscribersLimit] subscribers.'),
   'youNeedToUpgrade': __('You need to upgrade now to be able to continue using MailPoet.'),
@@ -145,9 +136,11 @@ jQuery('#adminmenu #toplevel_page_mailpoet-newsletters')
   'refreshMySubscribers': __('Refresh subscriber limit'),
 
   'emailVolumeLimitNoticeTitle': __('Congratulations, you sent more than [emailVolumeLimit] emails this month!'),
+  'emailVolumeLimitNoticeTitleUnknownLimit': __('Congratulations, you sent a lot of emails this month!'),
   'youReachedEmailVolumeLimit': __('You have sent more emails this month than your MailPoet plan includes ([emailVolumeLimit]), and sending has been temporarily paused.'),
+  'youReachedEmailVolumeLimitUnknownLimit': __('You have sent more emails this month than your MailPoet plan includes, and sending has been temporarily paused.'),
   'toContinueUpgradeYourPlanOrWaitUntil': __('To continue sending with MailPoet Sending Service please [link]upgrade your plan[/link], or wait until sending is automatically resumed on <b>[date]</b>.'),
-  'refreshMyEmailVolumeLimit': __('I’ve upgraded my subscription, refresh monthly email limit'),
+  'refreshMyEmailVolumeLimit': __('Refresh monthly email limit'),
 
   'manageSenderDomainHeaderSubtitle': __('To help your audience and MailPoet authenticate you as the domain owner, please add the following DNS records to your domain’s DNS and click “Verify the DNS records”. Please note that it may take up to 24 hours for DNS changes to propagate after you make the change. [link]Read the guide[/link].', 'mailpoet'),
 

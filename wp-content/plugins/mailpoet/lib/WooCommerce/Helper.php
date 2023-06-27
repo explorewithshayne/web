@@ -217,7 +217,7 @@ class Helper {
   public function getLatestCoupon(): ?string {
     $coupons = $this->wp->getPosts([
       'numberposts' => 1,
-      'orderby' => 'name',
+      'orderby' => 'date_created',
       'order' => 'desc',
       'post_type' => 'shop_coupon',
       'post_status' => 'publish',
@@ -225,5 +225,28 @@ class Helper {
     $coupon = reset($coupons);
 
     return $coupon ? $coupon->post_title : null; // phpcs:ignore Squiz.NamingConventions.ValidVariableName.MemberNotCamelCaps
+  }
+
+  public function getPaymentGateways() {
+    return $this->WC()->payment_gateways();
+  }
+
+  /**
+   * Check whether the current request is processing a WooCommerce checkout.
+   * Works for both the normal checkout and the block checkout.
+   *
+   * This solution is not ideal, but I checked with a few WooCommerce developers,
+   * and it is what they suggested. There is no helper function provided by Woo
+   * for this.
+   *
+   * @return bool
+   */
+  public function isCheckoutRequest(): bool {
+    $requestUri = !empty($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+    $isRegularCheckout = is_checkout();
+    $isBlockCheckout = WC()->is_rest_api_request()
+      && (strpos($requestUri, 'wc/store/checkout') !== false || strpos($requestUri, 'wc/store/v1/checkout') !== false);
+
+    return $isRegularCheckout || $isBlockCheckout;
   }
 }
